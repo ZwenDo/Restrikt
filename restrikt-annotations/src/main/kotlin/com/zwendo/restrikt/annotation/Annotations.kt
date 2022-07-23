@@ -28,4 +28,3 @@ annotation class HideFromKotlin(val reason: String = "", val alternative: String
     AnnotationTarget.FILE,
 )
 annotation class HideFromJava(val reason: String = "", val alternative: String = "")
-

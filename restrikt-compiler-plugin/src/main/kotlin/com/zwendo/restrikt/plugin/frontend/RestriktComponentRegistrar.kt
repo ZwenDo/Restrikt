@@ -19,17 +19,16 @@ internal class RestriktComponentRegistrar : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (configuration[Enabled.key] == false) return // return if not enabled
 
-        ClassBuilderInterceptorExtension.registerExtension(
-            project,
-            ClassGenerationInterceptor(configuration)
-        )
+        val interceptor = ClassGenerationInterceptor()
+        ClassBuilderInterceptorExtension.registerExtension(project, interceptor)
     }
+
 }
 
 /**
  * Class that intercepts bytecode generation and adds custom code to it
  */
-private class ClassGenerationInterceptor(val configuration: CompilerConfiguration) : ClassBuilderInterceptorExtension {
+private class ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
 
     /**
      * Methods that provides a factory for class builders (class builder is the class that will parse the kotlinc
@@ -48,4 +47,5 @@ private class ClassGenerationInterceptor(val configuration: CompilerConfiguratio
             interceptedFactory.newClassBuilder(origin)
         )
     }
+
 }

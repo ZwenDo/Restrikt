@@ -23,4 +23,5 @@ internal class RestriktCommandLineProcessor : CommandLineProcessor {
         configuration: CompilerConfiguration,
     ) = NAME_TO_OPTION[option.optionName]?.callback?.invoke(value, configuration)
         ?: throw CliOptionProcessingException("Unexpected option: ${option.optionName}")
+
 }

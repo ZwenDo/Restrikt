@@ -13,6 +13,7 @@ internal interface Option<T> {
     val key: CompilerConfigurationKey<T>
 
     val cliOption: CliOption
+
 }
 
 internal object Enabled : Option<Boolean> {
@@ -32,6 +33,7 @@ internal object Enabled : Option<Boolean> {
         required = false,
         allowMultipleOccurrences = false
     )
+
 }
 
 
