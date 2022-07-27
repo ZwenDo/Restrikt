@@ -13,9 +13,7 @@ dependencies {
 }
 
 gradlePlugin {
-
     plugins {
-
         create("restriktCompilerPlugin") {
             id = projectId
             displayName = projectDisplayName

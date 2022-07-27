@@ -1,8 +1,5 @@
 package com.zwendo.restrikt.plugin.backend
 
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktClassVisitor
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktFieldVisitor
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktMethodVisitor
 import org.jetbrains.kotlin.codegen.ClassBuilder
 import org.jetbrains.kotlin.codegen.DelegatingClassBuilder
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin

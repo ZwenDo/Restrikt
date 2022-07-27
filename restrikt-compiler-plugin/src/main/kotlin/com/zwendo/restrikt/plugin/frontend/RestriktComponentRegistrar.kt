@@ -17,7 +17,7 @@ import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 internal class RestriktComponentRegistrar : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        if (configuration[Enabled.key] == false) return // return if not enabled
+        if (configuration[EnabledOption.key] == false) return // return if not enabled
 
         val interceptor = ClassGenerationInterceptor()
         ClassBuilderInterceptorExtension.registerExtension(project, interceptor)

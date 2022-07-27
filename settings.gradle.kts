@@ -3,5 +3,5 @@ rootProject.name = "Restrikt"
 include(
     ":restrikt-compiler-plugin",
     ":restrikt-gradle-plugin",
-    ":restrikt-annotations",
+    ":restrikt-annotation",
 )

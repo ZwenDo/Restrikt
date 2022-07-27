@@ -12,7 +12,10 @@ internal class RestriktCommandLineProcessor : CommandLineProcessor {
 
     override val pluginId = "restrikt" // never change this
 
-    override val pluginOptions = OPTIONS.map(Option<*>::cliOption)
+    /**
+     * List of options that can be used by the plugin.
+     */
+    override val pluginOptions = listOf(EnabledOption.cliOption)
 
     /**
      * Function called for each option encountered
@@ -21,7 +24,10 @@ internal class RestriktCommandLineProcessor : CommandLineProcessor {
         option: AbstractCliOption,
         value: String,
         configuration: CompilerConfiguration,
-    ) = NAME_TO_OPTION[option.optionName]?.callback?.invoke(value, configuration)
-        ?: throw CliOptionProcessingException("Unexpected option: ${option.optionName}")
+    ) = when (option.optionName) {
+        EnabledOption.name -> EnabledOption.action(value, configuration)
+        else -> throw CliOptionProcessingException("Unknown option: ${option.optionName}")
+    }
 
 }
+
