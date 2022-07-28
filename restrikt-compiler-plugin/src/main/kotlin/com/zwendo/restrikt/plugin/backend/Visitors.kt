@@ -88,4 +88,4 @@ private val HIDE_FROM_KOTLIN_DESC = RestrictedToJava::class.java.desc
 
 private val DEPRECATED_DESC = Deprecated::class.java.desc
 
-val DEPRECATION_LEVEL_DESC = DeprecationLevel::class.java.desc
+private val DEPRECATION_LEVEL_DESC = DeprecationLevel::class.java.desc
