@@ -1,5 +1,6 @@
 plugins {
     id("java-gradle-plugin")
+    id("com.gradle.plugin-publish") version "1.0.0"
 }
 
 val kotlinVersion: String by System.getProperties()
@@ -12,6 +13,12 @@ val projectVersion: String by project
 
 dependencies {
     compileOnly("org.jetbrains.kotlin", "kotlin-gradle-plugin-api", kotlinVersion)
+}
+
+pluginBundle {
+    website = "https://github.com/ZwenDo/Restrikt"
+    vcsUrl = "https://github.com/ZwenDo/Restrikt.git"
+    tags = listOf("kotlin", "java", "library", "jvm", "compiler-plugin", "hide-code", "library-development")
 }
 
 gradlePlugin {
