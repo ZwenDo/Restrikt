@@ -65,7 +65,7 @@ private class HideFromKotlinVisitor(
     private val visitorFactory: (String, Boolean) -> AnnotationVisitor,
 ) : AnnotationVisitor(ASM_VERSION) {
 
-    private lateinit var message: String
+    private var message = RestrictedToJava.DEFAULT_MESSAGE
 
     override fun visit(name: String?, value: Any?) {
         message = value as String

@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.config.CompilerConfigurationKey
 
 internal object EnabledOption {
 
-    val name = "enabled"
+    const val name = "enabled"
 
     val key = CompilerConfigurationKey<Boolean>(name)
 
