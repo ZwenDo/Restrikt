@@ -1,5 +1,6 @@
 package com.zwendo.restrikt.plugin.frontend
 
+import com.zwendo.restrikt_compiler_plugin.BuildConfig
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
@@ -10,7 +11,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
  */
 internal class RestriktCommandLineProcessor : CommandLineProcessor {
 
-    override val pluginId = "restrikt" // never change this
+    override val pluginId = BuildConfig.PLUGIN_ID
 
     /**
      * List of options that can be used by the plugin.
