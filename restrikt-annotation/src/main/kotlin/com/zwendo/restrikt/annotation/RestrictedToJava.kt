@@ -21,4 +21,4 @@ package com.zwendo.restrikt.annotation
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
-annotation class RestrictedToJava
+annotation class RestrictedToJava(val message: String = "this element is hidden to kotlin")

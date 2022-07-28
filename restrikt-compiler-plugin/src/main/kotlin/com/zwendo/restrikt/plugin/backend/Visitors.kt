@@ -65,10 +65,16 @@ private class HideFromKotlinVisitor(
     private val visitorFactory: (String, Boolean) -> AnnotationVisitor,
 ) : AnnotationVisitor(ASM_VERSION) {
 
+    private lateinit var message: String
+
+    override fun visit(name: String?, value: Any?) {
+        message = value as String
+    }
+
     override fun visitEnd() {
         original.visitEnd()
         visitorFactory(DEPRECATED_DESC, false).apply {
-            visit("message", "this element is hidden to kotlin")
+            visit("message", message)
             visitEnum("level", DEPRECATION_LEVEL_DESC, DeprecationLevel.HIDDEN.toString())
             visitEnd()
         }
