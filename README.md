@@ -10,7 +10,12 @@
 ## Summary
 
 1. [Dependency](#dependency)
+   1. [Gradle plugins DSL](#using-the-gradle-plugin-dsl-gradle-21)
+   2. [apply method](#using-apply-method-gradle-prior-to-21) 
 2. [Usage](#usage)
+   1. [Plugin Configuration](#plugin-configuration)
+   2. [Annotation](#annotation-usage)
+   3. [**Important notes**](#important-notes)
 3. [How it works](#how-it-works)
 
 ## Dependency
@@ -37,11 +42,11 @@ plugins {
 
 Using Kotlin DSL:
 
-```groovy
+```kotlin
 buildscript {
     repositories {
         maven {
-            url("https://plugins.gradle.org/m2/")
+            url = uri("https://plugins.gradle.org/m2/")
         }
     }
 
@@ -73,9 +78,33 @@ apply plugin: 'com.zwendo.restrikt'
 
 ## Usage
 
-To hide elements from Kotlin, simply add the `@RestrictedToJava` annotation. It can be applied to any class, method, or
-field. The element will still be accessible at runtime, meaning that compiled code will still be able to access it.
+### Plugin Configuration
 
+You can configure the plugin using the configuration DSL.
+
+```kotlin
+restrkt {
+    enabled = true
+    // ...
+}
+```
+
+Currently supported configuration options:
+- `enabled`: `true` or `false` (default: `true`). Whether the plugin elements hiding is enabled or not, allows to
+generate classes without hiding the elements.
+
+### Annotation usage
+Once you have added the plugin in your `build.gradle` file, it will automatically add the dependency to the restrikt
+annotation(s) artifact corresponding to your version of the plugin.
+
+It will allow you to use the `@RestrictedToJava` annotation. This annotation is designed to be an equivalent of the
+Kotlin [@JvmSynthetic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-synthetic/) annotation for
+Java-Specific target hiding. 
+
+To hide elements from Kotlin, simply add the `@RestrictedToJava` annotation on it. It can be applied to any **class**,
+**method**, or **property**. 
+
+Example:
 ```kotlin
 @RestrictedToJava
 fun foo() { // will be only visible in Java
@@ -83,14 +112,20 @@ fun foo() { // will be only visible in Java
 }
 ```
 
-The annotation takes an optional parameter representing the reason for the restriction.
+The annotation also takes an optional parameter representing the reason for the restriction:
 
 ```kotlin
-@RestrictedToJava("This method is designed for Java")
+@RestrictedToJava("This class is designed for Java")
 class Bar { // will be only visible in Java
     // ...
 }
 ```
+
+### Important notes
+
+Annotated elements will still be accessible:
+- at **compile time** from **Kotlin sources** of their **origin module**
+- at **runtime** from **everywhere**, meaning that already compiled code will still be able to access it
 
 ## How it works
 
@@ -116,8 +151,10 @@ class Foo {
 }
 ```
 
+**NOTE:** The message of the `RestrictedToJava` annotation will be transferred to the `Deprecated` annotation.
+
 Generating the `Deprecated` annotation or simply using it directly have slightly different outcomes. Indeed, the
-`Deprecated` annotation acts as a flag for the Kotlin compiler. The latter will add the JVM `ACC_SYNTHETIC` flag for the
-element in the produced classfile, making it also invisible for Java sources. The hack is that the Kotlin compiler runs
-before calling the compiler plugin, so when it writes the classfile, the `Deprecated` annotation is not present meaning
-that the `ACC_SYNTHETIC` flag is not set.
+`Deprecated` annotation (with `HIDDEN` level) acts as a flag for the Kotlin compiler. The latter will add the JVM
+`ACC_SYNTHETIC` flag for the element in the produced classfile, making it also invisible for Java sources. The hack is
+that the Kotlin compiler runs before calling the compiler plugin, so when it writes the classfile, the `Deprecated`
+annotation is not present meaning that the `ACC_SYNTHETIC` flag is not set.
