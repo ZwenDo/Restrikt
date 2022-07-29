@@ -12,7 +12,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     override fun apply(target: Project) {
         target.extensions.create( // add configuration object to the gradle file
-            BuildConfig.GROUP_ID,
+            BuildConfig.EXTENSION_NAME,
             RestriktConfiguration::class.java
         )
 
@@ -27,9 +27,13 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         val extension = project.extensions.findByType(RestriktConfiguration::class.java) ?: RestriktConfiguration()
 
         val isEnabled = SubpluginOption("enabled", extension.enabled.toString())
+        val keepAnnotations = SubpluginOption("keepAnnotations", extension.keepAnnotations.toString())
 
         return project.provider {
-            listOf(isEnabled)
+            listOf(
+                isEnabled,
+                keepAnnotations
+            )
         }
     }
 

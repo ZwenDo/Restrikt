@@ -1,7 +1,6 @@
 package com.zwendo.restrikt.plugin.frontend
 
 import org.jetbrains.kotlin.compiler.plugin.CliOption
-import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 
 internal object EnabledOption {
@@ -10,10 +9,6 @@ internal object EnabledOption {
 
     val key = CompilerConfigurationKey<Boolean>(name)
 
-    val action: (String, CompilerConfiguration) -> Unit = { value, config ->
-        config.put(key, value.toBooleanStrict())
-    }
-
     val cliOption = CliOption(
         name,
         "<true|false>",
@@ -21,5 +16,23 @@ internal object EnabledOption {
         required = false,
         allowMultipleOccurrences = false
     )
+
+}
+
+internal object KeepAnnotationsOption {
+
+    const val name = "keepAnnotations"
+
+    val key = CompilerConfigurationKey<Boolean>(name)
+
+    val cliOption = CliOption(
+        name,
+        "<true|false>",
+        "whether to keep plugin annotations",
+        required = false,
+        allowMultipleOccurrences = false
+    )
+
+    const val default = true
 
 }

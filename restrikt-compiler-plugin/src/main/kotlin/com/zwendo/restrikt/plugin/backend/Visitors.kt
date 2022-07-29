@@ -1,6 +1,7 @@
 package com.zwendo.restrikt.plugin.backend
 
 import com.zwendo.restrikt.annotation.RestrictedToJava
+import com.zwendo.restrikt.plugin.frontend.Config
 import org.jetbrains.kotlin.descriptors.runtime.structure.desc
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 import org.jetbrains.org.objectweb.asm.ClassVisitor
@@ -52,16 +53,19 @@ private fun visitAnnotation(
     visible: Boolean,
     factory: (String, Boolean) -> AnnotationVisitor,
 ): AnnotationVisitor {
-    val originalVisitor = factory(descriptor, visible)
-    return when (descriptor) {
-        HIDE_FROM_KOTLIN_DESC -> HideFromKotlinVisitor(originalVisitor, factory)
-        else -> originalVisitor
+    return if (descriptor == HIDE_FROM_KOTLIN_DESC) {
+        val original = if (Config.keepAnnotations) {
+            factory(descriptor, visible)
+        } else null
+        HideFromKotlinVisitor(original, factory)
+    } else {
+        factory(descriptor, visible)
     }
 }
 
 
 private class HideFromKotlinVisitor(
-    private val original: AnnotationVisitor,
+    private val original: AnnotationVisitor?,
     private val visitorFactory: (String, Boolean) -> AnnotationVisitor,
 ) : AnnotationVisitor(ASM_VERSION) {
 
@@ -72,14 +76,18 @@ private class HideFromKotlinVisitor(
     }
 
     override fun visitEnd() {
-        original.visitEnd()
-        visitorFactory(DEPRECATED_DESC, false).apply {
-            visit("message", message)
-            visitEnum("level", DEPRECATION_LEVEL_DESC, DeprecationLevel.HIDDEN.toString())
-            visitEnd()
-        }
+        original?.visitEnd()
+        hide(message, visitorFactory)
     }
 
+}
+
+private fun hide(message: String, visitorFactory: (String, Boolean) -> AnnotationVisitor) {
+    visitorFactory(DEPRECATED_DESC, false).apply {
+        visit("message", message)
+        visitEnum("level", DEPRECATION_LEVEL_DESC, DeprecationLevel.HIDDEN.toString())
+        visitEnd()
+    }
 }
 
 private const val ASM_VERSION = Opcodes.ASM9

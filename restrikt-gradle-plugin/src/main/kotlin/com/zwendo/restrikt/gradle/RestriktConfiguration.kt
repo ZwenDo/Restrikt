@@ -10,4 +10,8 @@ open class RestriktConfiguration {
      */
     var enabled = true
 
+    /**
+     * Whether plugin annotations should be kept or removed in the generated code.
+     */
+    var keepAnnotations = true
 }

@@ -19,6 +19,8 @@ internal class RestriktComponentRegistrar : ComponentRegistrar {
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
         if (configuration[EnabledOption.key] == false) return // return if not enabled
 
+        Config.keepAnnotations = configuration[KeepAnnotationsOption.key] ?: KeepAnnotationsOption.default
+
         val interceptor = ClassGenerationInterceptor()
         ClassBuilderInterceptorExtension.registerExtension(project, interceptor)
     }
@@ -46,6 +48,13 @@ private class ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
         override fun newClassBuilder(origin: JvmDeclarationOrigin): ClassBuilder = RestriktClassBuilder(
             interceptedFactory.newClassBuilder(origin)
         )
+
     }
+
+}
+
+internal object Config {
+
+    var keepAnnotations: Boolean = true
 
 }

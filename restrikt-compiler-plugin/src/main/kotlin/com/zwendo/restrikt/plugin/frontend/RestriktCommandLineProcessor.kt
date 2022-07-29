@@ -16,7 +16,10 @@ internal class RestriktCommandLineProcessor : CommandLineProcessor {
     /**
      * List of options that can be used by the plugin.
      */
-    override val pluginOptions = listOf(EnabledOption.cliOption)
+    override val pluginOptions = listOf(
+        EnabledOption.cliOption,
+        KeepAnnotationsOption.cliOption
+    )
 
     /**
      * Function called for each option encountered
@@ -26,7 +29,8 @@ internal class RestriktCommandLineProcessor : CommandLineProcessor {
         value: String,
         configuration: CompilerConfiguration,
     ) = when (option.optionName) {
-        EnabledOption.name -> EnabledOption.action(value, configuration)
+        EnabledOption.name -> configuration.put(EnabledOption.key, value.toBooleanStrict())
+        KeepAnnotationsOption.name -> configuration.put(KeepAnnotationsOption.key, value.toBooleanStrict())
         else -> throw CliOptionProcessingException("Unknown option: ${option.optionName}")
     }
 
