@@ -1,7 +1,7 @@
 package com.zwendo.restrikt.plugin.backend
 
-import com.zwendo.restrikt.annotation.RestrictedToJava
-import com.zwendo.restrikt.plugin.frontend.Config
+import com.zwendo.restrikt.annotation.HideFromKotlin
+import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import org.jetbrains.kotlin.descriptors.runtime.structure.desc
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 import org.jetbrains.org.objectweb.asm.ClassVisitor
@@ -54,9 +54,12 @@ private fun visitAnnotation(
     factory: (String, Boolean) -> AnnotationVisitor,
 ): AnnotationVisitor {
     return if (descriptor == HIDE_FROM_KOTLIN_DESC) {
-        val original = if (Config.keepAnnotations) {
+        val original = if (PluginConfiguration.keepAnnotations) {
             factory(descriptor, visible)
-        } else null
+        } else {
+            null
+        }
+
         HideFromKotlinVisitor(original, factory)
     } else {
         factory(descriptor, visible)
@@ -69,7 +72,7 @@ private class HideFromKotlinVisitor(
     private val visitorFactory: (String, Boolean) -> AnnotationVisitor,
 ) : AnnotationVisitor(ASM_VERSION) {
 
-    private var message = RestrictedToJava.DEFAULT_MESSAGE
+    private var message = PluginConfiguration.defaultReason
 
     override fun visit(name: String?, value: Any?) {
         message = value as String
@@ -92,7 +95,7 @@ private fun hide(message: String, visitorFactory: (String, Boolean) -> Annotatio
 
 private const val ASM_VERSION = Opcodes.ASM9
 
-private val HIDE_FROM_KOTLIN_DESC = RestrictedToJava::class.java.desc
+private val HIDE_FROM_KOTLIN_DESC = HideFromKotlin::class.java.desc
 
 private val DEPRECATED_DESC = Deprecated::class.java.desc
 

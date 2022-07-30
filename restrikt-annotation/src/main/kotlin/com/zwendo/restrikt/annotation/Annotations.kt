@@ -1,7 +1,7 @@
 package com.zwendo.restrikt.annotation
 
 /**
- * This annotation is used to mark elements that should only be used from Java code.
+ * This annotation is used to hide elements from kotlin sources.
  *
  * Used with the [Restrikt compiler plugin](https://github.com/ZwenDo/Restrikt), this annotation causes the generation
  * of the [Deprecated] annotation with the level [DeprecationLevel.HIDDEN], which hides the element for Kotlin sources.
@@ -21,13 +21,9 @@ package com.zwendo.restrikt.annotation
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
-annotation class RestrictedToJava(val message: String = DEFAULT_MESSAGE) {
+annotation class HideFromKotlin(val message: String = "")
 
-    companion object {
-
-        const val DEFAULT_MESSAGE = "this element is hidden to kotlin"
-
-    }
-
-}
-
+/**
+ * Simple alias for [JvmSynthetic] annotation.
+ */
+typealias HideFromJava = JvmSynthetic

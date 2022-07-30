@@ -13,8 +13,9 @@ val projectVersion: String by project
 val jvmVersion: String by project
 val junitVersion: String by project
 val javaVersion = JavaVersion.VERSION_1_8
+val projectDefaultAnnotationReason: String by project
 
-allprojects {
+subprojects {
     apply(plugin = "java")
     apply(plugin = "kotlin")
     apply(plugin = "maven-publish")
@@ -26,10 +27,6 @@ allprojects {
 
     repositories {
         mavenCentral()
-    }
-
-    dependencies {
-        testImplementation(kotlin("test"))
     }
 
     java {
@@ -112,10 +109,11 @@ allprojects {
     }
 }
 
-fun buildConfigSetup(vararg projects: Project) {
+fun buildConfigGenericSetup(vararg projects: Project) {
     projects.forEach {
         it.buildConfig {
             buildConfigField("String", "PLUGIN_ID", "\"${rootProject.name.toLowerCase()}\"")
+            buildConfigField("String", "DEFAULT_REASON", "\"$projectDefaultAnnotationReason\"")
             useKotlinOutput {
                 internalVisibility = true
             }
@@ -123,7 +121,7 @@ fun buildConfigSetup(vararg projects: Project) {
     }
 }
 
-buildConfigSetup(
+buildConfigGenericSetup(
     project(":restrikt-gradle-plugin"),
     project(":restrikt-compiler-plugin"),
 )

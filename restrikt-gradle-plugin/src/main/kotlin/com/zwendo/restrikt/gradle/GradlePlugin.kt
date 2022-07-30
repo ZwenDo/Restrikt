@@ -28,11 +28,13 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         val isEnabled = SubpluginOption("enabled", extension.enabled.toString())
         val keepAnnotations = SubpluginOption("keepAnnotations", extension.keepAnnotations.toString())
+        val defaultReason = SubpluginOption("defaultReason", extension.defaultReason)
 
         return project.provider {
             listOf(
                 isEnabled,
-                keepAnnotations
+                keepAnnotations,
+                defaultReason
             )
         }
     }

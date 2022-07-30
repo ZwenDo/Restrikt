@@ -1,38 +1,73 @@
 package com.zwendo.restrikt.plugin.frontend
 
 import org.jetbrains.kotlin.compiler.plugin.CliOption
-import org.jetbrains.kotlin.config.CompilerConfigurationKey
 
-internal object EnabledOption {
+internal enum class Option {
 
-    const val name = "enabled"
+    Enabled {
 
-    val key = CompilerConfigurationKey<Boolean>(name)
+        override val optionName = "enabled"
 
-    val cliOption = CliOption(
-        name,
-        "<true|false>",
-        "whether plugin is enabled",
-        required = false,
-        allowMultipleOccurrences = false
-    )
+        override val cliOption = CliOption(
+            optionName,
+            "<true|false>",
+            "whether plugin is enabled",
+            required = false,
+            allowMultipleOccurrences = false
+        )
 
-}
+        override val action: (String) -> Unit = { PluginConfiguration.enabled = it.toBooleanStrict() }
 
-internal object KeepAnnotationsOption {
+    },
 
-    const val name = "keepAnnotations"
+    KeepAnnotations {
 
-    val key = CompilerConfigurationKey<Boolean>(name)
+        override val optionName = "keepAnnotations"
 
-    val cliOption = CliOption(
-        name,
-        "<true|false>",
-        "whether to keep plugin annotations",
-        required = false,
-        allowMultipleOccurrences = false
-    )
+        override val cliOption = CliOption(
+            optionName,
+            "<true|false>",
+            "whether to keep plugin annotations",
+            required = false,
+            allowMultipleOccurrences = false
+        )
 
-    const val default = true
+        override val action: (String) -> Unit = { PluginConfiguration.keepAnnotations = it.toBooleanStrict() }
+
+    },
+
+    DefaultReason {
+
+        override val optionName = "defaultReason"
+
+        override val cliOption = CliOption(
+            optionName,
+            "[reason]",
+            "default reason on generated annotations",
+            required = false,
+            allowMultipleOccurrences = false
+        )
+
+        override val action: (String) -> Unit = {
+            PluginConfiguration.defaultReason = it
+        }
+
+    },
+
+    ;
+
+    abstract val optionName: String
+
+    abstract val cliOption: CliOption
+
+    abstract val action: (String) -> Unit
+
+    companion object {
+
+        val CLI_OPTIONS = values().map { it.cliOption }
+
+        val NAME_TO_OPTION = values().associateBy { it.optionName }
+
+    }
 
 }
