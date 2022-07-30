@@ -128,8 +128,7 @@ class Bar { // will be only visible in Java
 
 Annotated elements will still be accessible:
 
-- at **compile time** from **Kotlin sources** of their **origin module** (subproject imports won't work even if the IDE
-doesn't show warnings)
+- at **compile time** from **Kotlin sources** in the same **package**
 - at **runtime** from **everywhere**, meaning that already compiled code will still be able to access it
 
 ## How it works
