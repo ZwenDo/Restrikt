@@ -26,7 +26,7 @@ Using Kotlin DSL:
 
 ```kotlin
 plugins {
-    id("com.zwendo.restrikt") version "[lastest-version]"
+   id("com.zwendo.restrikt") version "[latest-version]"
 }
 ```
 
@@ -34,7 +34,7 @@ Using Groovy DSL:
 
 ```groovy
 plugins {
-    id 'com.zwendo.restrikt' version '[lastest-version]'
+   id 'com.zwendo.restrikt' version '[latest-version]'
 }
 ```
 
@@ -44,15 +44,15 @@ Using Kotlin DSL:
 
 ```kotlin
 buildscript {
-    repositories {
-        maven {
-            url = uri("https://plugins.gradle.org/m2/")
-        }
-    }
+   repositories {
+      maven {
+         url = uri("https://plugins.gradle.org/m2/")
+      }
+   }
 
-    dependencies {
-        classpath("gradle.plugin.com.restrikt:restrikt:[lastest-version]")
-    }
+   dependencies {
+      classpath("gradle.plugin.com.restrikt:restrikt:[latest-version]")
+   }
 }
 
 apply(plugin = "com.zwendo.restrikt")
@@ -62,15 +62,15 @@ Using Groovy DSL:
 
 ```groovy
 buildscript {
-    repositories {
-        maven {
-            url 'https://plugins.gradle.org/m2/'
-        }
-    }
+   repositories {
+      maven {
+         url 'https://plugins.gradle.org/m2/'
+      }
+   }
 
-    dependencies {
-        classpath 'gradle.plugin.com.restrikt:restrikt:[lastest-version]'
-    }
+   dependencies {
+      classpath 'gradle.plugin.com.restrikt:restrikt:[latest-version]'
+   }
 }
 
 apply plugin: 'com.zwendo.restrikt'
@@ -90,8 +90,11 @@ restrkt {
 ```
 
 Currently supported configuration options:
+
 - `enabled`: `true` or `false` (default: `true`). Whether the plugin elements hiding is enabled or not, allows to
-generate classes without hiding the elements.
+  generate classes without hiding the elements.
+- `keepAnnotations`: `true` or `false` (default: `true`). Whether the annotations of the plugin should be kept in the
+  classfile.
 
 ### Annotation usage
 Once you have added the plugin in your `build.gradle` file, it will automatically add the dependency to the restrikt
