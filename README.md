@@ -14,7 +14,7 @@
    2. [apply method](#using-apply-method-gradle-prior-to-21) 
 2. [Usage](#usage)
    1. [Plugin Configuration](#plugin-configuration)
-   2. [Annotation](#annotation-usage)
+   2. [Annotations](#annotations-usage)
    3. [**Important notes**](#important-notes)
 3. [How it works](#how-it-works)
 
@@ -91,34 +91,45 @@ restrkt {
 
 Currently supported configuration options:
 
-- `enabled`: `true` or `false` (default: `true`). Whether the plugin elements hiding is enabled or not, allows to
-  generate classes without hiding the elements.
-- `keepAnnotations`: `true` or `false` (default: `true`). Whether the annotations of the plugin should be kept in the
-  classfile.
+|      name       |  type   |               default                | description                                                                                                   |
+|:---------------:|:-------:|:------------------------------------:|---------------------------------------------------------------------------------------------------------------|
+|     enabled     | boolean |                `true`                | Whether the plugin elements hiding is enabled or not, allows to generate classes without hiding the elements. |
+| keepAnnotations | boolean |                `true`                | Whether the annotations of the plugin should be kept in the classfile.                                        |
+|  defaultReason  | string  | `"this element is hidden to kotlin"` | The default reason message for generated annotations.                                                         |
 
-### Annotation usage
+### Annotations usage
+
 Once you have added the plugin in your `build.gradle` file, it will automatically add the dependency to the restrikt
-annotation(s) artifact corresponding to your version of the plugin.
+annotations artifact corresponding to your version of the plugin.
 
-It will allow you to use the `@RestrictedToJava` annotation. This annotation is designed to be an equivalent of the
-Kotlin [@JvmSynthetic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-synthetic/) annotation for
-Java-Specific target hiding. 
+#### HideFromJava
 
-To hide elements from Kotlin, simply add the `@RestrictedToJava` annotation on it. It can be applied to any **class**,
-**method**, or **property**. 
+This annotation is simply an alias to
+[@JvmSynthetic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-synthetic/) if you want to keep consistency
+in your code due to the name of the other featured annotation.
+
+#### HideFromKotlin
+
+The main annotation of the plugin is the `@HideFromKotlin` annotation. This annotation is designed to be an equivalent
+of the Kotlin [@JvmSynthetic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-synthetic/) annotation for
+Java-Specific target hiding.
+
+To hide elements from Kotlin, simply add the `@HideFromKotlin` annotation on it. It can be applied to any **class**,
+**method**, or **property**.
 
 Example:
+
 ```kotlin
-@RestrictedToJava
+@HideFromKotlin
 fun foo() { // will be only visible in Java
-    // ...
+   // ...
 }
 ```
 
 The annotation also takes an optional parameter representing the reason for the restriction:
 
 ```kotlin
-@RestrictedToJava("This class is designed for Java")
+@HideFromKotlin("This class is designed for Java")
 class Bar { // will be only visible in Java
     // ...
 }
@@ -140,7 +151,7 @@ level, makes the element invisible to Kotlin sources, but still visible to Java 
 
 ```kotlin
 // Foo.kt
-@RestrictedToJava("java only")
+@HideFromKotlin("java only")
 class Foo {
     // ...
 }
@@ -148,14 +159,14 @@ class Foo {
 // will be compiled to
 
 // Foo.class
-@RestrictedToJava
+@HideFromKotlin
 @Deprecated("java only", DeprecationLevel.HIDDEN)
 class Foo {
     // ...
 }
 ```
 
-**NOTE:** The message of the `RestrictedToJava` annotation will be transferred to the `Deprecated` annotation.
+**NOTE:** The message of the `HideFromKotlin` annotation will be transferred to the `Deprecated` annotation.
 
 Generating the `Deprecated` annotation or simply using it directly have slightly different outcomes. Indeed, the
 `Deprecated` annotation (with `HIDDEN` level) acts as a flag for the Kotlin compiler. The latter will add the JVM
