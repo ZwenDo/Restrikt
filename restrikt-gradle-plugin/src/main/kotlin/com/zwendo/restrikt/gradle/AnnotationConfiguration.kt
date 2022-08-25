@@ -2,7 +2,7 @@ package com.zwendo.restrikt.gradle
 
 import com.zwendo.restrikt_gradle_plugin.BuildConfig
 
-class AnnotationConfiguration(lang: String) {
+class AnnotationConfiguration internal constructor(lang: String) {
 
     /**
      * Whether the compiler plugin should run.
