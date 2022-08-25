@@ -99,7 +99,6 @@ subprojects {
                     }
                 }
             }
-
         }
     }
 
@@ -125,4 +124,3 @@ buildConfigGenericSetup(
     project(":restrikt-gradle-plugin"),
     project(":restrikt-compiler-plugin"),
 )
-
