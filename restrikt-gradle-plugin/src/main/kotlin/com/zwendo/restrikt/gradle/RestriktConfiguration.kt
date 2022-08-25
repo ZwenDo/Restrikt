@@ -1,24 +1,32 @@
 package com.zwendo.restrikt.gradle
 
-import com.zwendo.restrikt_gradle_plugin.BuildConfig
-
 /**
  * Configuration options for the Restrikt plugin.
  */
 open class RestriktConfiguration {
 
     /**
-     * Whether the compiler plugin should run.
+     * Whether internal symbols should be automatically hidden to java.
      */
-    var enabled = true
+    var automaticInternalHiding: Boolean = true
 
     /**
-     * Whether plugin annotations should be kept or removed in the generated code.
+     * Whether the annotation processing should be enabled.
      */
-    var keepAnnotations = true
+    var annotationProcessing: Boolean = true
 
     /**
-     * Default message for generated annotations.
+     * Configure the HideFromJava annotation.
      */
-    var defaultReason = BuildConfig.DEFAULT_REASON
+    fun hideFromJava(block: AnnotationConfiguration.() -> Unit) = hideFromJava.block()
+
+    /**
+     * Configure the HideFromKotlin annotation.
+     */
+    fun hideFromKotlin(block: AnnotationConfiguration.() -> Unit) = hideFromKotlin.block()
+
+    internal val hideFromJava = AnnotationConfiguration("Java")
+
+    internal val hideFromKotlin = AnnotationConfiguration("Kotlin")
+
 }

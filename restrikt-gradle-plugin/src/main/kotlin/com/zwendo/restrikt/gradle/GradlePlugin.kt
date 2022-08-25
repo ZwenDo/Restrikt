@@ -24,17 +24,18 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
     override fun applyToCompilation(kotlinCompilation: KotlinCompilation<*>): Provider<List<SubpluginOption>> {
         val project = kotlinCompilation.target.project
 
-        val extension = project.extensions.findByType(RestriktConfiguration::class.java) ?: RestriktConfiguration()
+        val extension = project.extensions.findByType(RestriktConfiguration::class.java)
+            ?: RestriktConfiguration()
 
-        val isEnabled = SubpluginOption("enabled", extension.enabled.toString())
-        val keepAnnotations = SubpluginOption("keepAnnotations", extension.keepAnnotations.toString())
-        val defaultReason = SubpluginOption("defaultReason", extension.defaultReason)
+        val internalHiding = SubpluginOption("automaticInternalHiding", extension.automaticInternalHiding.toString())
+        val annotationProcessing = SubpluginOption("annotationProcessing", extension.annotationProcessing.toString())
 
         return project.provider {
             listOf(
-                isEnabled,
-                keepAnnotations,
-                defaultReason
+                internalHiding,
+                annotationProcessing,
+                *annotationConfiguration("hideFromJava", extension.hideFromJava),
+                *annotationConfiguration("hideFromKotlin", extension.hideFromKotlin),
             )
         }
     }
@@ -51,6 +52,12 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
     )
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+
+    private fun annotationConfiguration(prefix: String, config: AnnotationConfiguration) = arrayOf(
+        SubpluginOption("${prefix}Enabled", config.enabled.toString()),
+        SubpluginOption("${prefix}KeepAnnotation", config.keepAnnotation.toString()),
+        SubpluginOption("${prefix}DefaultReason", config.defaultReason),
+    )
 
 }
 
