@@ -5,7 +5,10 @@ import com.zwendo.restrikt.plugin.backend.ASM_VERSION
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 import org.jetbrains.org.objectweb.asm.Attribute
 import org.jetbrains.org.objectweb.asm.ClassVisitor
+import org.jetbrains.org.objectweb.asm.FieldVisitor
+import org.jetbrains.org.objectweb.asm.MethodVisitor
 import org.jetbrains.org.objectweb.asm.ModuleVisitor
+import org.jetbrains.org.objectweb.asm.RecordComponentVisitor
 import org.jetbrains.org.objectweb.asm.TypePath
 
 
@@ -54,6 +57,47 @@ internal class RestriktClassVisitor(factory: () -> ClassVisitor) : ClassVisitor(
 
     override fun visitPermittedSubclass(permittedSubclass: String?) = context.addAction {
         original.visitPermittedSubclass(permittedSubclass)
+    }
+
+    override fun visitSource(source: String?, debug: String?) = context.addAction {
+        original.visitSource(source, debug)
+    }
+
+    override fun visitOuterClass(owner: String?, name: String?, descriptor: String?) = context.addAction {
+        original.visitOuterClass(owner, name, descriptor)
+    }
+
+    override fun visitInnerClass(name: String?, outerName: String?, innerName: String?, access: Int) =
+        context.addAction { original.visitInnerClass(name, outerName, innerName, access) }
+
+    override fun visitRecordComponent(name: String?, descriptor: String?, signature: String?): RecordComponentVisitor {
+        lateinit var visitor: RecordComponentVisitor
+        context.addAction { visitor = original.visitRecordComponent(name, descriptor, signature) }
+        return RestriktRecordComponentVisitor { visitor }
+    }
+
+    override fun visitField(
+        access: Int,
+        name: String,
+        descriptor: String?,
+        signature: String?,
+        value: Any?,
+    ): FieldVisitor {
+        lateinit var visitor: FieldVisitor
+        context.addAction { visitor = original.visitField(access, name, descriptor, signature, value) }
+        return RestriktFieldVisitor(name) { visitor }
+    }
+
+    override fun visitMethod(
+        access: Int,
+        name: String,
+        descriptor: String,
+        signature: String?,
+        exceptions: Array<out String>?,
+    ): MethodVisitor {
+        lateinit var visitor: MethodVisitor
+        context.addAction { visitor = original.visitMethod(access, name, descriptor, signature, exceptions) }
+        return RestriktMethodVisitor(name, descriptor) { visitor }
     }
 
     override fun visit(
