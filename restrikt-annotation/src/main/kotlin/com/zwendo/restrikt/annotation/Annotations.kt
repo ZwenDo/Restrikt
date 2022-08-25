@@ -15,15 +15,26 @@ package com.zwendo.restrikt.annotation
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
-    AnnotationTarget.ANNOTATION_CLASS,
     AnnotationTarget.CONSTRUCTOR,
+    AnnotationTarget.ANNOTATION_CLASS,
     AnnotationTarget.PROPERTY,
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
-annotation class HideFromKotlin(val message: String = "")
+annotation class HideFromKotlin(val reason: String = "")
 
 /**
- * Simple alias for [JvmSynthetic] annotation.
+ * Equivalent to [JvmSynthetic] annotation, but can be used on all symbol declarations.
  */
-typealias HideFromJava = JvmSynthetic
+@MustBeDocumented
+@Retention(AnnotationRetention.BINARY)
+@Target(
+    AnnotationTarget.CLASS,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.CONSTRUCTOR,
+    AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.FIELD,
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.PROPERTY_SETTER,
+)
+annotation class HideFromJava(val reason: String = "")
