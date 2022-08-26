@@ -38,15 +38,15 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         RestriktContext.addAction {
             val currentClass = RestriktContext.getClass(currentClassName)
             val function = currentClass?.function(name, desc)
-            val actualAccess = if (
-                function != null && (function.isInternal || currentClass.isForceSyntheticFunction(name, desc))
-            ) {
+            val actualAccess = if (function?.isSynthetic(currentClass) == true) {
                 access or Opcodes.ACC_SYNTHETIC
             } else {
                 access
             }
+
             original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
         }
+
         return RestriktMethodVisitor(name, desc) { original }
     }
 
@@ -64,13 +64,12 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         RestriktContext.addAction {
             val currentClass = RestriktContext.getClass(currentClassName)
             val field = currentClass?.property(name)
-            val actualAccess = if (
-                field != null && (field.isInternal || currentClass.isForceSyntheticProperty(name))
-            ) {
+            val actualAccess = if (field?.isSynthetic(currentClass) == true) {
                 access or Opcodes.ACC_SYNTHETIC
             } else {
                 access
             }
+
             original = super.newField(origin, actualAccess, name, desc, signature, value)
         }
 

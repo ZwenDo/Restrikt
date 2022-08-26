@@ -1,18 +1,14 @@
 package com.zwendo.restrikt.plugin.backend.wrapper
 
+import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import kotlinx.metadata.Flag
 import kotlinx.metadata.KmProperty
 
-internal class KotlinProperty(inner: KmProperty) : KotlinSymbol {
+internal class KotlinProperty(private val inner: KmProperty) {
 
-    private var forceSynthetic = false
+    val isInternal: Boolean = Flag.Common.IS_INTERNAL(inner.flags)
 
-    override val isInternal: Boolean = Flag.Common.IS_INTERNAL(inner.flags)
-
-    override val isForceSynthetic: Boolean = forceSynthetic
-
-    override fun forceSynthetic() {
-        forceSynthetic = true
-    }
+    fun isSynthetic(originClass: KotlinClass): Boolean = (PluginConfiguration.automaticInternalHiding && isInternal)
+                || originClass.isForceSynthetic(inner.name)
 
 }

@@ -14,36 +14,36 @@ internal fun visitSymbolDeclarationAnnotation(
     factory: (String, Boolean) -> AnnotationVisitor,
 ): AnnotationVisitor = when (descriptor) {
     HIDE_FROM_KOTLIN_DESC -> HideFromKotlinVisitor.new(descriptor, visible, factory)
-    HIDE_FROM_JAVA_DESC -> if (PluginConfiguration.keepAnnotations) {
-        factory(descriptor, visible)
-    } else {
-        RestriktNOPAnnotationVisitor
-    }
+    HIDE_FROM_JAVA_DESC -> HideFromJavaVisitor.new(descriptor, visible, factory)
     else -> factory(descriptor, visible)
 }
 
 internal inline fun checkHideFromJava(descriptor: String, hideAction: () -> Unit) {
-    if (descriptor == HIDE_FROM_JAVA_DESC) {
+    if (PluginConfiguration.hideFromJava.enabled && descriptor == HIDE_FROM_JAVA_DESC) {
         hideAction()
     }
 }
 
 
-private class HideFromKotlinVisitor(
+private class HideFromKotlinVisitor private constructor(
     private val original: AnnotationVisitor,
     private val visitorFactory: (String, Boolean) -> AnnotationVisitor,
 ) : AnnotationVisitor(ASM_VERSION) {
 
-    private var message = PluginConfiguration.defaultReason
+    private var message = PluginConfiguration.hideFromKotlin.defaultReason
 
     override fun visit(name: String?, value: Any?) {
         message = value as String
+        if (!PluginConfiguration.hideFromKotlin.enabled) {
+            original.visit(name, value) // if disabled, keep the message on the annotation
+        }
     }
 
     override fun visitEnd() {
         original.visitEnd()
+        if (!PluginConfiguration.hideFromKotlin.enabled) return
         visitorFactory(DEPRECATED_DESC, false).apply {
-            visit("message", message)
+            message?.let { visit("message", it) }
             visitEnum("level", DEPRECATION_LEVEL_DESC, DeprecationLevel.HIDDEN.toString())
             visitEnd()
         }
@@ -56,7 +56,7 @@ private class HideFromKotlinVisitor(
             visible: Boolean,
             factory: (String, Boolean) -> AnnotationVisitor,
         ): HideFromKotlinVisitor {
-            val original = if (PluginConfiguration.keepAnnotations) {
+            val original = if (PluginConfiguration.hideFromKotlin.keepAnnotation) {
                 factory(descriptor, visible)
             } else {
                 RestriktNOPAnnotationVisitor
@@ -71,6 +71,47 @@ private class HideFromKotlinVisitor(
     }
 
 }
+
+private class HideFromJavaVisitor private constructor(
+    private val original: AnnotationVisitor,
+) : AnnotationVisitor(ASM_VERSION) {
+
+    private var messageVisited: Boolean = false
+
+    override fun visit(name: String?, value: Any?) {
+        messageVisited = true
+        original.visit(name, value)
+    }
+
+    override fun visitEnd() {
+        if (!messageVisited && PluginConfiguration.hideFromJava.defaultReason != null) {
+            original.visit("reason", PluginConfiguration.hideFromJava.defaultReason)
+        }
+        original.visitEnd()
+    }
+
+    companion object {
+
+        fun new(
+            descriptor: String,
+            visible: Boolean,
+            factory: (String, Boolean) -> AnnotationVisitor,
+        ): HideFromJavaVisitor {
+            val original = if (
+                PluginConfiguration.hideFromJava.keepAnnotation
+                || !PluginConfiguration.hideFromJava.enabled
+            ) { // disabled or keep annotation
+                factory(descriptor, visible)
+            } else {
+                RestriktNOPAnnotationVisitor
+            }
+            return HideFromJavaVisitor(original)
+        }
+
+    }
+
+}
+
 
 private val HIDE_FROM_KOTLIN_DESC = HideFromKotlin::class.java.desc
 

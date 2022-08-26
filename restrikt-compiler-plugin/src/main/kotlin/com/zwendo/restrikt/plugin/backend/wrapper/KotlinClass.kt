@@ -1,5 +1,6 @@
 package com.zwendo.restrikt.plugin.backend.wrapper
 
+import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import kotlinx.metadata.Flag
 import kotlinx.metadata.Flags
 import kotlinx.metadata.KmClass
@@ -38,9 +39,7 @@ internal class KotlinClass : KotlinSymbol {
         syntheticSymbols += descriptor
     }
 
-    fun isForceSyntheticFunction(name: String, descriptor: String) = "$name$descriptor" in syntheticSymbols
-
-    fun isForceSyntheticProperty(descriptor: String) = descriptor in syntheticSymbols
+    fun isForceSynthetic(identifier: String) = identifier in syntheticSymbols
 
     fun setData(data: KotlinClassMetadata) {
         when (data) {
@@ -118,7 +117,7 @@ private fun propertyMapFactory(
         val wrapper = KotlinProperty(property)
 
         // if not internal and not force synthetic, we don't care about the rest
-        if (!wrapper.isInternal && !clazz.isForceSyntheticProperty(property.name)) return@associateBy wrapper
+        if (!wrapper.isInternal && !clazz.isForceSynthetic(property.name)) return@associateBy wrapper
 
         // gets the property methods signatures
         val propertyExtension = property.visitExtensions(JvmPropertyExtensionVisitor.TYPE)
@@ -141,11 +140,7 @@ private fun propertyMapFactory(
  */
 private object SyntheticMethod : KotlinFunction {
 
-    override val isInternal: Boolean = true
-
-    override val isForceSynthetic: Boolean = true
-
-    override fun forceSynthetic() = Unit
+    override fun isSynthetic(originClass: KotlinClass) = PluginConfiguration.automaticInternalHiding
 
 }
 

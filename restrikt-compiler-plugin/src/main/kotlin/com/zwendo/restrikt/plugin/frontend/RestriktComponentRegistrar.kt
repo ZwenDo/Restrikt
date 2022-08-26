@@ -17,7 +17,8 @@ import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 internal class RestriktComponentRegistrar : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        if (!PluginConfiguration.enabled) return // return if not enabled
+        // if both plugin features are disabled
+        if (!PluginConfiguration.automaticInternalHiding && !PluginConfiguration.annotationProcessing) return
 
         val interceptor = ClassGenerationInterceptor()
         ClassBuilderInterceptorExtension.registerExtension(project, interceptor)
