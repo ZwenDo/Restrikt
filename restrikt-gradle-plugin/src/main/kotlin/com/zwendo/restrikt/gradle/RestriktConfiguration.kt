@@ -8,12 +8,12 @@ open class RestriktConfiguration {
     /**
      * Whether internal symbols should be automatically hidden to java.
      */
-    var automaticInternalHiding: Boolean = true
+    var automaticInternalHiding: Boolean? = null
 
     /**
      * Whether the annotation processing should be enabled.
      */
-    var annotationProcessing: Boolean = true
+    var annotationProcessing: Boolean? = null
 
     /**
      * Configure the HideFromJava annotation.
@@ -25,8 +25,8 @@ open class RestriktConfiguration {
      */
     fun hideFromKotlin(block: AnnotationConfiguration.() -> Unit) = hideFromKotlin.block()
 
-    internal val hideFromJava = AnnotationConfiguration("Java")
+    internal val hideFromJava = AnnotationConfiguration()
 
-    internal val hideFromKotlin = AnnotationConfiguration("Kotlin")
+    internal val hideFromKotlin = AnnotationConfiguration()
 
 }

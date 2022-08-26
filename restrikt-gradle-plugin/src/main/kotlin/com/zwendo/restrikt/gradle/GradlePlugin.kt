@@ -27,17 +27,20 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         val extension = project.extensions.findByType(RestriktConfiguration::class.java)
             ?: RestriktConfiguration()
 
-        val internalHiding = SubpluginOption("automaticInternalHiding", extension.automaticInternalHiding.toString())
-        val annotationProcessing = SubpluginOption("annotationProcessing", extension.annotationProcessing.toString())
+        val parameters = mutableListOf<SubpluginOption>()
 
-        return project.provider {
-            listOf(
-                internalHiding,
-                annotationProcessing,
-                *annotationConfiguration("hideFromJava", extension.hideFromJava),
-                *annotationConfiguration("hideFromKotlin", extension.hideFromKotlin),
-            )
+        extension.automaticInternalHiding?.let {
+            parameters += SubpluginOption("automatic-internal-hiding", it.toString())
         }
+
+        extension.annotationProcessing?.let {
+            parameters += SubpluginOption("annotation-processing", it.toString())
+        }
+
+        annotationConfiguration(parameters, "hide-from-java", extension.hideFromJava)
+        annotationConfiguration(parameters, "hide-from-kotlin", extension.hideFromKotlin)
+
+        return project.provider { parameters }
     }
 
     override fun getCompilerPluginId(): String = BuildConfig.PLUGIN_ID
@@ -53,11 +56,23 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
     override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
 
-    private fun annotationConfiguration(prefix: String, config: AnnotationConfiguration) = arrayOf(
-        SubpluginOption("${prefix}Enabled", config.enabled.toString()),
-        SubpluginOption("${prefix}KeepAnnotation", config.keepAnnotation.toString()),
-        SubpluginOption("${prefix}DefaultReason", config.defaultReason),
-    )
+    private fun annotationConfiguration(
+        list: MutableList<SubpluginOption>,
+        annotationName: String,
+        config: AnnotationConfiguration,
+    ) {
+        config.enabled?.let {
+            list += SubpluginOption("$annotationName-enabled", it.toString())
+        }
+
+        config.keepAnnotation?.let {
+            list += SubpluginOption("$annotationName-keep-annotation", it.toString())
+        }
+
+        config.defaultReason?.let {
+            list += SubpluginOption("$annotationName-default-reason", it)
+        }
+    }
 
 }
 
