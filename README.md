@@ -238,8 +238,9 @@ The main difficulty while developing Kotlin compiler plugins is that.
    to change a symbol modifiers depending on its annotations.
 
 To solve both of these problems, this project uses a singleton representing a context. Each writing instruction is
-delayed by queueing the associated action (as a ``() -> Unit`` lambda). These actions can reference external values that
-aren't already resolved until the right symbol is parsed, like demonstrated below (simplified example):
+delayed by queueing the associated action (as a ``() -> Unit`` lambda) in a list in the context. These actions can
+reference external values thataren't already resolved until the right symbol is parsed, like demonstrated below
+(simplified example):
 
 ```kotlin
 // will be filled by an other function
