@@ -42,9 +42,9 @@ private class HideFromKotlinVisitor private constructor(
     override fun visitEnd() {
         original.visitEnd()
         if (!PluginConfiguration.hideFromKotlin.enabled) return
-        visitorFactory(DEPRECATED_DESC, false).apply {
-            message?.let { visit("message", it) }
-            visitEnum("level", DEPRECATION_LEVEL_DESC, DeprecationLevel.HIDDEN.toString())
+        visitorFactory(DEPRECATED_DESC, true).apply {
+            message?.let { visit(DEPRECATED_MESSAGE_NAME, it) }
+            visitEnum(DEPRECATED_LEVEL_NAME, DEPRECATION_LEVEL_DESC, DeprecationLevel.HIDDEN.toString())
             visitEnd()
         }
     }
@@ -68,6 +68,10 @@ private class HideFromKotlinVisitor private constructor(
 
         private val DEPRECATION_LEVEL_DESC = DeprecationLevel::class.java.desc
 
+        private val DEPRECATED_MESSAGE_NAME = Deprecated::message.name
+
+        private val DEPRECATED_LEVEL_NAME = Deprecated::level.name
+
     }
 
 }
@@ -85,7 +89,7 @@ private class HideFromJavaVisitor private constructor(
 
     override fun visitEnd() {
         if (!messageVisited && PluginConfiguration.hideFromJava.defaultReason != null) {
-            original.visit("reason", PluginConfiguration.hideFromJava.defaultReason)
+            original.visit(HIDE_FROM_JAVA_REASON_NAME, PluginConfiguration.hideFromJava.defaultReason)
         }
         original.visitEnd()
     }
@@ -107,6 +111,8 @@ private class HideFromJavaVisitor private constructor(
             }
             return HideFromJavaVisitor(original)
         }
+
+        private val HIDE_FROM_JAVA_REASON_NAME = HideFromJava::reason.name
 
     }
 

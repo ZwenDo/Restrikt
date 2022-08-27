@@ -97,7 +97,7 @@ internal class RestriktClassVisitor(factory: () -> ClassVisitor) : ClassVisitor(
     ): MethodVisitor {
         lateinit var visitor: MethodVisitor
         context.addAction { visitor = original.visitMethod(access, name, descriptor, signature, exceptions) }
-        return RestriktMethodVisitor(name, descriptor) { visitor }
+        return RestriktMethodVisitor("$name$descriptor") { visitor }
     }
 
     override fun visit(

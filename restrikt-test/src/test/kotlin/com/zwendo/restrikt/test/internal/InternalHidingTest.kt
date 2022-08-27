@@ -1,5 +1,6 @@
-package com.zwendo.restrikt.test
+package com.zwendo.restrikt.test.internal
 
+import com.zwendo.restrikt.test.assertNotNullAnd
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test

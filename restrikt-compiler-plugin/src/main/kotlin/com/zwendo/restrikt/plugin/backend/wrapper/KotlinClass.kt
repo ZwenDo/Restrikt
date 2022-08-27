@@ -24,22 +24,18 @@ internal class KotlinClass : KotlinSymbol {
 
     private val syntheticSymbols = hashSetOf<String>()
 
-    fun function(name: String, descriptor: String): KotlinFunction? {
-        val fullSignature = "$name$descriptor"
-        return functions[fullSignature]
+    fun function(name: String, descriptor: String): KotlinFunction {
+        val signature = "$name$descriptor"
+        return functions[signature] ?: KotlinFunction.new(signature)
     }
 
     fun property(descriptor: String) = properties[descriptor]
 
-    fun syntheticFunction(name: String, descriptor: String) {
-        syntheticSymbols += "$name$descriptor"
+    fun makeSynthetic(symbol: String) {
+        syntheticSymbols += symbol
     }
 
-    fun syntheticProperty(descriptor: String) {
-        syntheticSymbols += descriptor
-    }
-
-    fun isForceSynthetic(identifier: String) = identifier in syntheticSymbols
+    fun isForceSynthetic(identifier: String): Boolean = identifier in syntheticSymbols
 
     fun setData(data: KotlinClassMetadata) {
         when (data) {
@@ -90,7 +86,7 @@ internal class KotlinClass : KotlinSymbol {
  * Creates the map of functions of a kotlin class, either basic or toplevel.
  */
 private fun functionMapFactory(container: KmDeclarationContainer) = container.functions.associateBy(
-    { "${if (it.name.startsWith("<")) it.name else ""}${it.signature!!.asString()}" }
+    { "${if ('<' == it.name[0]) it.name else ""}${it.signature!!.asString()}" }
 ) {
     KotlinFunction.new(it)
 }.toMutableMap()

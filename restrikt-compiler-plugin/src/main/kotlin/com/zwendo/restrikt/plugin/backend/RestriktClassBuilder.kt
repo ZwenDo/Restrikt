@@ -47,7 +47,7 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
             original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
         }
 
-        return RestriktMethodVisitor(name, desc) { original }
+        return RestriktMethodVisitor("$name$desc") { original }
     }
 
     override fun newField(

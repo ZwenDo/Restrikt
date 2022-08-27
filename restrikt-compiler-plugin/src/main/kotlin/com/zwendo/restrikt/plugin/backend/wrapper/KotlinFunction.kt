@@ -13,14 +13,16 @@ internal interface KotlinFunction {
     companion object {
 
         fun new(inner: KmFunction): KotlinFunction = Impl(
-            "${inner.name}${inner.signature}",
+            "${inner.signature?.asString()}",
             Flag.IS_INTERNAL(inner.flags)
         )
 
         fun new(inner: KmConstructor): KotlinFunction = Impl(
-            "<init>${inner.signature}",
+            "<init>${inner.signature?.asString()}",
             Flag.IS_INTERNAL(inner.flags)
         )
+
+        fun new(name: String): KotlinFunction = Impl(name, false)
 
     }
 

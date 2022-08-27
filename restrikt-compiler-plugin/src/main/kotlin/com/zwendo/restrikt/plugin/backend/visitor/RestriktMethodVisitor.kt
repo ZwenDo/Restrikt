@@ -11,8 +11,7 @@ import org.jetbrains.org.objectweb.asm.TypePath
 
 
 internal class RestriktMethodVisitor(
-    private val name: String,
-    private val descriptor: String,
+    private val signature: String,
     factory: () -> MethodVisitor,
 ) : MethodVisitor(ASM_VERSION) {
 
@@ -32,7 +31,7 @@ internal class RestriktMethodVisitor(
         lateinit var visitor: AnnotationVisitor
 
         checkHideFromJava(descriptor) {
-            context.getClass(context.currentClassName)?.syntheticFunction(name, this.descriptor)
+            context.getClass(context.currentClassName)?.makeSynthetic(signature)
         }
 
         context.addAction {

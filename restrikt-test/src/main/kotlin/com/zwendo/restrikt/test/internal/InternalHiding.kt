@@ -1,4 +1,4 @@
-package com.zwendo.restrikt.test
+package com.zwendo.restrikt.test.internal
 
 import kotlin.reflect.KClass
 
