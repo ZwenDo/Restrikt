@@ -194,7 +194,7 @@ works.
 ### Automatic internal symbols detection
 
 By using the [kotlinx-metadata](https://github.com/JetBrains/kotlin/tree/master/libraries/kotlinx-metadata) parser
-library, it is possible to know at compile time which symbols are ``internal`` and therefore hide it.
+library, it is possible to know at compile time which symbols are ``internal`` and therefore hide them.
 
 ### Java hiding
 
