@@ -150,7 +150,7 @@ class Bar { // will be hidden from kotlin sources
   access it ;
 - Symbols hidden from Kotlin will still be accessible at compile-time from Kotlin sources in the same package.
 
-### Known issues
+## Known issues
 
 #### **from 2.0.0**
 
