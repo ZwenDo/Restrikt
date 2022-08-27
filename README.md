@@ -99,19 +99,19 @@ restrkt {
 
 Here are the currently supported default configuration options:
 
-|          name           |  type   |               default                | description                                                               |
-|:-----------------------:|:-------:|:------------------------------------:|---------------------------------------------------------------------------|
-| automaticInternalHiding | boolean |                `true`                | Whether the internal symbols should be automatically hidden.              |
-|  annotationProcessing   | boolean |                `true`                | Whether the plugin annotations should be parsed to manually hide symbols. |
+|            name             |  type   | default | description                                                               |
+|:---------------------------:|:-------:|:-------:|---------------------------------------------------------------------------|
+| ``automaticInternalHiding`` | boolean | `true`  | Whether the internal symbols should be automatically hidden.              |
+|  ``annotationProcessing``   | boolean | `true`  | Whether the plugin annotations should be parsed to manually hide symbols. |
 
 Moreover, both annotations of the plugin can be individually configured using their own DSL (``hideFromKotlin`` or
 ``hideFromJava``), with the following configuration options:
 
-|      name      |  type   | default | description                                                                                                       |
-|:--------------:|:-------:|:-------:|-------------------------------------------------------------------------------------------------------------------|
-|    enabled     | boolean | `true`  | Whether the annotation should be processed to hide symbols. (works only if ``annotationProcessing`` is ``true``). |
-| keepAnnotation | boolean | `true`  | Whether the annotation should be written to the classfile.                                                        |
-| defaultReason  | string  | `none`  | The default reason written on the annotation if no specific reason is provided.                                   |
+|        name        |  type   | default | description                                                                                                       |
+|:------------------:|:-------:|:-------:|-------------------------------------------------------------------------------------------------------------------|
+|    ``enabled``     | boolean | `true`  | Whether the annotation should be processed to hide symbols. (works only if ``annotationProcessing`` is ``true``). |
+| ``keepAnnotation`` | boolean | `true`  | Whether the annotation should be written to the classfile.                                                        |
+| ``defaultReason``  | string  | `none`  | The default reason written on the annotation if no specific reason is provided.                                   |
 
 ### Internal symbols hiding
 
