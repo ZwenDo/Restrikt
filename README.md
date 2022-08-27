@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.7.10-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 
-<div style="text-align: center;">
+<div align="center">
 <h3><i>A Kotlin/JVM compiler plugin to restrict symbols access, from external source files.</i></h3>
 </div>
 
