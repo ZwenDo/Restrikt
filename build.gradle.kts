@@ -112,7 +112,6 @@ fun buildConfigGenericSetup(vararg projects: Project) {
     projects.forEach {
         it.buildConfig {
             buildConfigField("String", "PLUGIN_ID", "\"${rootProject.name.toLowerCase()}\"")
-            buildConfigField("String", "DEFAULT_REASON", "\"$projectDefaultAnnotationReason\"")
             useKotlinOutput {
                 internalVisibility = true
             }
