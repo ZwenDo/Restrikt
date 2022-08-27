@@ -5,22 +5,27 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.7.10-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 
-**A Kotlin/JVM compiler plugin to easily restrict symbol access, from external Kotlin and Java sources.**
+<div style="text-align: center;">
+<h3><i>A Kotlin/JVM compiler plugin to easily restrict symbols access, from external Kotlin and Java sources.</i></h3>
+</div>
 
-This plugin offers two ways to hide symbols:
+<br/>
 
-- An **automatic way**, with the automatic hiding of ``internal`` symbols ;
-- A **manual way**, by using two different annotations to hide symbols from either Kotlin or Java sources.
+
+**This plugin offers two ways to hide symbols:**
+
+- **An automatic way, with the automatic hiding of ``internal`` symbols ;**
+- **A manual way, by using two different annotations to hide symbols from either Kotlin or Java sources.**
 
 ## Summary
 
 1. [Dependency](#dependency)
-   1. [Gradle plugins DSL](#using-the-gradle-plugin-dsl-gradle-21)
-   2. [apply method](#using-apply-method-gradle-prior-to-21)
+    1. [Gradle plugins DSL](#using-the-gradle-plugin-dsl-gradle-21)
+    2. [apply method](#using-apply-method-gradle-prior-to-21)
 2. [Usage](#usage)
-   1. [Plugin Configuration](#plugin-configuration)
-   2. [Internal symbols hiding](#internal-symbols-hiding)
-   3. [Annotations](#annotations-usage)
+    1. [Plugin Configuration](#plugin-configuration)
+    2. [Internal symbols hiding](#internal-symbols-hiding)
+    3. [Annotations](#annotations-usage)
    4. [**Important notes**](#important-notes)
 3. [Known issues](#known-issues)
 4. [How it works](#how-it-works)
