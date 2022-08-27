@@ -259,5 +259,5 @@ to keep output classfile integrity.
 
 ## Future Plans
 
-- Add supports for generating an annotation on all ``public`` (to be able to differentiate ``internal`` and ``public``)
-  members of a project to simplify Kotlin project obfuscation with [ProGuard](https://www.guardsquare.com/proguard).
+- Add support for generating annotations on all ``public`` (to be able to differentiate ``internal`` and ``public``)
+  symbols of a project to simplify Kotlin project obfuscation with [ProGuard](https://www.guardsquare.com/proguard).
