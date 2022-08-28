@@ -6,7 +6,7 @@
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.7.10-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 
 <div align="center">
-<h3><i>A Kotlin/JVM compiler plugin to restrict symbols access, from external source files.</i></h3>
+<h3><i>A Kotlin/JVM compiler plugin to restrict symbols access, from external project sources.</i></h3>
 </div>
 
 <br/>
@@ -169,14 +169,14 @@ meets all the following conditions:
 These conditions can be illustrated by the following example:
 
 ```kotlin
-// 1
+// first requirement
 inline fun inlinedAnonymous(crossinline lambda: () -> Unit) = object {
 
       fun bar() = lambda()
 
-   }
+}
 
-// 2
+// second requirement
 fun problem() = inlinedAnonymous {
    /* the lambda inlining causes the error */
 }
@@ -184,7 +184,7 @@ fun problem() = inlinedAnonymous {
 fun valid(lambda: () -> Unit) = inlinedAnonymous(lambda)
 ```
 
-A simple solution, if performances are not a critical issue, is to remove the inline modifier from the function.
+A simple solution (if performances are not a critical issue) is just to remove the inline modifier from the function.
 
 ## How it works
 
@@ -193,8 +193,12 @@ works.
 
 ### Automatic internal symbols detection
 
-By using the [kotlinx-metadata](https://github.com/JetBrains/kotlin/tree/master/libraries/kotlinx-metadata) parser
-library, it is possible to know at compile time which symbols are ``internal`` and therefore hide them.
+All Kotlin specific informations of a classfile is stored in an annotation (the
+[@Metatdata](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-metadata/) annotation) placed on the class
+declaration. At compile-time be able to parse this annotation is the only way to access Kotlin specific data. Thank to
+the [kotlinx-metadata](https://github.com/JetBrains/kotlin/tree/master/libraries/kotlinx-metadata) parser
+library, this parsing is made possible and allows to know at compile-time which symbols are ``internal`` in order to
+hide them.
 
 ### Java hiding
 
@@ -215,7 +219,7 @@ class Foo {
     // ...
 }
 
-// will be compiled to
+// will be compiled to ...
 
 // Foo.class
 @HideFromKotlin
@@ -248,12 +252,11 @@ reference external values that aren't already resolved until the right symbol is
 (simplified example):
 
 ```kotlin
-// will be filled by an other function
-lateinit var isInternal: Boolean
+lateinit var isInternal: Boolean // will be filled by an other function
 
 fun functionDeclaration(signature: String, modifiers: Int, /* ... */) {
 
-   Context.queue { // when this lambda will be executed, isInternal value will have a value
+   Context.queue { // when this lambda will be executed, isInternal value will been set
       val actualModifiers = if (isInternal) modifier or Modifiers.SYNTHETIC else actualModifiers
       writeFunctionDeclaration(signature, actualModifiers, /* ... */)
    }
