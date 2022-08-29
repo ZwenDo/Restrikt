@@ -4,10 +4,6 @@ plugins {
 }
 
 val kotlinVersion: String by System.getProperties()
-val projectId: String by project
-val projectDisplayName: String by project
-val projectDescription: String by project
-val projectImplementationClass: String by project
 val projectGroup: String by project
 val projectVersion: String by project
 
@@ -24,10 +20,10 @@ pluginBundle {
 gradlePlugin {
     plugins {
         create("restriktCompilerPlugin") {
-            id = projectId
-            displayName = projectDisplayName
-            description = projectDescription
-            implementationClass = projectImplementationClass
+            id = "com.zwendo.restrikt"
+            displayName = "Restrikt compiler plugin"
+            description = "Gradle plugin for Restrikt compiler plugin"
+            implementationClass = "com.zwendo.restrikt.gradle.GradlePlugin"
         }
     }
 }
@@ -37,9 +33,5 @@ buildConfig {
     buildConfigField("String", "ANNOTATION_ID", "\"${project(":restrikt-annotation").name}\"")
     buildConfigField("String", "VERSION", "\"$projectVersion\"")
     buildConfigField("String", "EXTENSION_NAME", "\"${rootProject.name.toLowerCase()}\"")
-    buildConfigField(
-        "String",
-        "COMPILER_PLUGIN_ID",
-        "\"${project(":restrikt-compiler-plugin").name}\""
-    )
+    buildConfigField("String", "COMPILER_PLUGIN_ID", "\"${project(":restrikt-compiler-plugin").name}\"")
 }
