@@ -26,12 +26,16 @@
     1. [Plugin Configuration](#plugin-configuration)
     2. [Internal symbols hiding](#internal-symbols-hiding)
     3. [Annotations](#annotations-usage)
-   4. [**Important notes**](#important-notes)
+    4. [Important notes](#important-notes)
 3. [Known issues](#known-issues)
 4. [How it works](#how-it-works)
 5. [Future plans](#future-plans)
+6. [Changelog](#changelog)
 
 ## Dependency
+
+Both **compiler plugin** and **annotations** are added to your project's dependencies in the same unique way, as shown
+below :
 
 ### Using the Gradle plugin DSL (Gradle 2.1+)
 
@@ -39,7 +43,7 @@ Using Kotlin DSL:
 
 ```kotlin
 plugins {
-   id("com.zwendo.restrikt") version "[latest-version]"
+    id("com.zwendo.restrikt") version "[latest-version]"
 }
 ```
 
@@ -157,6 +161,11 @@ class Bar { // will be hidden from kotlin sources
 
 ## Known issues
 
+<h4>Problems listed below are in the process of being resolved. If you encounter an issue that doesn't seems to be in
+this list, feel free to open an issue for it.</h4>
+
+<br/>
+
 #### **from 2.0.0**
 
 With the new way of modifying the compilation, the plugin will run into an error if called to compile a project that
@@ -270,3 +279,11 @@ to keep output classfile integrity.
 
 - Add support for generating annotations on all ``public`` (to be able to differentiate ``internal`` and ``public``)
   symbols of a project to simplify Kotlin project obfuscation with [ProGuard](https://www.guardsquare.com/proguard).
+
+## Changelog
+
+### 2.0.0 - 2022.08.27
+
+- **[Feature]** automatic detection and hiding of internal symbols
+- **[Feature]** ``HideFromJava`` annotation to hide symbols from Java sources
+- **[Feature]** new gradle plugin configuration options for each annotation and internal hiding
