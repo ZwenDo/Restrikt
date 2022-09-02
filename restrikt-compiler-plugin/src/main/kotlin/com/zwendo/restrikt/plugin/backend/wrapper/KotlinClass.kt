@@ -1,5 +1,6 @@
 package com.zwendo.restrikt.plugin.backend.wrapper
 
+import com.zwendo.restrikt.plugin.backend.PACKAGE_PRIVATE_MASK
 import kotlinx.metadata.Flag
 import kotlinx.metadata.Flags
 import kotlinx.metadata.KmClass
@@ -11,6 +12,7 @@ import kotlinx.metadata.jvm.JvmMethodSignature
 import kotlinx.metadata.jvm.JvmPropertyExtensionVisitor
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.metadata.jvm.signature
+import org.jetbrains.org.objectweb.asm.Opcodes
 
 internal class KotlinClass {
 
@@ -20,10 +22,16 @@ internal class KotlinClass {
 
     private val properties = hashMapOf<String, KotlinProperty>()
 
-    /**
-     * Set of all synthetic elements of the class (function signatures and field names).
-     */
-    private val syntheticSymbols = hashSetOf<String>()
+    var isPackagePrivate = false
+        private set
+
+    private var isInternalValue = false
+
+    val isInternal
+        get() = isInternalValue
+
+    val isForceSynthetic
+        get() = forceSynthetic
 
     /**
      * Gets a function by its signature.
@@ -34,15 +42,6 @@ internal class KotlinClass {
      * Gets a property by its name.
      */
     fun property(descriptor: String) = properties.computeIfAbsent(descriptor, ::KotlinProperty)
-
-    /**
-     * Makes a symbol synthetic.
-     */
-    fun makeSynthetic(symbol: String) {
-        syntheticSymbols += symbol
-    }
-
-    fun isForceSynthetic(identifier: String): Boolean = identifier in syntheticSymbols
 
     fun setData(data: KotlinClassMetadata) = when (data) {
         is KotlinClassMetadata.Class -> {
@@ -68,16 +67,26 @@ internal class KotlinClass {
         else -> Unit
     }
 
-    private var isInternalValue = false
-
-    val isInternal
-        get() = isInternalValue
-
-    val isForceSynthetic
-        get() = forceSynthetic
-
     fun forceSynthetic() {
         forceSynthetic = true
+    }
+
+    fun setPackagePrivate() {
+        isPackagePrivate = true
+    }
+
+    fun computeModifiers(access: Int): Int {
+        var actualAccess: Int = access
+
+        if (isInternal || isForceSynthetic) {
+            actualAccess = actualAccess or Opcodes.ACC_SYNTHETIC
+        }
+
+        if (isPackagePrivate) {
+            actualAccess = actualAccess and PACKAGE_PRIVATE_MASK
+        }
+
+        return actualAccess
     }
 
     /**
@@ -106,18 +115,22 @@ internal class KotlinClass {
             val wrapper = properties[property.name] ?: return@forEach
             wrapper.setData(property)
 
-            // if not internal and not force synthetic, we don't care about the rest
-            if (!wrapper.isInternal && !isForceSynthetic(property.name)) return@forEach
-
-            // gets the property methods signatures
+            // gets the property extension
             val propertyExtension = property.visitExtensions(JvmPropertyExtensionVisitor.TYPE)
             val visitor = PropertyVisitor()
 
             // visit the property extensions
             @Suppress("UNCHECKED_CAST")
             (propertyExtension as KmExtension<KmPropertyExtensionVisitor>).accept(visitor)
-            visitor.getterSignature?.let { functions[it]?.setInternal() }
-            visitor.setterSignature?.let { functions[it]?.setInternal() }
+
+            // now, we must apply property modifiers to its functions
+
+            // retrieve annotation function to get annotations for the whole property
+            val annotationFunction = visitor.annotationsFunctionSignature?.let { function(it) }
+            visitor.getterSignature?.let { wrapper.applyModifiersToFunction(function(it), annotationFunction) }
+            visitor.setterSignature?.let { wrapper.applyModifiersToFunction(function(it), annotationFunction) }
+
+            annotationFunction?.removeAll() // remove all modifiers because function is not intended to be used
         }
     }
 
@@ -132,6 +145,8 @@ private class PropertyVisitor : JvmPropertyExtensionVisitor(null) {
 
     var setterSignature: String? = null
 
+    var annotationsFunctionSignature: String? = null
+
     override fun visit(
         jvmFlags: Flags,
         fieldSignature: JvmFieldSignature?,
@@ -142,4 +157,7 @@ private class PropertyVisitor : JvmPropertyExtensionVisitor(null) {
         this.setterSignature = setterSignature?.asString()
     }
 
+    override fun visitSyntheticMethodForAnnotations(signature: JvmMethodSignature?) {
+        annotationsFunctionSignature = signature?.asString()
+    }
 }

@@ -21,7 +21,10 @@ internal class RestriktClassVisitor(factory: () -> ClassVisitor) : ClassVisitor(
     override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
         lateinit var visitor: AnnotationVisitor
 
-        checkHideFromJava(descriptor) { context.currentClass?.forceSynthetic() }
+        when (descriptor) {
+            HIDE_FROM_JAVA_DESC -> context.currentClass.forceSynthetic()
+            PACKAGE_PRIVATE_DESC -> context.currentClass.setPackagePrivate()
+        }
 
         context.addAction {
             visitor = visitSymbolDeclarationAnnotation(

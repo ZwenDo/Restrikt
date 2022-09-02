@@ -37,6 +37,7 @@ annotation class HideFromKotlin(val reason: String = "")
     AnnotationTarget.ANNOTATION_CLASS,
     AnnotationTarget.FILE,
     AnnotationTarget.FIELD,
+    AnnotationTarget.PROPERTY,
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
@@ -57,7 +58,8 @@ annotation class HideFromJava(val reason: String = "")
     AnnotationTarget.ANNOTATION_CLASS,
     AnnotationTarget.FILE,
     AnnotationTarget.FIELD,
+    AnnotationTarget.PROPERTY,
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
-annotation class PackagePrivate
+annotation class PackagePrivate(val reason: String = "")

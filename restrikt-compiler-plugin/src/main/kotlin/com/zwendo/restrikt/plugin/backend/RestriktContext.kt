@@ -46,10 +46,11 @@ internal object RestriktContext {
     /**
      * Adds a class to the context stack.
      */
-    fun visitNewClass(className: String) {
+    fun visitNewClass(className: String): KotlinClass {
         val clazz = KotlinClass()
         classStack.push(clazz)
         classNameToData[className] = clazz
+        return clazz
     }
 
     /**

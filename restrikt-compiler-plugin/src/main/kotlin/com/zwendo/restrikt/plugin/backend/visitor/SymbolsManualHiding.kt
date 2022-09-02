@@ -2,6 +2,7 @@ package com.zwendo.restrikt.plugin.backend.visitor
 
 import com.zwendo.restrikt.annotation.HideFromJava
 import com.zwendo.restrikt.annotation.HideFromKotlin
+import com.zwendo.restrikt.annotation.PackagePrivate
 import com.zwendo.restrikt.plugin.backend.ASM_VERSION
 import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import org.jetbrains.kotlin.descriptors.runtime.structure.desc
@@ -15,14 +16,15 @@ internal fun visitSymbolDeclarationAnnotation(
 ): AnnotationVisitor = when (descriptor) {
     HIDE_FROM_KOTLIN_DESC -> HideFromKotlinVisitor.new(descriptor, visible, factory)
     HIDE_FROM_JAVA_DESC -> HideFromJavaVisitor.new(descriptor, visible, factory)
+    PACKAGE_PRIVATE_DESC -> PackagePrivateVisitor.new(descriptor, visible, factory)
     else -> factory(descriptor, visible)
 }
 
-internal inline fun checkHideFromJava(descriptor: String, hideAction: () -> Unit) {
-    if (PluginConfiguration.hideFromJava.enabled && descriptor == HIDE_FROM_JAVA_DESC) {
-        hideAction()
-    }
-}
+internal val HIDE_FROM_KOTLIN_DESC = HideFromKotlin::class.java.desc
+
+internal val HIDE_FROM_JAVA_DESC = HideFromJava::class.java.desc
+
+internal val PACKAGE_PRIVATE_DESC = PackagePrivate::class.java.desc
 
 
 private class HideFromKotlinVisitor private constructor(
@@ -88,8 +90,8 @@ private class HideFromJavaVisitor private constructor(
     }
 
     override fun visitEnd() {
-        if (!messageVisited && PluginConfiguration.hideFromJava.defaultReason != null) {
-            original.visit(HIDE_FROM_JAVA_REASON_NAME, PluginConfiguration.hideFromJava.defaultReason)
+        if (!messageVisited && DEFAULT_REASON != null) {
+            original.visit(HIDE_FROM_JAVA_REASON_NAME, DEFAULT_REASON) // if no message, use the default one
         }
         original.visitEnd()
     }
@@ -114,14 +116,54 @@ private class HideFromJavaVisitor private constructor(
 
         private val HIDE_FROM_JAVA_REASON_NAME = HideFromJava::reason.name
 
+        private val DEFAULT_REASON = PluginConfiguration.hideFromJava.defaultReason
+
     }
 
 }
 
+class PackagePrivateVisitor private constructor(
+    private val original: AnnotationVisitor,
+) : AnnotationVisitor(ASM_VERSION) {
 
-private val HIDE_FROM_KOTLIN_DESC = HideFromKotlin::class.java.desc
+    private var messageVisited: Boolean = false
 
-private val HIDE_FROM_JAVA_DESC = HideFromJava::class.java.desc
+    override fun visit(name: String?, value: Any?) {
+        messageVisited = true
+        original.visit(name, value)
+    }
+
+    override fun visitEnd() {
+//        if (!messageVisited && PluginConfiguration.packagePrivate.defaultReason != null) {
+//            original.visit(PACKAGE_PRIVATE_REASON_NAME, PluginConfiguration.packagePrivate.defaultReason)
+//        }
+        original.visitEnd()
+    }
+
+
+    companion object {
+
+        fun new(
+            descriptor: String,
+            visible: Boolean,
+            factory: (String, Boolean) -> AnnotationVisitor,
+        ): PackagePrivateVisitor {
+            val original = if (true
+//                PluginConfiguration.hideFromJava.keepAnnotation
+//                || !PluginConfiguration.hideFromJava.enabled
+            ) { // disabled or keep annotation
+                factory(descriptor, visible)
+            } else {
+                RestriktNOPAnnotationVisitor
+            }
+            return PackagePrivateVisitor(original)
+        }
+
+        private val PACKAGE_PRIVATE_REASON_NAME = PackagePrivate::reason.name
+
+        //private val DEFAULT_REASON = PluginConfiguration.packagePrivate.defaultReason
+    }
+}
 
 private object RestriktNOPAnnotationVisitor : AnnotationVisitor(ASM_VERSION) {
 
