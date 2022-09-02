@@ -37,3 +37,18 @@ internal interface KotlinFunction {
     }
 
 }
+
+fun printIntBytes(i: Int) {
+    repeat(32) {
+        val bit = i and (1 shl it) != 0
+        if (it % 8 == 0 && it != 0) {
+            print(" ")
+        }
+        print(if (bit) "1" else "0")
+    }
+}
+
+fun main() {
+    val v = 0.inv() ushr 3
+    printIntBytes(v)
+}

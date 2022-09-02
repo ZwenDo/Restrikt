@@ -38,12 +38,13 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         RestriktContext.addAction {
             val currentClass = RestriktContext.getClass(currentClassName)
             val function = currentClass?.function(name, desc)
-            val actualAccess = if (function?.isSynthetic(currentClass) == true) {
+            var actualAccess = if (function?.isSynthetic(currentClass) == true) {
                 access or Opcodes.ACC_SYNTHETIC
             } else {
                 access
             }
 
+            actualAccess = actualAccess.setPackagePrivate()
             original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
         }
 
