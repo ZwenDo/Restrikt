@@ -17,6 +17,7 @@ package com.zwendo.restrikt.annotation
     AnnotationTarget.FUNCTION,
     AnnotationTarget.CONSTRUCTOR,
     AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.FIELD,
     AnnotationTarget.PROPERTY,
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,

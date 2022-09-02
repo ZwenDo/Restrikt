@@ -10,6 +10,10 @@ val visiblePropertyAccessor = ::visibleProperty
 @HideFromKotlin
 val invisiblePropertyDefaultMessage = "a"
 
+@JvmField
+@field:HideFromKotlin
+val invisibleFieldDefaultMessage = "b"
+
 val invisiblePropertyDefaultMessageAccessor = ::invisiblePropertyDefaultMessage
 
 const val CUSTOM_MESSAGE = "custom message"
