@@ -45,10 +45,6 @@ class HideFromJavaTest {
     fun `Annotated property is hidden`() {
         val property = ::invisibleProperty
 
-        property.javaField.assertNotNullAnd {
-            assertTrue(isSynthetic)
-        }
-
         property.javaGetter.assertNotNullAnd {
             assertTrue(isSynthetic)
         }
