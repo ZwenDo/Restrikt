@@ -4,51 +4,25 @@ import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import kotlinx.metadata.Flag
 import kotlinx.metadata.KmConstructor
 import kotlinx.metadata.KmFunction
-import kotlinx.metadata.jvm.signature
 
-internal interface KotlinFunction {
+internal class KotlinFunction(private val signature: String) {
 
-    fun isSynthetic(originClass: KotlinClass): Boolean
+    private var isInternal: Boolean = false
 
-    companion object {
+    fun isSynthetic(originClass: KotlinClass): Boolean =
+        (PluginConfiguration.automaticInternalHiding && isInternal) || originClass.isForceSynthetic(signature)
 
-        fun new(inner: KmFunction): KotlinFunction = Impl(
-            "${inner.signature?.asString()}",
-            Flag.IS_INTERNAL(inner.flags)
-        )
 
-        fun new(inner: KmConstructor): KotlinFunction = Impl(
-            "<init>${inner.signature?.asString()}",
-            Flag.IS_INTERNAL(inner.flags)
-        )
-
-        fun new(name: String): KotlinFunction = Impl(name, false)
-
+    fun setData(inner: KmFunction) {
+        isInternal = Flag.IS_INTERNAL(inner.flags)
     }
 
-    private class Impl(
-        private val innerName: String,
-        private val isInternal: Boolean,
-    ) : KotlinFunction {
-
-        override fun isSynthetic(originClass: KotlinClass): Boolean =
-            (PluginConfiguration.automaticInternalHiding && isInternal) || originClass.isForceSynthetic(innerName)
-
+    fun setData(inner: KmConstructor) {
+        isInternal = Flag.IS_INTERNAL(inner.flags)
     }
 
-}
-
-fun printIntBytes(i: Int) {
-    repeat(32) {
-        val bit = i and (1 shl it) != 0
-        if (it % 8 == 0 && it != 0) {
-            print(" ")
-        }
-        print(if (bit) "1" else "0")
+    fun setInternal() {
+        isInternal = true
     }
-}
 
-fun main() {
-    val v = 0.inv() ushr 3
-    printIntBytes(v)
 }

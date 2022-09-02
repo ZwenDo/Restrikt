@@ -33,22 +33,21 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         exceptions: Array<out String>?,
     ): MethodVisitor {
         lateinit var original: MethodVisitor
-        val currentClassName = RestriktContext.currentClassName
+        val currentClass = RestriktContext.currentClass
+        val fullSignature = "$name$desc"
+        val function = currentClass.function(fullSignature) // add function to class
 
         RestriktContext.addAction {
-            val currentClass = RestriktContext.getClass(currentClassName)
-            val function = currentClass?.function(name, desc)
-            var actualAccess = if (function?.isSynthetic(currentClass) == true) {
+            val actualAccess = if (function.isSynthetic(currentClass)) {
                 access or Opcodes.ACC_SYNTHETIC
             } else {
                 access
             }
 
-            actualAccess = actualAccess.setPackagePrivate()
             original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
         }
 
-        return RestriktMethodVisitor("$name$desc") { original }
+        return RestriktMethodVisitor(fullSignature) { original }
     }
 
     override fun newField(
@@ -60,12 +59,11 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         value: Any?,
     ): FieldVisitor {
         lateinit var original: FieldVisitor
-        val currentClassName = RestriktContext.currentClassName
+        val currentClass = RestriktContext.currentClass
+        val property = currentClass.property(name) // add property to class
 
         RestriktContext.addAction {
-            val currentClass = RestriktContext.getClass(currentClassName)
-            val field = currentClass?.property(name)
-            val actualAccess = if (field?.isSynthetic(currentClass) == true) {
+            val actualAccess = if (property.isSynthetic(currentClass)) {
                 access or Opcodes.ACC_SYNTHETIC
             } else {
                 access

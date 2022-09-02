@@ -31,7 +31,7 @@ internal class RestriktMethodVisitor(
         lateinit var visitor: AnnotationVisitor
 
         checkHideFromJava(descriptor) {
-            context.getClass(context.currentClassName)?.makeSynthetic(signature)
+            context.currentClass?.makeSynthetic(signature)
         }
 
         context.addAction {
