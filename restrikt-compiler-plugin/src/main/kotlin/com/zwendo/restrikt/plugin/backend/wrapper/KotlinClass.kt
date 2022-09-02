@@ -14,7 +14,7 @@ import kotlinx.metadata.jvm.JvmPropertyExtensionVisitor
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.metadata.jvm.signature
 
-internal class KotlinClass : KotlinSymbol {
+internal class KotlinClass {
 
     private var forceSynthetic = false
 
@@ -22,15 +22,28 @@ internal class KotlinClass : KotlinSymbol {
 
     private val properties = hashMapOf<String, KotlinProperty>()
 
+    /**
+     * Set of all synthetic elements of the class (function signatures and field names).
+     */
     private val syntheticSymbols = hashSetOf<String>()
 
+    /**
+     * Gets a function by its signature.
+     */
     fun function(name: String, descriptor: String): KotlinFunction {
         val signature = "$name$descriptor"
-        return functions[signature] ?: KotlinFunction.new(signature)
+        // compute used for default constructor
+        return functions.computeIfAbsent(signature) { KotlinFunction.new(signature) }
     }
 
+    /**
+     * Gets a property by its name.
+     */
     fun property(descriptor: String) = properties[descriptor]
 
+    /**
+     * Makes a symbol synthetic.
+     */
     fun makeSynthetic(symbol: String) {
         syntheticSymbols += symbol
     }
@@ -70,13 +83,13 @@ internal class KotlinClass : KotlinSymbol {
 
     private var isInternalValue = false
 
-    override val isInternal
+    val isInternal
         get() = isInternalValue
 
-    override val isForceSynthetic
+    val isForceSynthetic
         get() = forceSynthetic
 
-    override fun forceSynthetic() {
+    fun forceSynthetic() {
         forceSynthetic = true
     }
 
