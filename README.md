@@ -100,7 +100,7 @@ apply plugin: 'com.zwendo.restrikt'
 You can configure the plugin using the configuration DSL.
 
 ```kotlin
-restrkt {
+restrikt {
    option = value
    // ...
 }
