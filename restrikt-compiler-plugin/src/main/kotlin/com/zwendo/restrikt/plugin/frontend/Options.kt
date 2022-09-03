@@ -1,5 +1,6 @@
 package com.zwendo.restrikt.plugin.frontend
 
+import com.zwendo.restrikt_compiler_plugin.BuildConfig
 import org.jetbrains.kotlin.compiler.plugin.CliOption
 
 internal sealed interface Option {
@@ -15,9 +16,9 @@ internal sealed interface Option {
         private val OPTIONS = listOf(
             AutomaticInternalHiding,
             AnnotationProcessing,
-            *annotationConfiguration("hide-from-java", PluginConfiguration.hideFromJava),
-            *annotationConfiguration("hide-from-kotlin", PluginConfiguration.hideFromKotlin),
-            *annotationConfiguration("package-private", PluginConfiguration.packagePrivate),
+            *annotationConfiguration(BuildConfig.HIDE_FROM_JAVA, PluginConfiguration.hideFromJava),
+            *annotationConfiguration(BuildConfig.HIDE_FROM_KOTLIN, PluginConfiguration.hideFromKotlin),
+            *annotationConfiguration(BuildConfig.PACKAGE_PRIVATE, PluginConfiguration.packagePrivate),
         )
 
         val CLI_OPTIONS = OPTIONS.map { it.cliOption }
@@ -31,7 +32,7 @@ internal sealed interface Option {
 
 private object AutomaticInternalHiding : Option {
 
-    override val optionName = "automatic-internal-hiding"
+    override val optionName = BuildConfig.AUTOMATIC_INTERNAL_HIDING
 
     override val cliOption = CliOption(
         optionName,
@@ -48,7 +49,7 @@ private object AutomaticInternalHiding : Option {
 
 private object AnnotationProcessing : Option {
 
-    override val optionName = "annotation-processing"
+    override val optionName = BuildConfig.ANNOTATION_PROCESSING
 
     override val cliOption = CliOption(
         optionName,
@@ -68,7 +69,7 @@ private class AnnotationEnabled(
     annotationConfiguration: PluginConfiguration.AnnotationConfiguration,
 ) : Option {
 
-    override val optionName = "$annotationName-enabled"
+    override val optionName = "$annotationName-${BuildConfig.ANNOTATION_POSTFIX_ENABLED}"
 
     override val cliOption = CliOption(
         optionName,
@@ -88,7 +89,7 @@ private class AnnotationKeeping(
     annotationConfiguration: PluginConfiguration.AnnotationConfiguration,
 ) : Option {
 
-    override val optionName = "keep-$annotationName-annotation"
+    override val optionName = "keep-$annotationName-${BuildConfig.ANNOTATION_POSTFIX_KEEP_ANNOTATION}"
 
     override val cliOption = CliOption(
         optionName,
@@ -107,7 +108,7 @@ private class AnnotationDefaultReason(
     annotationConfiguration: PluginConfiguration.AnnotationConfiguration,
 ) : Option {
 
-    override val optionName = "$annotationName-default-reason"
+    override val optionName = "$annotationName-${BuildConfig.ANNOTATION_POSTFIX_DEFAULT_REASON}"
 
     override val cliOption = CliOption(
         optionName,
