@@ -12,6 +12,9 @@ import kotlinx.metadata.jvm.JvmMethodSignature
 import kotlinx.metadata.jvm.JvmPropertyExtensionVisitor
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.metadata.jvm.signature
+import org.jetbrains.kotlin.codegen.ClassBuilder
+import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
+import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOriginKind
 import org.jetbrains.org.objectweb.asm.Opcodes
 
 internal class KotlinClass(val name: String) : KotlinSymbol {
@@ -26,6 +29,13 @@ internal class KotlinClass(val name: String) : KotlinSymbol {
 
     private var isInternal = false
 
+    private var needsPrivateConstructor: Boolean = false
+        get() {
+            val result = field
+            field = false
+            return result
+        }
+
     /**
      * Gets a function by its signature.
      */
@@ -35,6 +45,12 @@ internal class KotlinClass(val name: String) : KotlinSymbol {
      * Gets a property by its name.
      */
     fun property(descriptor: String): KotlinProperty = properties.computeIfAbsent(descriptor) { KotlinProperty() }
+
+    fun onMemberDeclaration(builder: ClassBuilder) {
+        if (needsPrivateConstructor) {
+            generatePrivateConstructor(builder)
+        }
+    }
 
     fun setData(data: KotlinClassMetadata) = when (data) {
         is KotlinClassMetadata.Class -> {
@@ -48,6 +64,7 @@ internal class KotlinClass(val name: String) : KotlinSymbol {
         is KotlinClassMetadata.FileFacade -> {
             val pkg = data.toKmPackage()
 
+            needsPrivateConstructor = true
             fillWithFunctions(pkg)
             fillWithProperties(pkg)
         }
@@ -56,6 +73,9 @@ internal class KotlinClass(val name: String) : KotlinSymbol {
 
             fillWithFunctions(pkg)
             fillWithProperties(pkg)
+        }
+        is KotlinClassMetadata.MultiFileClassFacade -> {
+            needsPrivateConstructor = true
         }
         else -> Unit
     }
@@ -122,6 +142,21 @@ internal class KotlinClass(val name: String) : KotlinSymbol {
             visitor.setterSignature?.let { wrapper.applyModifiersToFunction(function(it), annotationFunction) }
 
             annotationFunction?.removeAll() // remove all modifiers because function is not intended to be used
+        }
+    }
+
+    private fun generatePrivateConstructor(builder: ClassBuilder) {
+        val origin = JvmDeclarationOrigin(JvmDeclarationOriginKind.OTHER, null, null, null)
+        val name = "<init>"
+        val desc = "()V"
+        val visitor = builder.newMethod(origin, Opcodes.ACC_PRIVATE, name, desc, null, null)
+        visitor.apply {
+            visitCode()
+            visitVarInsn(Opcodes.ALOAD, 0)
+            visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", name, desc, false)
+            visitInsn(Opcodes.RETURN)
+            visitMaxs(1, 1)
+            visitEnd()
         }
     }
 

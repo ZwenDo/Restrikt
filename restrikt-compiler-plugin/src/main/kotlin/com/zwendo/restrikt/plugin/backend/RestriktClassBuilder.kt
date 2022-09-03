@@ -37,6 +37,7 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         val function = currentClass.function(fullSignature) // add function to class
 
         RestriktContext.addAction {
+            currentClass.onMemberDeclaration(this.original)
             val actualAccess = function.computeModifiers(access)
             original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
         }
@@ -57,6 +58,7 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         val property = currentClass.property(name) // add property to class
 
         RestriktContext.addAction {
+            currentClass.onMemberDeclaration(this.original)
             val actualAccess = property.computeModifiers(access)
             original = super.newField(origin, actualAccess, name, desc, signature, value)
         }
