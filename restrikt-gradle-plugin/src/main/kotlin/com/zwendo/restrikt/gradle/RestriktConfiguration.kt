@@ -25,8 +25,15 @@ open class RestriktConfiguration {
      */
     fun hideFromKotlin(block: AnnotationConfiguration.() -> Unit) = hideFromKotlin.block()
 
+    /**
+     * Configure the PackagePrivate annotation.
+     */
+    fun packagePrivate(block: AnnotationConfiguration.() -> Unit) = packagePrivate.block()
+
     internal val hideFromJava = AnnotationConfiguration()
 
     internal val hideFromKotlin = AnnotationConfiguration()
+
+    internal val packagePrivate = AnnotationConfiguration()
 
 }

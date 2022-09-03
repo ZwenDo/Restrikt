@@ -39,6 +39,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         annotationConfiguration(parameters, "hide-from-java", extension.hideFromJava)
         annotationConfiguration(parameters, "hide-from-kotlin", extension.hideFromKotlin)
+        annotationConfiguration(parameters, "package-private", extension.packagePrivate)
 
         return project.provider { parameters }
     }
