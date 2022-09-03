@@ -3,7 +3,7 @@ package com.zwendo.restrikt.test.internal
 import kotlin.reflect.KClass
 
 
-open class InternalTestClass {
+open class InternalTestClass internal constructor() {
 
     //region internal
     internal companion object {

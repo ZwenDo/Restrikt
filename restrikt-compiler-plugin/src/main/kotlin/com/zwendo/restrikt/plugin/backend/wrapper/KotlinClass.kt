@@ -14,7 +14,7 @@ import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.metadata.jvm.signature
 import org.jetbrains.org.objectweb.asm.Opcodes
 
-internal class KotlinClass(private val name: String) : KotlinSymbol {
+internal class KotlinClass(val name: String) : KotlinSymbol {
 
     private var isForceSynthetic = false
 
@@ -34,7 +34,7 @@ internal class KotlinClass(private val name: String) : KotlinSymbol {
     /**
      * Gets a property by its name.
      */
-    fun property(descriptor: String) = properties.computeIfAbsent(descriptor) { KotlinProperty() }
+    fun property(descriptor: String): KotlinProperty = properties.computeIfAbsent(descriptor) { KotlinProperty() }
 
     fun setData(data: KotlinClassMetadata) = when (data) {
         is KotlinClassMetadata.Class -> {
@@ -87,8 +87,7 @@ internal class KotlinClass(private val name: String) : KotlinSymbol {
      */
     private fun fillWithFunctions(container: KmDeclarationContainer) = container.functions.forEach {
         val jvmSignature = it.signature ?: return@forEach
-        val signature = "${if ('<' == it.name[0]) it.name else ""}${jvmSignature.asString()}"
-        functions[signature]?.setData(it)
+        functions[jvmSignature.asString()]?.setData(it)
     }
 
     /**
@@ -96,8 +95,7 @@ internal class KotlinClass(private val name: String) : KotlinSymbol {
      */
     private fun fillWithConstructors(inner: KmClass) = inner.constructors.forEach {
         val jvmSignature = it.signature ?: return@forEach
-        val signature = "<init>${jvmSignature.asString()}"
-        functions[signature]?.setData(it)
+        functions[jvmSignature.asString()]?.setData(it)
     }
 
     /**

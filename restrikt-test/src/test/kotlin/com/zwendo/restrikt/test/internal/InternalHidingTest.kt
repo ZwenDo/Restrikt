@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.reflect.full.companionObject
+import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.jvm.javaConstructor
 import kotlin.reflect.jvm.javaField
 import kotlin.reflect.jvm.javaGetter
 import kotlin.reflect.jvm.javaMethod
@@ -58,6 +60,15 @@ class InternalHidingTest {
     @Test
     fun `Internal annotation is hidden`() {
         assertTrue(InternalAnnotation::class.java.isSynthetic)
+    }
+
+    @Test
+    fun `Internal constructor is hidden`() {
+        InternalTestClass::class.primaryConstructor.assertNotNullAnd {
+            this.javaConstructor.assertNotNullAnd {
+                assertTrue(isSynthetic)
+            }
+        }
     }
     //endregion
 
