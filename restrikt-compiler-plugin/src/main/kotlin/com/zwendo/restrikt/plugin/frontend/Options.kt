@@ -17,6 +17,7 @@ internal sealed interface Option {
             AnnotationProcessing,
             *annotationConfiguration("hide-from-java", PluginConfiguration.hideFromJava),
             *annotationConfiguration("hide-from-kotlin", PluginConfiguration.hideFromKotlin),
+            *annotationConfiguration("package-private", PluginConfiguration.packagePrivate),
         )
 
         val CLI_OPTIONS = OPTIONS.map { it.cliOption }

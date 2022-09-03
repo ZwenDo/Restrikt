@@ -10,6 +10,8 @@ internal object PluginConfiguration {
 
     var hideFromKotlin = AnnotationConfiguration()
 
+    var packagePrivate = AnnotationConfiguration()
+
     class AnnotationConfiguration {
 
         var enabled = true

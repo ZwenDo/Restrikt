@@ -147,9 +147,9 @@ class PackagePrivateVisitor private constructor(
     }
 
     override fun visitEnd() {
-//        if (!messageVisited && PluginConfiguration.packagePrivate.defaultReason != null) {
-//            original.visit(PACKAGE_PRIVATE_REASON_NAME, PluginConfiguration.packagePrivate.defaultReason)
-//        }
+        if (!messageVisited && PluginConfiguration.packagePrivate.defaultReason != null) {
+            original.visit(PACKAGE_PRIVATE_REASON_NAME, DEFAULT_REASON) // if no message, use the default one
+        }
         original.visitEnd()
     }
 
@@ -161,9 +161,9 @@ class PackagePrivateVisitor private constructor(
             visible: Boolean,
             factory: (String, Boolean) -> AnnotationVisitor,
         ): PackagePrivateVisitor {
-            val original = if (true
-//                PluginConfiguration.hideFromJava.keepAnnotation
-//                || !PluginConfiguration.hideFromJava.enabled
+            val original = if (
+                PluginConfiguration.packagePrivate.keepAnnotation
+                || !PluginConfiguration.packagePrivate.enabled
             ) { // disabled or keep annotation
                 factory(descriptor, visible)
             } else {
@@ -174,7 +174,7 @@ class PackagePrivateVisitor private constructor(
 
         private val PACKAGE_PRIVATE_REASON_NAME = PackagePrivate::reason.name
 
-        //private val DEFAULT_REASON = PluginConfiguration.packagePrivate.defaultReason
+        private val DEFAULT_REASON = PluginConfiguration.packagePrivate.defaultReason
     }
 }
 
