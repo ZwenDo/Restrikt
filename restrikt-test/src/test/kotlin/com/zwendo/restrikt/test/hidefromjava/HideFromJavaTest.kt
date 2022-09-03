@@ -124,4 +124,14 @@ class HideFromJavaTest {
         }
     }
 
+    @Test
+    fun `Not annotated annotation is not hidden`() {
+        assertFalse(VisibleAnnotation::class.java.isSynthetic)
+    }
+
+    @Test
+    fun `Annotated annotation is hidden`() {
+        assertTrue(InvisibleAnnotation::class.java.isSynthetic)
+    }
+
 }

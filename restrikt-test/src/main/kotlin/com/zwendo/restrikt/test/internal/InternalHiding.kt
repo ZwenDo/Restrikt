@@ -102,3 +102,11 @@ var publicProperty = 3
 fun publicFunction() {
 
 }
+
+annotation class PublicAnnotation
+
+internal annotation class InternalAnnotation
+
+private annotation class PrivateAnnotation
+
+val privateAnnotationAccessor: KClass<*> = PrivateAnnotation::class

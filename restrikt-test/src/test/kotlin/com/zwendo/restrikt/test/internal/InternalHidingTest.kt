@@ -54,6 +54,11 @@ class InternalHidingTest {
             assertTrue(isSynthetic)
         }
     }
+
+    @Test
+    fun `Internal annotation is hidden`() {
+        assertTrue(InternalAnnotation::class.java.isSynthetic)
+    }
     //endregion
 
     //region private
@@ -92,6 +97,11 @@ class InternalHidingTest {
         instance.privateFunctionAccessor.javaMethod.assertNotNullAnd {
             assertFalse(isSynthetic)
         }
+    }
+
+    @Test
+    fun `Private annotation is not hidden`() {
+        assertFalse(privateAnnotationAccessor.java.isSynthetic)
     }
     //endregion
 
@@ -137,6 +147,11 @@ class InternalHidingTest {
             assertFalse(isSynthetic)
         }
     }
+
+    @Test
+    fun `Public annotation is not hidden`() {
+        assertFalse(PublicAnnotation::class.java.isSynthetic)
+    }
     //endregion
 
     //region protected
@@ -171,7 +186,6 @@ class InternalHidingTest {
     }
     //endregion
 
-    //region top-level
     @Test
     fun `Top-level internal property is hidden`() {
         val property = ::internalProperty

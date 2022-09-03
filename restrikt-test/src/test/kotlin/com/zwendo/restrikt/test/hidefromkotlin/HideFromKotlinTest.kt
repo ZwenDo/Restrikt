@@ -111,7 +111,8 @@ class HideFromKotlinTest {
 
     @Test
     fun `Not annotated class is not hidden`() {
-        assertFalse(VisibleClass::class.isHiddenFromKotlin)
+        val clazz = visibleClassAccessor
+        assertFalse(clazz.isHiddenFromKotlin)
     }
 
     @Test
@@ -119,6 +120,26 @@ class HideFromKotlinTest {
         val clazz = invisibleClassDefaultMessageAccessor
         assertTrue(clazz.isHiddenFromKotlin)
         assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, clazz.hideFromKotlinMessage)
+    }
+
+    @Test
+    fun `Not annotated annotation is not hidden`() {
+        val annotation = visibleAnnotationAccessor
+        assertFalse(annotation.isHiddenFromKotlin)
+    }
+
+    @Test
+    fun `Annotated annotation is hidden and default message is correctly applied`() {
+        val annotation = invisibleAnnotationDefaultMessageAccessor
+        assertTrue(annotation.isHiddenFromKotlin)
+        assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, annotation.hideFromKotlinMessage)
+    }
+
+    @Test
+    fun `Annotated annotation is hidden and custom message is correctly applied`() {
+        val annotation = invisibleAnnotationCustomMessageAccessor
+        assertTrue(annotation.isHiddenFromKotlin)
+        assertEquals(CUSTOM_MESSAGE_4, annotation.hideFromKotlinMessage)
     }
 
 
