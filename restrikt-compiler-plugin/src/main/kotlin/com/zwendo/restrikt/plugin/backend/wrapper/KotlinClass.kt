@@ -14,40 +14,33 @@ import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.metadata.jvm.signature
 import org.jetbrains.org.objectweb.asm.Opcodes
 
-internal class KotlinClass {
+internal class KotlinClass : KotlinSymbol {
 
-    private var forceSynthetic = false
+    private var isForceSynthetic = false
 
     private val functions = hashMapOf<String, KotlinFunction>()
 
     private val properties = hashMapOf<String, KotlinProperty>()
 
-    var isPackagePrivate = false
-        private set
+    private var isPackagePrivate = false
 
-    private var isInternalValue = false
-
-    val isInternal
-        get() = isInternalValue
-
-    val isForceSynthetic
-        get() = forceSynthetic
+    private var isInternal = false
 
     /**
      * Gets a function by its signature.
      */
-    fun function(signature: String): KotlinFunction = functions.computeIfAbsent(signature, ::KotlinFunction)
+    fun function(signature: String): KotlinFunction = functions.computeIfAbsent(signature) { KotlinFunction() }
 
     /**
      * Gets a property by its name.
      */
-    fun property(descriptor: String) = properties.computeIfAbsent(descriptor, ::KotlinProperty)
+    fun property(descriptor: String) = properties.computeIfAbsent(descriptor) { KotlinProperty() }
 
     fun setData(data: KotlinClassMetadata) = when (data) {
         is KotlinClassMetadata.Class -> {
             val clazz = data.toKmClass()
 
-            isInternalValue = Flag.Common.IS_INTERNAL(clazz.flags)
+            isInternal = Flag.Common.IS_INTERNAL(clazz.flags)
             fillWithFunctions(clazz)
             fillWithConstructors(clazz)
             fillWithProperties(clazz)
@@ -67,11 +60,11 @@ internal class KotlinClass {
         else -> Unit
     }
 
-    fun forceSynthetic() {
-        forceSynthetic = true
+    override fun forceSynthetic() {
+        isForceSynthetic = true
     }
 
-    fun setPackagePrivate() {
+    override fun setPackagePrivate() {
         isPackagePrivate = true
     }
 

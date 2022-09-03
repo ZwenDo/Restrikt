@@ -15,8 +15,10 @@ internal class RestriktAnnotationVisitor(factory: () -> AnnotationVisitor) : Ann
         original.visitEnum(name, descriptor, value)
     }
 
-    override fun visitAnnotation(name: String?, descriptor: String?): AnnotationVisitor {
+    override fun visitAnnotation(name: String, descriptor: String): AnnotationVisitor {
         lateinit var visitor: AnnotationVisitor
+
+        preVisitSymbolDeclarationAnnotation(descriptor, context::currentClass)
         context.addAction { visitor = original.visitAnnotation(name, descriptor) }
         return RestriktAnnotationVisitor { visitor }
     }

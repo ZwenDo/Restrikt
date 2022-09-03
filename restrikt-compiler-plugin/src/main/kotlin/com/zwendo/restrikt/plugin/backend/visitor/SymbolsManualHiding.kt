@@ -4,21 +4,34 @@ import com.zwendo.restrikt.annotation.HideFromJava
 import com.zwendo.restrikt.annotation.HideFromKotlin
 import com.zwendo.restrikt.annotation.PackagePrivate
 import com.zwendo.restrikt.plugin.backend.ASM_VERSION
+import com.zwendo.restrikt.plugin.backend.wrapper.KotlinSymbol
 import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import org.jetbrains.kotlin.descriptors.runtime.structure.desc
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 
-
+/**
+ * Called when an annotation is visited during the context action queue traversal.
+ */
 internal fun visitSymbolDeclarationAnnotation(
-    descriptor: String,
-    visible: Boolean,
-    factory: (String, Boolean) -> AnnotationVisitor,
-): AnnotationVisitor = when (descriptor) {
-    HIDE_FROM_KOTLIN_DESC -> HideFromKotlinVisitor.new(descriptor, visible, factory)
-    HIDE_FROM_JAVA_DESC -> HideFromJavaVisitor.new(descriptor, visible, factory)
-    PACKAGE_PRIVATE_DESC -> PackagePrivateVisitor.new(descriptor, visible, factory)
-    else -> factory(descriptor, visible)
+    annotationDescriptor: String,
+    runtimeVisibility: Boolean,
+    visitorFactory: (String, Boolean) -> AnnotationVisitor,
+): AnnotationVisitor = when (annotationDescriptor) {
+    HIDE_FROM_KOTLIN_DESC -> HideFromKotlinVisitor.new(annotationDescriptor, runtimeVisibility, visitorFactory)
+    HIDE_FROM_JAVA_DESC -> HideFromJavaVisitor.new(annotationDescriptor, runtimeVisibility, visitorFactory)
+    PACKAGE_PRIVATE_DESC -> PackagePrivateVisitor.new(annotationDescriptor, runtimeVisibility, visitorFactory)
+    else -> visitorFactory(annotationDescriptor, runtimeVisibility)
 }
+
+/**
+ * Called when an annotation is visited for the first time (not when context queue is run).
+ */
+internal fun preVisitSymbolDeclarationAnnotation(annotationDescriptor: String, symbolProvider: () -> KotlinSymbol) =
+    when (annotationDescriptor) {
+        HIDE_FROM_JAVA_DESC -> symbolProvider().forceSynthetic()
+        PACKAGE_PRIVATE_DESC -> symbolProvider().setPackagePrivate()
+        else -> Unit
+    }
 
 internal val HIDE_FROM_KOTLIN_DESC = HideFromKotlin::class.java.desc
 

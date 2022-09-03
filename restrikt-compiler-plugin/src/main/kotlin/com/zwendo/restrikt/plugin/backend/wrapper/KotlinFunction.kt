@@ -7,7 +7,7 @@ import kotlinx.metadata.KmConstructor
 import kotlinx.metadata.KmFunction
 import org.jetbrains.org.objectweb.asm.Opcodes
 
-internal class KotlinFunction(private val signature: String) {
+internal class KotlinFunction : KotlinSymbol {
 
     var isInternal = false
         private set
@@ -32,11 +32,11 @@ internal class KotlinFunction(private val signature: String) {
         isInternal = true
     }
 
-    fun forceSynthetic() {
+    override fun forceSynthetic() {
         isForceSynthetic = true
     }
 
-    fun setPackagePrivate() {
+    override fun setPackagePrivate() {
         isPackagePrivate = true
     }
 

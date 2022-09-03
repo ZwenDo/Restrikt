@@ -5,7 +5,7 @@ import kotlinx.metadata.Flag
 import kotlinx.metadata.KmProperty
 import org.jetbrains.org.objectweb.asm.Opcodes
 
-internal class KotlinProperty(private val name: String) {
+internal class KotlinProperty : KotlinSymbol {
 
     private var isInternal = false
 
@@ -20,11 +20,11 @@ internal class KotlinProperty(private val name: String) {
         isInternal = Flag.IS_INTERNAL(property.flags)
     }
 
-    fun forceSynthetic() {
+    override fun forceSynthetic() {
         isForceSynthetic = true
     }
 
-    fun setPackagePrivate() {
+    override fun setPackagePrivate() {
         isPackagePrivate = true
     }
 
