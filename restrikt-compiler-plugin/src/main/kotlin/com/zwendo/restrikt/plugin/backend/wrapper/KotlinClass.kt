@@ -14,7 +14,7 @@ import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.metadata.jvm.signature
 import org.jetbrains.org.objectweb.asm.Opcodes
 
-internal class KotlinClass : KotlinSymbol {
+internal class KotlinClass(private val name: String) : KotlinSymbol {
 
     private var isForceSynthetic = false
 

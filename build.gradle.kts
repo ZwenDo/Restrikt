@@ -120,7 +120,7 @@ val annotationPostfixDefaultReason: String by project
 fun buildConfigGenericSetup(vararg projects: Project) {
     projects.forEach {
         it.buildConfig {
-            buildConfigField("String", "PLUGIN_ID", "\"${rootProject.name.toLowerCase()}\"")
+            buildConfigField("String", "PLUGIN_ID", "\"$projectGroup.${rootProject.name.toLowerCase()}\"")
             buildConfigField("String", "AUTOMATIC_INTERNAL_HIDING", "\"$automaticInternalHiding\"")
             buildConfigField("String", "ANNOTATION_PROCESSING", "\"$annotationProcessing\"")
             buildConfigField("String", "HIDE_FROM_JAVA", "\"$hideFromJava\"")
