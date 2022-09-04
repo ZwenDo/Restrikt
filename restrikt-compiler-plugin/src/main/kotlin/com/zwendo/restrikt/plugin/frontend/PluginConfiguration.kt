@@ -2,6 +2,8 @@ package com.zwendo.restrikt.plugin.frontend
 
 internal object PluginConfiguration {
 
+    var toplevelPrivateConstructor = true
+
     var automaticInternalHiding = true
 
     var annotationProcessing = true

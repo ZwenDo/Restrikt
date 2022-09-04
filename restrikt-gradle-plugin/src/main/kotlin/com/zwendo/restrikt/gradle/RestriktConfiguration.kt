@@ -6,6 +6,11 @@ package com.zwendo.restrikt.gradle
 open class RestriktConfiguration {
 
     /**
+     * Whether to generate private constructors toplevel classes.
+     */
+    var toplevelPrivateConstructor: Boolean? = null
+
+    /**
      * Whether internal symbols should be automatically hidden to java.
      */
     var automaticInternalHiding: Boolean? = null

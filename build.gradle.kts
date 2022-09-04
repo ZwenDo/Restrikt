@@ -107,6 +107,7 @@ subprojects {
     }
 }
 
+val toplevelPrivateConstructor: String by project
 val automaticInternalHiding: String by project
 val annotationProcessing: String by project
 val hideFromJava: String by project
@@ -121,6 +122,7 @@ fun buildConfigGenericSetup(vararg projects: Project) {
     projects.forEach {
         it.buildConfig {
             buildConfigField("String", "PLUGIN_ID", "\"$projectGroup.${rootProject.name.toLowerCase()}\"")
+            buildConfigField("String", "TOPLEVEL_PRIVATE_CONSTRUCTOR", "\"$toplevelPrivateConstructor\"")
             buildConfigField("String", "AUTOMATIC_INTERNAL_HIDING", "\"$automaticInternalHiding\"")
             buildConfigField("String", "ANNOTATION_PROCESSING", "\"$annotationProcessing\"")
             buildConfigField("String", "HIDE_FROM_JAVA", "\"$hideFromJava\"")

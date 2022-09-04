@@ -1,6 +1,7 @@
 package com.zwendo.restrikt.plugin.backend.wrapper
 
 import com.zwendo.restrikt.plugin.backend.PACKAGE_PRIVATE_MASK
+import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import kotlinx.metadata.Flag
 import kotlinx.metadata.Flags
 import kotlinx.metadata.KmClass
@@ -47,7 +48,7 @@ internal class KotlinClass(val name: String) : KotlinSymbol {
     fun property(descriptor: String): KotlinProperty = properties.computeIfAbsent(descriptor) { KotlinProperty() }
 
     fun onMemberDeclaration(builder: ClassBuilder) {
-        if (needsPrivateConstructor) {
+        if (PluginConfiguration.toplevelPrivateConstructor && needsPrivateConstructor) {
             generatePrivateConstructor(builder)
         }
     }

@@ -29,6 +29,10 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         val parameters = mutableListOf<SubpluginOption>()
 
+        extension.toplevelPrivateConstructor?.let {
+            parameters += SubpluginOption(BuildConfig.TOPLEVEL_PRIVATE_CONSTRUCTOR, it.toString())
+        }
+
         extension.automaticInternalHiding?.let {
             parameters += SubpluginOption(BuildConfig.AUTOMATIC_INTERNAL_HIDING, it.toString())
         }
