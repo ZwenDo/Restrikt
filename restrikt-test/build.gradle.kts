@@ -18,6 +18,7 @@ dependencies {
 
 val kotlinDefaultReason = "this is a default message for kotlin"
 val javaDefaultReason = "not for java"
+val packagePrivateReason = "this implementation must be package private"
 
 restrikt {
 
@@ -29,12 +30,17 @@ restrikt {
         defaultReason = javaDefaultReason
     }
 
+    packagePrivate {
+        defaultReason = packagePrivateReason
+    }
+
 }
 
 
 buildConfig {
     buildConfigField("String", "KOTLIN_DEFAULT_REASON", "\"$kotlinDefaultReason\"")
     buildConfigField("String", "JAVA_DEFAULT_REASON", "\"$javaDefaultReason\"")
+    buildConfigField("String", "PACKAGE_PRIVATE_REASON", "\"$packagePrivateReason\"")
 }
 
 tasks {
