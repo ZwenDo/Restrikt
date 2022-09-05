@@ -140,7 +140,7 @@ Here are the currently supported default configuration options:
 |    `annotationProcessing`    | boolean | `true`  | Whether the plugin annotations should be parsed to manually hide symbols. |
 | `toplevelPrivateConstructor` | boolean | `true`  | Whether to generate private constructor for top-level classes.            |
 
-Moreover, both annotations of the plugin can be individually configured using their own DSL (`hideFromKotlin`,
+Moreover, all annotations of the plugin can be individually configured using their own DSL (`hideFromKotlin`,
 `hideFromJava` or `PackagePrivate`), with the following configuration options:
 
 |       name       |  type   | default | description                                                                                                   |
