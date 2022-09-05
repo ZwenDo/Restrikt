@@ -365,7 +365,7 @@ to keep output classfile integrity.
 
 - Added the `PackagePrivate` annotation to force compiler to use the `package-private` visibility ;
 - Plugin can now generate private constructors for top-level classes ;
-- `HideFromJava` annotation now supports the File target ;
+- `HideFromJava` annotation now supports the File and Property targets ;
 - `HideFromKotlin` annotation now supports the Property target.
 
 **Bugfixes** :
