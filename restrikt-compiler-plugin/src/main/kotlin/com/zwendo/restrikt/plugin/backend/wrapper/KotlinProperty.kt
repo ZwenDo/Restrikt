@@ -1,5 +1,6 @@
 package com.zwendo.restrikt.plugin.backend.wrapper
 
+import com.zwendo.restrikt.plugin.backend.PACKAGE_PRIVATE_MASK
 import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import kotlinx.metadata.Flag
 import kotlinx.metadata.KmProperty
@@ -35,6 +36,10 @@ internal class KotlinProperty : KotlinSymbol {
             actualAccess = actualAccess or Opcodes.ACC_SYNTHETIC
         }
 
+        if (isPackagePrivate) {
+            actualAccess = actualAccess and PACKAGE_PRIVATE_MASK
+        }
+
         return actualAccess
     }
 
@@ -43,11 +48,11 @@ internal class KotlinProperty : KotlinSymbol {
             function.setInternal()
         }
 
-        if (isForceSynthetic || annotationFunction?.isForceSynthetic == true) {
+        if (annotationFunction?.isForceSynthetic == true) {
             function.forceSynthetic()
         }
 
-        if (isPackagePrivate || annotationFunction?.isPackagePrivate == true) {
+        if (annotationFunction?.isPackagePrivate == true) {
             function.setPackagePrivate()
         }
     }
