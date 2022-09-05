@@ -35,3 +35,9 @@ fun invisibleFunction() {
 class VisibleConstructorClass
 
 class InvisibleConstructorClass @HideFromJava constructor()
+
+
+annotation class VisibleAnnotation
+
+@HideFromJava
+annotation class InvisibleAnnotation

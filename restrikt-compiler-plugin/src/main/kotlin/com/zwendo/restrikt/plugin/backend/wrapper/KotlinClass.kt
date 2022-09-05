@@ -1,11 +1,11 @@
 package com.zwendo.restrikt.plugin.backend.wrapper
 
+import com.zwendo.restrikt.plugin.backend.PACKAGE_PRIVATE_MASK
 import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import kotlinx.metadata.Flag
 import kotlinx.metadata.Flags
 import kotlinx.metadata.KmClass
 import kotlinx.metadata.KmDeclarationContainer
-import kotlinx.metadata.KmProperty
 import kotlinx.metadata.KmPropertyExtensionVisitor
 import kotlinx.metadata.impl.extensions.KmExtension
 import kotlinx.metadata.jvm.JvmFieldSignature
@@ -13,130 +13,153 @@ import kotlinx.metadata.jvm.JvmMethodSignature
 import kotlinx.metadata.jvm.JvmPropertyExtensionVisitor
 import kotlinx.metadata.jvm.KotlinClassMetadata
 import kotlinx.metadata.jvm.signature
+import org.jetbrains.kotlin.codegen.ClassBuilder
+import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
+import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOriginKind
+import org.jetbrains.org.objectweb.asm.Opcodes
 
-internal class KotlinClass : KotlinSymbol {
+internal class KotlinClass(val name: String) : KotlinSymbol {
 
-    private var forceSynthetic = false
+    private var isForceSynthetic = false
 
     private val functions = hashMapOf<String, KotlinFunction>()
 
     private val properties = hashMapOf<String, KotlinProperty>()
 
-    private val syntheticSymbols = hashSetOf<String>()
+    private var isPackagePrivate = false
 
-    fun function(name: String, descriptor: String): KotlinFunction {
-        val signature = "$name$descriptor"
-        return functions[signature] ?: KotlinFunction.new(signature)
-    }
+    private var isInternal = false
 
-    fun property(descriptor: String) = properties[descriptor]
+    private var needsPrivateConstructor: Boolean = false
+        get() {
+            val result = field
+            field = false
+            return result
+        }
 
-    fun makeSynthetic(symbol: String) {
-        syntheticSymbols += symbol
-    }
+    /**
+     * Gets a function by its signature.
+     */
+    fun function(signature: String): KotlinFunction = functions.computeIfAbsent(signature) { KotlinFunction() }
 
-    fun isForceSynthetic(identifier: String): Boolean = identifier in syntheticSymbols
+    /**
+     * Gets a property by its name.
+     */
+    fun property(descriptor: String): KotlinProperty = properties.computeIfAbsent(descriptor) { KotlinProperty() }
 
-    fun setData(data: KotlinClassMetadata) {
-        when (data) {
-            is KotlinClassMetadata.Class -> {
-                val clazz = data.toKmClass()
-
-                isInternalValue = Flag.Common.IS_INTERNAL(clazz.flags)
-
-                functions += functionMapFactory(clazz)
-                functions += constructorsMapFactory(clazz)
-                val (props, extraFunctions) = propertyMapFactory(clazz, this)
-                properties += props
-                functions += extraFunctions
-            }
-            is KotlinClassMetadata.FileFacade -> {
-                val pkg = data.toKmPackage()
-                functions += functionMapFactory(pkg)
-                val (props, extraFunctions) = propertyMapFactory(pkg, this)
-                properties += props
-                functions += extraFunctions
-            }
-            is KotlinClassMetadata.MultiFileClassPart -> {
-                val pkg = data.toKmPackage()
-                functions += functionMapFactory(pkg)
-                val (props, extraFunctions) = propertyMapFactory(pkg, this)
-                properties += props
-                functions += extraFunctions
-            }
-            else -> Unit
+    fun onMemberDeclaration(builder: ClassBuilder) {
+        if (PluginConfiguration.toplevelPrivateConstructor && needsPrivateConstructor) {
+            generatePrivateConstructor(builder)
         }
     }
 
-    private var isInternalValue = false
+    fun setData(data: KotlinClassMetadata) = when (data) {
+        is KotlinClassMetadata.Class -> {
+            val clazz = data.toKmClass()
 
-    override val isInternal
-        get() = isInternalValue
+            isInternal = Flag.Common.IS_INTERNAL(clazz.flags)
+            fillWithFunctions(clazz)
+            fillWithConstructors(clazz)
+            fillWithProperties(clazz)
+        }
+        is KotlinClassMetadata.FileFacade -> {
+            val pkg = data.toKmPackage()
 
-    override val isForceSynthetic
-        get() = forceSynthetic
+            needsPrivateConstructor = true
+            fillWithFunctions(pkg)
+            fillWithProperties(pkg)
+        }
+        is KotlinClassMetadata.MultiFileClassPart -> {
+            val pkg = data.toKmPackage()
+
+            fillWithFunctions(pkg)
+            fillWithProperties(pkg)
+        }
+        is KotlinClassMetadata.MultiFileClassFacade -> {
+            needsPrivateConstructor = true
+        }
+        else -> Unit
+    }
 
     override fun forceSynthetic() {
-        forceSynthetic = true
+        isForceSynthetic = true
     }
 
-}
-
-/**
- * Creates the map of functions of a kotlin class, either basic or toplevel.
- */
-private fun functionMapFactory(container: KmDeclarationContainer) = container.functions.associateBy(
-    { "${if ('<' == it.name[0]) it.name else ""}${it.signature!!.asString()}" }
-) {
-    KotlinFunction.new(it)
-}.toMutableMap()
-
-/**
- * Creates the map of constructors of a kotlin class (not toplevel).
- */
-private fun constructorsMapFactory(inner: KmClass) = inner.constructors.associateBy(
-    { "<init>${it.signature!!.asString()}" }
-) {
-    KotlinFunction.new(it)
-}
-
-/**
- * Creates the map of properties of a kotlin class. In addition gets the functions of the properties if they exist.
- */
-private fun propertyMapFactory(
-    container: KmDeclarationContainer,
-    clazz: KotlinClass,
-): Pair<MutableMap<String, KotlinProperty>, MutableMap<String, KotlinFunction>> {
-    val extraFunctions = hashMapOf<String, KotlinFunction>()
-
-    val properties = container.properties.associateBy(KmProperty::name) { property ->
-        val wrapper = KotlinProperty(property)
-
-        // if not internal and not force synthetic, we don't care about the rest
-        if (!wrapper.isInternal && !clazz.isForceSynthetic(property.name)) return@associateBy wrapper
-
-        // gets the property methods signatures
-        val propertyExtension = property.visitExtensions(JvmPropertyExtensionVisitor.TYPE)
-        val visitor = PropertyVisitor()
-
-        // visit the property extensions
-        @Suppress("UNCHECKED_CAST")
-        (propertyExtension as KmExtension<KmPropertyExtensionVisitor>).accept(visitor)
-        visitor.getterSignature?.let { extraFunctions[it] = SyntheticMethod }
-        visitor.setterSignature?.let { extraFunctions[it] = SyntheticMethod }
-
-        wrapper // add the property to the map
+    override fun setPackagePrivate() {
+        isPackagePrivate = true
     }
 
-    return properties.toMutableMap() to extraFunctions
-}
+    fun computeModifiers(access: Int): Int {
+        var actualAccess: Int = access
 
-/**
- * Singleton representing a simple internal method. Used to represents internal or force java hidden property accessors.
- */
-private object SyntheticMethod : KotlinFunction {
+        if (isInternal || isForceSynthetic) {
+            actualAccess = actualAccess or Opcodes.ACC_SYNTHETIC
+        }
 
-    override fun isSynthetic(originClass: KotlinClass) = PluginConfiguration.automaticInternalHiding
+        if (isPackagePrivate) {
+            actualAccess = actualAccess and PACKAGE_PRIVATE_MASK
+        }
+
+        return actualAccess
+    }
+
+    /**
+     * Fills the functions with their kotlin data.
+     */
+    private fun fillWithFunctions(container: KmDeclarationContainer) = container.functions.forEach {
+        val jvmSignature = it.signature ?: return@forEach
+        functions[jvmSignature.asString()]?.setData(it)
+    }
+
+    /**
+     * Fills constructors with their kotlin data.
+     */
+    private fun fillWithConstructors(inner: KmClass) = inner.constructors.forEach {
+        val jvmSignature = it.signature ?: return@forEach
+        functions[jvmSignature.asString()]?.setData(it)
+    }
+
+    /**
+     * Fills the properties with their kotlin data and potentiality creates extra functions.
+     */
+    private fun fillWithProperties(container: KmDeclarationContainer) {
+        container.properties.forEach { property ->
+            val wrapper = properties[property.name] ?: return@forEach
+            wrapper.setData(property)
+
+            // gets the property extension
+            val propertyExtension = property.visitExtensions(JvmPropertyExtensionVisitor.TYPE)
+            val visitor = PropertyVisitor()
+
+            // visit the property extensions
+            @Suppress("UNCHECKED_CAST")
+            (propertyExtension as KmExtension<KmPropertyExtensionVisitor>).accept(visitor)
+
+            // now, we must apply property modifiers to its functions
+
+            // retrieve annotation function to get annotations for the whole property
+            val annotationFunction = visitor.annotationsFunctionSignature?.let { function(it) }
+            visitor.getterSignature?.let { wrapper.applyModifiersToFunction(function(it), annotationFunction) }
+            visitor.setterSignature?.let { wrapper.applyModifiersToFunction(function(it), annotationFunction) }
+
+            annotationFunction?.removeAll() // remove all modifiers because function is not intended to be used
+        }
+    }
+
+    private fun generatePrivateConstructor(builder: ClassBuilder) {
+        val origin = JvmDeclarationOrigin(JvmDeclarationOriginKind.OTHER, null, null, null)
+        val name = "<init>"
+        val desc = "()V"
+        val visitor = builder.newMethod(origin, Opcodes.ACC_PRIVATE, name, desc, null, null)
+        visitor.apply {
+            visitCode()
+            visitVarInsn(Opcodes.ALOAD, 0)
+            visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", name, desc, false)
+            visitInsn(Opcodes.RETURN)
+            visitMaxs(1, 1)
+            visitEnd()
+        }
+    }
 
 }
 
@@ -149,6 +172,8 @@ private class PropertyVisitor : JvmPropertyExtensionVisitor(null) {
 
     var setterSignature: String? = null
 
+    var annotationsFunctionSignature: String? = null
+
     override fun visit(
         jvmFlags: Flags,
         fieldSignature: JvmFieldSignature?,
@@ -159,4 +184,7 @@ private class PropertyVisitor : JvmPropertyExtensionVisitor(null) {
         this.setterSignature = setterSignature?.asString()
     }
 
+    override fun visitSyntheticMethodForAnnotations(signature: JvmMethodSignature?) {
+        annotationsFunctionSignature = signature?.asString()
+    }
 }

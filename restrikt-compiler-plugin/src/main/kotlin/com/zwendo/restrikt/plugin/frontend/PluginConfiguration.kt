@@ -2,6 +2,8 @@ package com.zwendo.restrikt.plugin.frontend
 
 internal object PluginConfiguration {
 
+    var toplevelPrivateConstructor = true
+
     var automaticInternalHiding = true
 
     var annotationProcessing = true
@@ -9,6 +11,8 @@ internal object PluginConfiguration {
     var hideFromJava = AnnotationConfiguration()
 
     var hideFromKotlin = AnnotationConfiguration()
+
+    var packagePrivate = AnnotationConfiguration()
 
     class AnnotationConfiguration {
 

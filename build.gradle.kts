@@ -13,7 +13,6 @@ val projectVersion: String by project
 val jvmVersion: String by project
 val junitVersion: String by project
 val javaVersion = JavaVersion.VERSION_1_8
-val projectDefaultAnnotationReason: String by project
 
 subprojects {
     apply(plugin = "java")
@@ -108,10 +107,31 @@ subprojects {
     }
 }
 
+val toplevelPrivateConstructor: String by project
+val automaticInternalHiding: String by project
+val annotationProcessing: String by project
+val hideFromJava: String by project
+val hideFromKotlin: String by project
+val packagePrivate: String by project
+val annotationPostfixEnabled: String by project
+val annotationPostfixKeepAnnotation: String by project
+val annotationPostfixDefaultReason: String by project
+
+
 fun buildConfigGenericSetup(vararg projects: Project) {
     projects.forEach {
         it.buildConfig {
-            buildConfigField("String", "PLUGIN_ID", "\"${rootProject.name.toLowerCase()}\"")
+            buildConfigField("String", "PLUGIN_ID", "\"$projectGroup.${rootProject.name.toLowerCase()}\"")
+            buildConfigField("String", "TOPLEVEL_PRIVATE_CONSTRUCTOR", "\"$toplevelPrivateConstructor\"")
+            buildConfigField("String", "AUTOMATIC_INTERNAL_HIDING", "\"$automaticInternalHiding\"")
+            buildConfigField("String", "ANNOTATION_PROCESSING", "\"$annotationProcessing\"")
+            buildConfigField("String", "HIDE_FROM_JAVA", "\"$hideFromJava\"")
+            buildConfigField("String", "HIDE_FROM_KOTLIN", "\"$hideFromKotlin\"")
+            buildConfigField("String", "PACKAGE_PRIVATE", "\"$packagePrivate\"")
+            buildConfigField("String", "ANNOTATION_POSTFIX_ENABLED", "\"$annotationPostfixEnabled\"")
+            buildConfigField("String", "ANNOTATION_POSTFIX_KEEP_ANNOTATION", "\"$annotationPostfixKeepAnnotation\"")
+            buildConfigField("String", "ANNOTATION_POSTFIX_DEFAULT_REASON", "\"$annotationPostfixDefaultReason\"")
+
             useKotlinOutput {
                 internalVisibility = true
             }

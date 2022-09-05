@@ -14,7 +14,6 @@ import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.FieldVisitor
 import org.jetbrains.org.objectweb.asm.MethodVisitor
-import org.jetbrains.org.objectweb.asm.Opcodes
 import org.jetbrains.org.objectweb.asm.RecordComponentVisitor
 
 
@@ -33,21 +32,17 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         exceptions: Array<out String>?,
     ): MethodVisitor {
         lateinit var original: MethodVisitor
-        val currentClassName = RestriktContext.currentClassName
+        val currentClass = RestriktContext.currentClass
+        val fullSignature = "$name$desc"
+        val function = currentClass.function(fullSignature) // add function to class
 
         RestriktContext.addAction {
-            val currentClass = RestriktContext.getClass(currentClassName)
-            val function = currentClass?.function(name, desc)
-            val actualAccess = if (function?.isSynthetic(currentClass) == true) {
-                access or Opcodes.ACC_SYNTHETIC
-            } else {
-                access
-            }
-
+            currentClass.onMemberDeclaration(this.original)
+            val actualAccess = function.computeModifiers(access)
             original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
         }
 
-        return RestriktMethodVisitor("$name$desc") { original }
+        return RestriktMethodVisitor(fullSignature) { original }
     }
 
     override fun newField(
@@ -59,25 +54,21 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         value: Any?,
     ): FieldVisitor {
         lateinit var original: FieldVisitor
-        val currentClassName = RestriktContext.currentClassName
+        val currentClass = RestriktContext.currentClass
+        val property = currentClass.property(name) // add property to class
 
         RestriktContext.addAction {
-            val currentClass = RestriktContext.getClass(currentClassName)
-            val field = currentClass?.property(name)
-            val actualAccess = if (field?.isSynthetic(currentClass) == true) {
-                access or Opcodes.ACC_SYNTHETIC
-            } else {
-                access
-            }
-
+            currentClass.onMemberDeclaration(this.original)
+            val actualAccess = property.computeModifiers(access)
             original = super.newField(origin, actualAccess, name, desc, signature, value)
         }
 
         return RestriktFieldVisitor(name) { original }
     }
 
-    override fun visitSource(name: String, debug: String?) =
-        RestriktContext.addAction { super.visitSource(name, debug) }
+    override fun visitSource(name: String, debug: String?) = RestriktContext.addAction {
+        super.visitSource(name, debug)
+    }
 
     override fun visitSMAP(smap: SourceMapper, backwardsCompatibleSyntax: Boolean) = RestriktContext.addAction {
         super.visitSMAP(smap, backwardsCompatibleSyntax)
@@ -87,18 +78,11 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         super.visitOuterClass(owner, name, desc)
     }
 
-    override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) {
+    override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) =
         RestriktContext.addAction {
-            val clazz = RestriktContext.getClass(name)
-            val actualAccess = if (clazz?.isInternal == true || clazz?.isForceSynthetic == true) {
-                access or Opcodes.ACC_SYNTHETIC
-            } else {
-                access
-            }
-
+            val actualAccess = RestriktContext.getClass(name)?.computeModifiers(access) ?: access
             super.visitInnerClass(name, outerName, innerName, actualAccess)
         }
-    }
 
     override fun newRecordComponent(name: String, desc: String, signature: String?): RecordComponentVisitor {
         lateinit var original: RecordComponentVisitor
@@ -115,15 +99,9 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         superName: String,
         interfaces: Array<out String>,
     ) {
-        RestriktContext.visitNewClass(name)
+        val currentClass = RestriktContext.visitNewClass(name)
         RestriktContext.addAction {
-            val clazz = RestriktContext.getClass(name)
-            val actualAccess = if (clazz?.isInternal == true || clazz?.isForceSynthetic == true) {
-                access or Opcodes.ACC_SYNTHETIC
-            } else {
-                access
-            }
-
+            val actualAccess = currentClass.computeModifiers(access)
             super.defineClass(origin, version, actualAccess, name, signature, superName, interfaces)
         }
     }

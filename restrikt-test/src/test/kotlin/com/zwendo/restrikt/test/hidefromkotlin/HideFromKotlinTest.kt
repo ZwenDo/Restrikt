@@ -1,12 +1,14 @@
 package com.zwendo.restrikt.test.hidefromkotlin
 
 import com.zwendo.restrikt.test.assertNotNullAnd
+import java.lang.reflect.AnnotatedElement
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import restrikt_test.BuildConfig
 import kotlin.reflect.KAnnotatedElement
+import kotlin.reflect.jvm.javaField
 
 class HideFromKotlinTest {
 
@@ -20,6 +22,15 @@ class HideFromKotlinTest {
         val property = invisiblePropertyDefaultMessageAccessor
         assertTrue(property.isHiddenFromKotlin)
         assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, property.hideFromKotlinMessage)
+    }
+
+    @Test
+    fun `Annotated field is hidden and default message is correctly applied`() {
+        val property = ::invisibleFieldDefaultMessage
+        property.javaField.assertNotNullAnd {
+            assertTrue(isHiddenFromKotlin)
+            assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, hideFromKotlinMessage)
+        }
     }
 
     @Test
@@ -100,7 +111,8 @@ class HideFromKotlinTest {
 
     @Test
     fun `Not annotated class is not hidden`() {
-        assertFalse(VisibleClass::class.isHiddenFromKotlin)
+        val clazz = visibleClassAccessor
+        assertFalse(clazz.isHiddenFromKotlin)
     }
 
     @Test
@@ -110,11 +122,39 @@ class HideFromKotlinTest {
         assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, clazz.hideFromKotlinMessage)
     }
 
+    @Test
+    fun `Not annotated annotation is not hidden`() {
+        val annotation = visibleAnnotationAccessor
+        assertFalse(annotation.isHiddenFromKotlin)
+    }
+
+    @Test
+    fun `Annotated annotation is hidden and default message is correctly applied`() {
+        val annotation = invisibleAnnotationDefaultMessageAccessor
+        assertTrue(annotation.isHiddenFromKotlin)
+        assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, annotation.hideFromKotlinMessage)
+    }
+
+    @Test
+    fun `Annotated annotation is hidden and custom message is correctly applied`() {
+        val annotation = invisibleAnnotationCustomMessageAccessor
+        assertTrue(annotation.isHiddenFromKotlin)
+        assertEquals(CUSTOM_MESSAGE_4, annotation.hideFromKotlinMessage)
+    }
+
 
     private val KAnnotatedElement.isHiddenFromKotlin: Boolean
         get() = annotations.any { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
 
+    private val AnnotatedElement.isHiddenFromKotlin: Boolean
+        get() = annotations.any { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
+
     private val KAnnotatedElement.hideFromKotlinMessage: String
+        get() = annotations.find { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
+            ?.let { (it as Deprecated).message }
+            ?: throw AssertionError("Element $this is not hidden from kotlin")
+
+    private val AnnotatedElement.hideFromKotlinMessage: String
         get() = annotations.find { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
             ?.let { (it as Deprecated).message }
             ?: throw AssertionError("Element $this is not hidden from kotlin")

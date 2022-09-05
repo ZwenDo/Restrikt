@@ -17,6 +17,7 @@ package com.zwendo.restrikt.annotation
     AnnotationTarget.FUNCTION,
     AnnotationTarget.CONSTRUCTOR,
     AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.FIELD,
     AnnotationTarget.PROPERTY,
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
@@ -24,7 +25,8 @@ package com.zwendo.restrikt.annotation
 annotation class HideFromKotlin(val reason: String = "")
 
 /**
- * Equivalent to [JvmSynthetic] annotation, but can be used on all symbol declarations.
+ * Used with the [Restrikt compiler plugin](https://github.com/ZwenDo/Restrikt), this annotation acts like
+ * [JvmSynthetic] annotation, but can be used on all symbol declarations.
  */
 @MustBeDocumented
 @Retention(AnnotationRetention.BINARY)
@@ -33,8 +35,31 @@ annotation class HideFromKotlin(val reason: String = "")
     AnnotationTarget.FUNCTION,
     AnnotationTarget.CONSTRUCTOR,
     AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.FILE,
     AnnotationTarget.FIELD,
+    AnnotationTarget.PROPERTY,
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
 annotation class HideFromJava(val reason: String = "")
+
+/**
+ * Used with the [Restrikt compiler plugin](https://github.com/ZwenDo/Restrikt), this annotation is used to force
+ * `package-private` visibility on Kotlin symbols.
+ *
+ * NOTE: the original visibility will be overridden by the compiler plugin.
+ */
+@MustBeDocumented
+@Retention(AnnotationRetention.BINARY)
+@Target(
+    AnnotationTarget.CLASS,
+    AnnotationTarget.FUNCTION,
+    AnnotationTarget.CONSTRUCTOR,
+    AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.FILE,
+    AnnotationTarget.FIELD,
+    AnnotationTarget.PROPERTY,
+    AnnotationTarget.PROPERTY_GETTER,
+    AnnotationTarget.PROPERTY_SETTER,
+)
+annotation class PackagePrivate(val reason: String = "")

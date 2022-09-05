@@ -10,6 +10,10 @@ val visiblePropertyAccessor = ::visibleProperty
 @HideFromKotlin
 val invisiblePropertyDefaultMessage = "a"
 
+@JvmField
+@field:HideFromKotlin
+val invisibleFieldDefaultMessage = "b"
+
 val invisiblePropertyDefaultMessageAccessor = ::invisiblePropertyDefaultMessage
 
 const val CUSTOM_MESSAGE = "custom message"
@@ -65,7 +69,26 @@ class VisibleClass @HideFromKotlin(CUSTOM_MESSAGE_3) constructor() {
 
 }
 
+val visibleClassAccessor = VisibleClass::class
+
 @HideFromKotlin
 class InvisibleClassDefaultMessage
 
 val invisibleClassDefaultMessageAccessor = InvisibleClassDefaultMessage::class
+
+
+annotation class VisibleAnnotation
+
+val visibleAnnotationAccessor = VisibleAnnotation::class
+
+@HideFromKotlin
+annotation class InvisibleAnnotationDefaultMessage
+
+val invisibleAnnotationDefaultMessageAccessor = InvisibleAnnotationDefaultMessage::class
+
+const val CUSTOM_MESSAGE_4 = "custom message 4"
+
+@HideFromKotlin(CUSTOM_MESSAGE_4)
+annotation class InvisibleAnnotationCustomMessage
+
+val invisibleAnnotationCustomMessageAccessor = InvisibleAnnotationCustomMessage::class

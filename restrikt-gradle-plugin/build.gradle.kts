@@ -21,7 +21,7 @@ gradlePlugin {
     plugins {
         create("restriktCompilerPlugin") {
             id = "com.zwendo.restrikt"
-            displayName = "Restrikt compiler plugin"
+            displayName = "Restrikt gradle plugin"
             description = "Gradle plugin for Restrikt compiler plugin"
             implementationClass = "com.zwendo.restrikt.gradle.GradlePlugin"
         }

@@ -29,16 +29,21 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         val parameters = mutableListOf<SubpluginOption>()
 
+        extension.toplevelPrivateConstructor?.let {
+            parameters += SubpluginOption(BuildConfig.TOPLEVEL_PRIVATE_CONSTRUCTOR, it.toString())
+        }
+
         extension.automaticInternalHiding?.let {
-            parameters += SubpluginOption("automatic-internal-hiding", it.toString())
+            parameters += SubpluginOption(BuildConfig.AUTOMATIC_INTERNAL_HIDING, it.toString())
         }
 
         extension.annotationProcessing?.let {
-            parameters += SubpluginOption("annotation-processing", it.toString())
+            parameters += SubpluginOption(BuildConfig.ANNOTATION_PROCESSING, it.toString())
         }
 
-        annotationConfiguration(parameters, "hide-from-java", extension.hideFromJava)
-        annotationConfiguration(parameters, "hide-from-kotlin", extension.hideFromKotlin)
+        annotationConfiguration(parameters, BuildConfig.HIDE_FROM_JAVA, extension.hideFromJava)
+        annotationConfiguration(parameters, BuildConfig.HIDE_FROM_KOTLIN, extension.hideFromKotlin)
+        annotationConfiguration(parameters, BuildConfig.PACKAGE_PRIVATE, extension.packagePrivate)
 
         return project.provider { parameters }
     }
@@ -62,15 +67,15 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         config: AnnotationConfiguration,
     ) {
         config.enabled?.let {
-            list += SubpluginOption("$annotationName-enabled", it.toString())
+            list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_ENABLED}", it.toString())
         }
 
         config.keepAnnotation?.let {
-            list += SubpluginOption("$annotationName-keep-annotation", it.toString())
+            list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_KEEP_ANNOTATION}", it.toString())
         }
 
         config.defaultReason?.let {
-            list += SubpluginOption("$annotationName-default-reason", it)
+            list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_DEFAULT_REASON}", it)
         }
     }
 

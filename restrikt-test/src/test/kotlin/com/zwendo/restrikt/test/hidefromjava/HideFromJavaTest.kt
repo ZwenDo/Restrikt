@@ -45,10 +45,6 @@ class HideFromJavaTest {
     fun `Annotated property is hidden`() {
         val property = ::invisibleProperty
 
-        property.javaField.assertNotNullAnd {
-            assertTrue(isSynthetic)
-        }
-
         property.javaGetter.assertNotNullAnd {
             assertTrue(isSynthetic)
         }
@@ -126,6 +122,16 @@ class HideFromJavaTest {
                 assertTrue(isSynthetic)
             }
         }
+    }
+
+    @Test
+    fun `Not annotated annotation is not hidden`() {
+        assertFalse(VisibleAnnotation::class.java.isSynthetic)
+    }
+
+    @Test
+    fun `Annotated annotation is hidden`() {
+        assertTrue(InvisibleAnnotation::class.java.isSynthetic)
     }
 
 }

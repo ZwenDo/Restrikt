@@ -1,39 +1,62 @@
 package com.zwendo.restrikt.plugin.backend.wrapper
 
+import com.zwendo.restrikt.plugin.backend.PACKAGE_PRIVATE_MASK
 import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import kotlinx.metadata.Flag
 import kotlinx.metadata.KmConstructor
 import kotlinx.metadata.KmFunction
-import kotlinx.metadata.jvm.signature
+import org.jetbrains.org.objectweb.asm.Opcodes
 
-internal interface KotlinFunction {
+internal class KotlinFunction : KotlinSymbol {
 
-    fun isSynthetic(originClass: KotlinClass): Boolean
+    var isInternal = false
+        private set
 
-    companion object {
+    var isPackagePrivate = false
+        private set
 
-        fun new(inner: KmFunction): KotlinFunction = Impl(
-            "${inner.signature?.asString()}",
-            Flag.IS_INTERNAL(inner.flags)
-        )
+    var isForceSynthetic = false
 
-        fun new(inner: KmConstructor): KotlinFunction = Impl(
-            "<init>${inner.signature?.asString()}",
-            Flag.IS_INTERNAL(inner.flags)
-        )
+    private val isSynthetic
+        get() = (PluginConfiguration.automaticInternalHiding && isInternal) || isForceSynthetic
 
-        fun new(name: String): KotlinFunction = Impl(name, false)
-
+    fun setData(inner: KmFunction) {
+        isInternal = Flag.IS_INTERNAL(inner.flags)
     }
 
-    private class Impl(
-        private val innerName: String,
-        private val isInternal: Boolean,
-    ) : KotlinFunction {
+    fun setData(inner: KmConstructor) {
+        isInternal = Flag.IS_INTERNAL(inner.flags)
+    }
 
-        override fun isSynthetic(originClass: KotlinClass): Boolean =
-            (PluginConfiguration.automaticInternalHiding && isInternal) || originClass.isForceSynthetic(innerName)
+    fun setInternal() {
+        isInternal = true
+    }
 
+    override fun forceSynthetic() {
+        isForceSynthetic = true
+    }
+
+    override fun setPackagePrivate() {
+        isPackagePrivate = true
+    }
+
+    fun computeModifiers(access: Int): Int {
+        var actualAccess: Int = access
+
+        if (isSynthetic) {
+            actualAccess = actualAccess or Opcodes.ACC_SYNTHETIC
+        }
+
+        if (isPackagePrivate) {
+            actualAccess = actualAccess and PACKAGE_PRIVATE_MASK
+        }
+
+        return actualAccess
+    }
+
+    fun removeAll() {
+        isInternal = false
+        isPackagePrivate = false
     }
 
 }

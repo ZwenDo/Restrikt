@@ -3,7 +3,7 @@ package com.zwendo.restrikt.test.internal
 import kotlin.reflect.KClass
 
 
-open class InternalTestClass {
+open class InternalTestClass internal constructor() {
 
     //region internal
     internal companion object {
@@ -102,3 +102,11 @@ var publicProperty = 3
 fun publicFunction() {
 
 }
+
+annotation class PublicAnnotation
+
+internal annotation class InternalAnnotation
+
+private annotation class PrivateAnnotation
+
+val privateAnnotationAccessor: KClass<*> = PrivateAnnotation::class

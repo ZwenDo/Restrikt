@@ -11,7 +11,7 @@ internal object RestriktContext {
 
     private var actions = mutableListOf<() -> Unit>()
     private var classNameToData = hashMapOf<String, KotlinClass>()
-    private val classStack = mutableListOf<String>()
+    private val classStack = mutableListOf<KotlinClass>()
 
     /**
      * Adds an action to the list of actions to be executed when the context is reset.
@@ -40,28 +40,29 @@ internal object RestriktContext {
     fun storeClass(kmClass: KotlinClassMetadata) {
         val currentClass = classStack.peek()
             ?: throw AssertionError("Class $kmClass stack should not be empty")
-        classNameToData[currentClass]?.setData(kmClass)
-            ?: throw AssertionError("Class $kmClass should already be in the context")
+        currentClass.setData(kmClass)
     }
 
     /**
      * Adds a class to the context stack.
      */
-    fun visitNewClass(className: String) {
-        classStack.push(className)
-        classNameToData[className] = KotlinClass()
+    fun visitNewClass(className: String): KotlinClass {
+        val clazz = KotlinClass(className)
+        classStack.push(clazz)
+        classNameToData[className] = clazz
+        return clazz
     }
-
-    /**
-     * Gets the fqName of the current class.
-     */
-    val currentClassName
-        get() = classStack.peek() ?: throw AssertionError("Class stack should not be empty")
 
     /**
      * Gets a class for the given fqName.
      */
     fun getClass(className: String?) = classNameToData[className]
+
+    /**
+     * Gets the current class.
+     */
+    val currentClass: KotlinClass
+        get() = classStack.peek() ?: throw AssertionError("Class stack should not be empty")
 
 }
 

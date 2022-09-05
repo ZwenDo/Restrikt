@@ -30,10 +30,7 @@ internal class RestriktMethodVisitor(
     override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
         lateinit var visitor: AnnotationVisitor
 
-        checkHideFromJava(descriptor) {
-            context.getClass(context.currentClassName)?.makeSynthetic(signature)
-        }
-
+        preVisitSymbolDeclarationAnnotation(descriptor) { context.currentClass.function(signature) }
         context.addAction {
             visitor = visitSymbolDeclarationAnnotation(descriptor, visible, original::visitAnnotation)
         }
