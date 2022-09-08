@@ -141,7 +141,7 @@ Here are the currently supported default configuration options:
 | `toplevelPrivateConstructor` | boolean | `true`  | Whether to generate private constructor for top-level classes.            |
 
 Moreover, all annotations of the plugin can be individually configured using their own DSL (`hideFromKotlin`,
-`hideFromJava` or `PackagePrivate`), with the following configuration options:
+`hideFromJava` or `packagePrivate`), with the following configuration options:
 
 |       name       |  type   | default | description                                                                                                   |
 |:----------------:|:-------:|:-------:|---------------------------------------------------------------------------------------------------------------|
