@@ -1,7 +1,7 @@
 package com.zwendo.restrikt.plugin.backend.visitor
 
-import com.zwendo.restrikt.plugin.backend.RestriktContext as context
 import com.zwendo.restrikt.plugin.backend.ASM_VERSION
+import com.zwendo.restrikt.plugin.backend.symbol.SymbolData
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 import org.jetbrains.org.objectweb.asm.Attribute
 import org.jetbrains.org.objectweb.asm.Handle
@@ -11,31 +11,20 @@ import org.jetbrains.org.objectweb.asm.TypePath
 
 
 internal class RestriktMethodVisitor(
-    private val signature: String,
-    factory: () -> MethodVisitor,
+    private val context: SymbolData<MethodVisitor>,
 ) : MethodVisitor(ASM_VERSION) {
 
-    private val original: MethodVisitor by lazy { factory() }
 
-    override fun visitParameter(name: String?, access: Int) = context.addAction {
-        original.visitParameter(name, access)
-    }
+    override fun visitParameter(name: String?, access: Int) = queue { visitParameter(name, access) }
 
-    override fun visitAnnotationDefault(): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-        context.addAction { visitor = original.visitAnnotationDefault() }
-        return RestriktAnnotationVisitor { visitor }
-    }
+    override fun visitAnnotationDefault(): AnnotationVisitor =
+        annotationVisitor(context) { visitAnnotationDefault() }
 
     override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-
-        preVisitSymbolDeclarationAnnotation(descriptor) { context.currentClass.function(signature) }
-        context.addAction {
-            visitor = visitSymbolDeclarationAnnotation(descriptor, visible, original::visitAnnotation)
+        preVisitSymbolDeclarationAnnotation(descriptor, context)
+        return annotationVisitor(context) {
+            visitSymbolDeclarationAnnotation(descriptor) { visitAnnotation(descriptor, visible) }
         }
-
-        return RestriktAnnotationVisitor { visitor }
     }
 
     override fun visitTypeAnnotation(
@@ -43,39 +32,36 @@ internal class RestriktMethodVisitor(
         typePath: TypePath?,
         descriptor: String?,
         visible: Boolean,
-    ): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-        context.addAction { visitor = original.visitTypeAnnotation(typeRef, typePath, descriptor, visible) }
-        return RestriktAnnotationVisitor { visitor }
+    ): AnnotationVisitor = annotationVisitor(context) {
+        visitTypeAnnotation(typeRef, typePath, descriptor, visible)
     }
 
-    override fun visitAnnotableParameterCount(parameterCount: Int, visible: Boolean) = context.addAction {
-        original.visitAnnotableParameterCount(parameterCount, visible)
+    override fun visitAnnotableParameterCount(parameterCount: Int, visible: Boolean) = queue {
+        visitAnnotableParameterCount(parameterCount, visible)
     }
 
-    override fun visitParameterAnnotation(parameter: Int, descriptor: String?, visible: Boolean): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-        context.addAction { visitor = original.visitParameterAnnotation(parameter, descriptor, visible) }
-        return RestriktAnnotationVisitor { visitor }
-    }
+    override fun visitParameterAnnotation(parameter: Int, descriptor: String?, visible: Boolean): AnnotationVisitor =
+        annotationVisitor(context) {
+            visitParameterAnnotation(parameter, descriptor, visible)
+        }
 
-    override fun visitAttribute(attribute: Attribute?) = context.addAction { original.visitAttribute(attribute) }
+    override fun visitAttribute(attribute: Attribute?) = queue { visitAttribute(attribute) }
 
-    override fun visitCode() = context.addAction { original.visitCode() }
+    override fun visitCode() = queue { visitCode() }
 
     override fun visitFrame(type: Int, numLocal: Int, local: Array<out Any>?, numStack: Int, stack: Array<out Any>?) =
-        context.addAction { original.visitFrame(type, numLocal, local, numStack, stack) }
+        queue { visitFrame(type, numLocal, local, numStack, stack) }
 
-    override fun visitInsn(opcode: Int) = context.addAction { original.visitInsn(opcode) }
+    override fun visitInsn(opcode: Int) = queue { visitInsn(opcode) }
 
-    override fun visitIntInsn(opcode: Int, operand: Int) = context.addAction { original.visitIntInsn(opcode, operand) }
+    override fun visitIntInsn(opcode: Int, operand: Int) = queue { visitIntInsn(opcode, operand) }
 
-    override fun visitVarInsn(opcode: Int, `var`: Int) = context.addAction { original.visitVarInsn(opcode, `var`) }
+    override fun visitVarInsn(opcode: Int, `var`: Int) = queue { visitVarInsn(opcode, `var`) }
 
-    override fun visitTypeInsn(opcode: Int, type: String?) = context.addAction { original.visitTypeInsn(opcode, type) }
+    override fun visitTypeInsn(opcode: Int, type: String?) = queue { visitTypeInsn(opcode, type) }
 
-    override fun visitFieldInsn(opcode: Int, owner: String?, name: String?, descriptor: String?) = context.addAction {
-        original.visitFieldInsn(opcode, owner, name, descriptor)
+    override fun visitFieldInsn(opcode: Int, owner: String?, name: String?, descriptor: String?) = queue {
+        visitFieldInsn(opcode, owner, name, descriptor)
     }
 
     override fun visitMethodInsn(
@@ -84,36 +70,36 @@ internal class RestriktMethodVisitor(
         name: String?,
         descriptor: String?,
         isInterface: Boolean,
-    ) = context.addAction { original.visitMethodInsn(opcode, owner, name, descriptor, isInterface) }
+    ) = queue { visitMethodInsn(opcode, owner, name, descriptor, isInterface) }
 
     override fun visitInvokeDynamicInsn(
         name: String?,
         descriptor: String?,
         bootstrapMethodHandle: Handle?,
         vararg bootstrapMethodArguments: Any?,
-    ) = context.addAction {
-        original.visitInvokeDynamicInsn(name, descriptor, bootstrapMethodHandle, *bootstrapMethodArguments)
+    ) = queue {
+        visitInvokeDynamicInsn(name, descriptor, bootstrapMethodHandle, *bootstrapMethodArguments)
     }
 
-    override fun visitJumpInsn(opcode: Int, label: Label?) = context.addAction { original.visitJumpInsn(opcode, label) }
+    override fun visitJumpInsn(opcode: Int, label: Label?) = queue { visitJumpInsn(opcode, label) }
 
-    override fun visitLabel(label: Label?) = context.addAction { original.visitLabel(label) }
+    override fun visitLabel(label: Label?) = queue { visitLabel(label) }
 
-    override fun visitLdcInsn(value: Any?) = context.addAction { original.visitLdcInsn(value) }
+    override fun visitLdcInsn(value: Any?) = queue { visitLdcInsn(value) }
 
     override fun visitIincInsn(`var`: Int, increment: Int) =
-        context.addAction { original.visitIincInsn(`var`, increment) }
+        queue { visitIincInsn(`var`, increment) }
 
-    override fun visitTableSwitchInsn(min: Int, max: Int, dflt: Label?, vararg labels: Label?) = context.addAction {
-        original.visitTableSwitchInsn(min, max, dflt, *labels)
+    override fun visitTableSwitchInsn(min: Int, max: Int, dflt: Label?, vararg labels: Label?) = queue {
+        visitTableSwitchInsn(min, max, dflt, *labels)
     }
 
-    override fun visitLookupSwitchInsn(dflt: Label?, keys: IntArray?, labels: Array<out Label>?) = context.addAction {
-        original.visitLookupSwitchInsn(dflt, keys, labels)
+    override fun visitLookupSwitchInsn(dflt: Label?, keys: IntArray?, labels: Array<out Label>?) = queue {
+        visitLookupSwitchInsn(dflt, keys, labels)
     }
 
-    override fun visitMultiANewArrayInsn(descriptor: String?, numDimensions: Int) = context.addAction {
-        original.visitMultiANewArrayInsn(descriptor, numDimensions)
+    override fun visitMultiANewArrayInsn(descriptor: String?, numDimensions: Int) = queue {
+        visitMultiANewArrayInsn(descriptor, numDimensions)
     }
 
     override fun visitInsnAnnotation(
@@ -121,14 +107,12 @@ internal class RestriktMethodVisitor(
         typePath: TypePath?,
         descriptor: String?,
         visible: Boolean,
-    ): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-        context.addAction { visitor = original.visitInsnAnnotation(typeRef, typePath, descriptor, visible) }
-        return RestriktAnnotationVisitor { visitor }
+    ): AnnotationVisitor = annotationVisitor(context) {
+        visitInsnAnnotation(typeRef, typePath, descriptor, visible)
     }
 
-    override fun visitTryCatchBlock(start: Label?, end: Label?, handler: Label?, type: String?) = context.addAction {
-        original.visitTryCatchBlock(start, end, handler, type)
+    override fun visitTryCatchBlock(start: Label?, end: Label?, handler: Label?, type: String?) = queue {
+        visitTryCatchBlock(start, end, handler, type)
     }
 
     override fun visitTryCatchAnnotation(
@@ -136,10 +120,8 @@ internal class RestriktMethodVisitor(
         typePath: TypePath?,
         descriptor: String?,
         visible: Boolean,
-    ): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-        context.addAction { visitor = original.visitTryCatchAnnotation(typeRef, typePath, descriptor, visible) }
-        return RestriktAnnotationVisitor { visitor }
+    ): AnnotationVisitor = annotationVisitor(context) {
+        visitTryCatchAnnotation(typeRef, typePath, descriptor, visible)
     }
 
     override fun visitLocalVariable(
@@ -149,7 +131,7 @@ internal class RestriktMethodVisitor(
         start: Label?,
         end: Label?,
         index: Int,
-    ) = context.addAction { original.visitLocalVariable(name, descriptor, signature, start, end, index) }
+    ) = queue { visitLocalVariable(name, descriptor, signature, start, end, index) }
 
     override fun visitLocalVariableAnnotation(
         typeRef: Int,
@@ -159,19 +141,18 @@ internal class RestriktMethodVisitor(
         index: IntArray?,
         descriptor: String?,
         visible: Boolean,
-    ): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-        context.addAction {
-            visitor = original.visitLocalVariableAnnotation(typeRef, typePath, start, end, index, descriptor, visible)
-        }
-        return RestriktAnnotationVisitor { visitor }
+    ): AnnotationVisitor = annotationVisitor(context) {
+        visitLocalVariableAnnotation(typeRef, typePath, start, end, index, descriptor, visible)
     }
 
-    override fun visitLineNumber(line: Int, start: Label?) = context.addAction { original.visitLineNumber(line, start) }
+    override fun visitLineNumber(line: Int, start: Label?) = queue { visitLineNumber(line, start) }
 
-    override fun visitMaxs(maxStack: Int, maxLocals: Int) = context.addAction {
-        original.visitMaxs(maxStack, maxLocals)
+    override fun visitMaxs(maxStack: Int, maxLocals: Int) = queue {
+        visitMaxs(maxStack, maxLocals)
     }
 
-    override fun visitEnd() = context.addAction { original.visitEnd() }
+    override fun visitEnd() = queue { visitEnd() }
+
+    private inline fun queue(crossinline action: MethodVisitor.() -> Unit) = context.queueAction { action() }
+
 }

@@ -1,13 +1,14 @@
 package com.zwendo.restrikt.plugin.backend
 
+import com.zwendo.restrikt.plugin.backend.symbol.RestriktClassBuildingContext
 import com.zwendo.restrikt.plugin.backend.visitor.RestriktClassVisitor
+import com.zwendo.restrikt.plugin.backend.visitor.RestriktClassVisitorProxy
 import com.zwendo.restrikt.plugin.backend.visitor.RestriktFieldVisitor
 import com.zwendo.restrikt.plugin.backend.visitor.RestriktMetadataVisitor
 import com.zwendo.restrikt.plugin.backend.visitor.RestriktMethodVisitor
 import com.zwendo.restrikt.plugin.backend.visitor.RestriktRecordComponentVisitor
 import org.jetbrains.kotlin.codegen.ClassBuilder
 import org.jetbrains.kotlin.codegen.DelegatingClassBuilder
-import org.jetbrains.kotlin.codegen.inline.SourceMapper
 import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
@@ -21,7 +22,16 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
 
     override fun getDelegate(): ClassBuilder = original
 
-    override fun getVisitor(): ClassVisitor = RestriktClassVisitor { super.getVisitor() }
+    override fun getVisitor(): ClassVisitor {
+        val classData = RestriktClassBuildingContext.currentClassData
+        // the following if aims to avoid infinite queueing, in the case of the RestriktClassVisitor tries to call
+        // methods from the original visitor (e.g. avoid infinite annotation queueing)
+        return if (classData.isWritten) { // most common case, class containing at least 1 symbol
+            RestriktClassVisitorProxy(classData, original.visitor)
+        } else { // empty interface/annotation class
+            RestriktClassVisitor(classData)
+        }
+    }
 
     override fun newMethod(
         origin: JvmDeclarationOrigin,
@@ -31,18 +41,10 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         signature: String?,
         exceptions: Array<out String>?,
     ): MethodVisitor {
-        lateinit var original: MethodVisitor
-        val currentClass = RestriktContext.currentClass
-        val fullSignature = "$name$desc"
-        val function = currentClass.function(fullSignature) // add function to class
-
-        RestriktContext.addAction {
-            currentClass.onMemberDeclaration(this.original)
-            val actualAccess = function.computeModifiers(access)
-            original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
+        val data = RestriktClassBuildingContext.methodData(origin.descriptor, access) {
+            super.newMethod(origin, it, name, desc, signature, exceptions)
         }
-
-        return RestriktMethodVisitor(fullSignature) { original }
+        return RestriktMethodVisitor(data)
     }
 
     override fun newField(
@@ -53,41 +55,16 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         signature: String?,
         value: Any?,
     ): FieldVisitor {
-        lateinit var original: FieldVisitor
-        val currentClass = RestriktContext.currentClass
-        val property = currentClass.property(name) // add property to class
-
-        RestriktContext.addAction {
-            currentClass.onMemberDeclaration(this.original)
-            val actualAccess = property.computeModifiers(access)
-            original = super.newField(origin, actualAccess, name, desc, signature, value)
+        val data = RestriktClassBuildingContext.fieldData(origin.descriptor, access) {
+            super.newField(origin, it, name, desc, signature, value)
         }
-
-        return RestriktFieldVisitor(name) { original }
+        return RestriktFieldVisitor(data)
     }
 
-    override fun visitSource(name: String, debug: String?) = RestriktContext.addAction {
-        super.visitSource(name, debug)
-    }
-
-    override fun visitSMAP(smap: SourceMapper, backwardsCompatibleSyntax: Boolean) = RestriktContext.addAction {
-        super.visitSMAP(smap, backwardsCompatibleSyntax)
-    }
-
-    override fun visitOuterClass(owner: String, name: String?, desc: String?) = RestriktContext.addAction {
-        super.visitOuterClass(owner, name, desc)
-    }
-
-    override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) =
-        RestriktContext.addAction {
-            val actualAccess = RestriktContext.getClass(name)?.computeModifiers(access) ?: access
-            super.visitInnerClass(name, outerName, innerName, actualAccess)
-        }
-
-    override fun newRecordComponent(name: String, desc: String, signature: String?): RecordComponentVisitor {
-        lateinit var original: RecordComponentVisitor
-        RestriktContext.addAction { original = super.newRecordComponent(name, desc, signature) }
-        return RestriktRecordComponentVisitor { original }
+    override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) {
+        RestriktClassBuildingContext.onStartWritingPartWithoutData()
+        val actualAccess = RestriktClassBuildingContext.classAccess(name, access)
+        super.visitInnerClass(name, outerName, innerName, actualAccess)
     }
 
     override fun defineClass(
@@ -98,25 +75,33 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         signature: String?,
         superName: String,
         interfaces: Array<out String>,
-    ) {
-        val currentClass = RestriktContext.visitNewClass(name)
-        RestriktContext.addAction {
-            val actualAccess = currentClass.computeModifiers(access)
-            super.defineClass(origin, version, actualAccess, name, signature, superName, interfaces)
+    ) = RestriktClassBuildingContext.createClassData(original, name, access) {
+        super.defineClass(origin, version, it, name, signature, superName, interfaces)
+        original.visitor
+    }
+
+    override fun newRecordComponent(name: String, desc: String, signature: String?): RecordComponentVisitor {
+        val data = RestriktClassBuildingContext.recordComponentData {
+            super.newRecordComponent(name, desc, signature)
         }
+        return RestriktRecordComponentVisitor(data)
     }
 
-    // called when metadata is visited
     override fun newAnnotation(desc: String, visible: Boolean): AnnotationVisitor {
-        lateinit var original: AnnotationVisitor
-        RestriktContext.addAction { original = super.newAnnotation(desc, visible) }
-        return RestriktMetadataVisitor { original }
+        // most common case, class containing at least 1 symbol and has already been written, so we do not need to
+        // parse the metadata
+        if (RestriktClassBuildingContext.currentClassData.isWritten) {
+            return super.newAnnotation(desc, visible)
+        }
+
+        // we must parse the metadata to gather the information about the class, as it has an empty body, meaning that
+        // we did not have the possibility to retrieve its descriptor
+        val data = RestriktClassBuildingContext.metadataProxyData {
+            super.newAnnotation(desc, visible)
+        }
+        return RestriktMetadataVisitor(RestriktClassBuildingContext.currentClassData, data)
     }
 
-
-    override fun done() {
-        RestriktContext.addAction { super.done() }
-        RestriktContext.done()
-    }
+    override fun done() = RestriktClassBuildingContext.done()
 
 }

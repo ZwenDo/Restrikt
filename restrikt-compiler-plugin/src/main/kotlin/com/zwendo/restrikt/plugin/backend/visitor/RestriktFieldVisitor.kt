@@ -1,7 +1,7 @@
 package com.zwendo.restrikt.plugin.backend.visitor
 
-import com.zwendo.restrikt.plugin.backend.RestriktContext as context
 import com.zwendo.restrikt.plugin.backend.ASM_VERSION
+import com.zwendo.restrikt.plugin.backend.symbol.SymbolData
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 import org.jetbrains.org.objectweb.asm.Attribute
 import org.jetbrains.org.objectweb.asm.FieldVisitor
@@ -9,21 +9,15 @@ import org.jetbrains.org.objectweb.asm.TypePath
 
 
 internal class RestriktFieldVisitor(
-    private val name: String,
-    factory: () -> FieldVisitor,
+    private val context: SymbolData<FieldVisitor>
 ) : FieldVisitor(ASM_VERSION) {
 
-    private val original: FieldVisitor by lazy { factory() }
 
     override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-
-        preVisitSymbolDeclarationAnnotation(descriptor) { context.currentClass.property(name) }
-        context.addAction {
-            visitor = visitSymbolDeclarationAnnotation(descriptor, visible, original::visitAnnotation)
+        preVisitSymbolDeclarationAnnotation(descriptor, context)
+        return annotationVisitor(context) {
+            visitSymbolDeclarationAnnotation(descriptor) { visitAnnotation(descriptor, visible) }
         }
-
-        return RestriktAnnotationVisitor { visitor }
     }
 
     override fun visitTypeAnnotation(
@@ -31,13 +25,16 @@ internal class RestriktFieldVisitor(
         typePath: TypePath?,
         descriptor: String?,
         visible: Boolean,
-    ): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-        context.addAction { visitor = original.visitTypeAnnotation(typeRef, typePath, descriptor, visible) }
-        return RestriktAnnotationVisitor { visitor }
+    ): AnnotationVisitor = annotationVisitor(context) {
+        visitTypeAnnotation(typeRef, typePath, descriptor, visible)
     }
 
-    override fun visitAttribute(attribute: Attribute?) = context.addAction { original.visitAttribute(attribute) }
+    override fun visitAttribute(attribute: Attribute?) = queue { visitAttribute(attribute) }
 
-    override fun visitEnd() = context.addAction { original.visitEnd() }
+    override fun visitEnd() = queue { visitEnd() }
+
+    private inline fun queue(crossinline action: FieldVisitor.() -> Unit) {
+        context.queueAction { action() }
+    }
+
 }
