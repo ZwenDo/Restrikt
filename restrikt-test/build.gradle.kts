@@ -1,7 +1,7 @@
 plugins {
     java
     kotlin("jvm") version "1.7.10"
-    id("com.zwendo.restrikt") version "2.1.0"
+    id("com.zwendo.restrikt") version "2.2.0"
     id("com.github.gmazzo.buildconfig") version "3.1.0"
 }
 
@@ -17,6 +17,7 @@ dependencies {
 }
 
 val kotlinDefaultReason = "this is a default message for kotlin"
+val deprecatedDefaultReason = "this element is hidden due to HideFromKotlin"
 val javaDefaultReason = "not for java"
 val packagePrivateReason = "this implementation must be package private"
 
@@ -24,6 +25,7 @@ restrikt {
 
     hideFromKotlin {
         defaultReason = kotlinDefaultReason
+        deprecatedMessage = deprecatedDefaultReason
     }
 
     hideFromJava {
@@ -41,6 +43,7 @@ buildConfig {
     buildConfigField("String", "KOTLIN_DEFAULT_REASON", "\"$kotlinDefaultReason\"")
     buildConfigField("String", "JAVA_DEFAULT_REASON", "\"$javaDefaultReason\"")
     buildConfigField("String", "PACKAGE_PRIVATE_REASON", "\"$packagePrivateReason\"")
+    buildConfigField("String", "DEPRECATED_REASON", "\"$deprecatedDefaultReason\"")
 }
 
 tasks {
