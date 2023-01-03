@@ -2,6 +2,8 @@ package com.zwendo.restrikt.plugin.frontend
 
 internal object PluginConfiguration {
 
+    var enabled = true
+
     var toplevelPrivateConstructor = true
 
     var automaticInternalHiding = true
@@ -10,11 +12,11 @@ internal object PluginConfiguration {
 
     var hideFromJava = AnnotationConfiguration()
 
-    var hideFromKotlin = AnnotationConfiguration()
+    var hideFromKotlin = HideFromKotlinConfiguration()
 
     var packagePrivate = AnnotationConfiguration()
 
-    class AnnotationConfiguration {
+    open class AnnotationConfiguration {
 
         var enabled = true
             get() = annotationProcessing && field
@@ -24,5 +26,19 @@ internal object PluginConfiguration {
         var defaultReason: String? = null
 
     }
+
+    class HideFromKotlinConfiguration : AnnotationConfiguration() {
+
+        private var deprecatedReasonField: String? = null
+
+        var deprecatedReason: String
+            get() = deprecatedReasonField ?: HIDE_FROM_KOTLIN_DEPRECATED_DEFAULT_REASON
+            set(value) {
+                deprecatedReasonField = value
+            }
+
+    }
+
+    private const val HIDE_FROM_KOTLIN_DEPRECATED_DEFAULT_REASON: String = "This element is hidden from Kotlin."
 
 }
