@@ -6,6 +6,11 @@ package com.zwendo.restrikt.gradle
 open class RestriktConfiguration {
 
     /**
+     * Whether to enable the Restrikt plugin.
+     */
+    var enabled: Boolean = true
+
+    /**
      * Whether to generate private constructors toplevel classes.
      */
     var toplevelPrivateConstructor: Boolean? = null
@@ -28,7 +33,7 @@ open class RestriktConfiguration {
     /**
      * Configure the HideFromKotlin annotation.
      */
-    fun hideFromKotlin(block: AnnotationConfiguration.() -> Unit) = hideFromKotlin.block()
+    fun hideFromKotlin(block: HideFromKotlinConfiguration.() -> Unit) = hideFromKotlin.block()
 
     /**
      * Configure the PackagePrivate annotation.
@@ -37,7 +42,7 @@ open class RestriktConfiguration {
 
     internal val hideFromJava = AnnotationConfiguration()
 
-    internal val hideFromKotlin = AnnotationConfiguration()
+    internal val hideFromKotlin = HideFromKotlinConfiguration()
 
     internal val packagePrivate = AnnotationConfiguration()
 

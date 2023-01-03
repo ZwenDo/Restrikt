@@ -29,6 +29,10 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         val parameters = mutableListOf<SubpluginOption>()
 
+        extension.enabled.let {
+            parameters.add(SubpluginOption("enabled", it.toString()))
+        }
+
         extension.toplevelPrivateConstructor?.let {
             parameters += SubpluginOption(BuildConfig.TOPLEVEL_PRIVATE_CONSTRUCTOR, it.toString())
         }
@@ -42,7 +46,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         }
 
         annotationConfiguration(parameters, BuildConfig.HIDE_FROM_JAVA, extension.hideFromJava)
-        annotationConfiguration(parameters, BuildConfig.HIDE_FROM_KOTLIN, extension.hideFromKotlin)
+        hideFromKotlinConfiguration(parameters, extension.hideFromKotlin)
         annotationConfiguration(parameters, BuildConfig.PACKAGE_PRIVATE, extension.packagePrivate)
 
         return project.provider { parameters }
@@ -64,7 +68,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
     private fun annotationConfiguration(
         list: MutableList<SubpluginOption>,
         annotationName: String,
-        config: AnnotationConfiguration,
+        config: AbstractAnnotationConfiguration,
     ) {
         config.enabled?.let {
             list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_ENABLED}", it.toString())
@@ -76,6 +80,16 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         config.defaultReason?.let {
             list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_DEFAULT_REASON}", it)
+        }
+    }
+
+    private fun hideFromKotlinConfiguration(
+        list: MutableList<SubpluginOption>,
+        config: HideFromKotlinConfiguration,
+    ) {
+        annotationConfiguration(list, BuildConfig.HIDE_FROM_KOTLIN, config)
+        config.deprecatedMessageField?.let {
+            list += SubpluginOption("${BuildConfig.HIDE_FROM_KOTLIN}-${BuildConfig.ANNOTATION_POSTFIX_DEPRECATED_REASON}", it)
         }
     }
 
