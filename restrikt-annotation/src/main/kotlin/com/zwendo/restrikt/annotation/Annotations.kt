@@ -11,7 +11,7 @@ package com.zwendo.restrikt.annotation
  * Java-specific target from Kotlin language, in order to keep an idiomatic API for both languages.
  */
 @MustBeDocumented
-@Retention(AnnotationRetention.BINARY)
+@Retention(AnnotationRetention.RUNTIME)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -29,7 +29,7 @@ annotation class HideFromKotlin(val reason: String = "")
  * [JvmSynthetic] annotation, but can be used on all symbol declarations.
  */
 @MustBeDocumented
-@Retention(AnnotationRetention.BINARY)
+@Retention(AnnotationRetention.RUNTIME)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -50,7 +50,7 @@ annotation class HideFromJava(val reason: String = "")
  * NOTE: the original visibility will be overridden by the compiler plugin.
  */
 @MustBeDocumented
-@Retention(AnnotationRetention.BINARY)
+@Retention(AnnotationRetention.RUNTIME)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
