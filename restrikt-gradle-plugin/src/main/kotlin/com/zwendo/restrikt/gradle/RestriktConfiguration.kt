@@ -7,21 +7,29 @@ open class RestriktConfiguration {
 
     /**
      * Whether to enable the Restrikt plugin.
+     *
+     * **Default:** `true`
      */
-    var enabled: Boolean = true
+    var enabled: Boolean? = null
 
     /**
      * Whether to generate private constructors toplevel classes.
+     *
+     * **Default:** `true`
      */
     var toplevelPrivateConstructor: Boolean? = null
 
     /**
      * Whether internal symbols should be automatically hidden to java.
+     *
+     * **Default:** `true`
      */
     var automaticInternalHiding: Boolean? = null
 
     /**
      * Whether the annotation processing should be enabled.
+     *
+     * **Default:** `true`
      */
     var annotationProcessing: Boolean? = null
 

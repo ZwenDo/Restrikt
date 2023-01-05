@@ -85,10 +85,10 @@ private fun annotationKeeping(
     annotationName: String,
     annotationConfiguration: PluginConfiguration.AnnotationConfiguration
 ) = OptionImpl(
-    "$annotationName-${BuildConfig.ANNOTATION_POSTFIX_KEEP_ANNOTATION}",
-    "<true|false>",
+    "$annotationName-${BuildConfig.ANNOTATION_POSTFIX_RETENTION}",
+    "<source|binary|runtime>",
     "Whether the plugin should keep the $annotationName annotation.",
-) { annotationConfiguration.keepAnnotation = it.toBooleanStrict() }
+) { annotationConfiguration.retention = PluginConfiguration.AnnotationConfiguration.Retention.valueOf(it) }
 
 private fun annotationDefaultReason(
     annotationName: String,

@@ -8,18 +8,23 @@ import org.jetbrains.org.objectweb.asm.AnnotationVisitor
  * Visitor for annotations that are defined in the plugin.
  */
 internal class RestriktDefinedAnnotationVisitor(
+    descriptor: String,
     private val annotationConfig: PluginConfiguration.AnnotationConfiguration,
     private val reasonName: String,
-    factory: () -> AnnotationVisitor,
+    factory: (String, Boolean) -> AnnotationVisitor,
 ) : AnnotationVisitor(ASM_VERSION) {
 
     private var messageVisited: Boolean = false
 
-    private val original: AnnotationVisitor = if (!annotationConfig.keepAnnotation || !annotationConfig.enabled) {
-        object : AnnotationVisitor(ASM_VERSION) {} // no-op
-    } else {
-        factory()
-    }
+    private val original: AnnotationVisitor =
+        if (
+            !annotationConfig.retention.writeToClassFile
+            || !annotationConfig.enabled
+        ) {
+            object : AnnotationVisitor(ASM_VERSION) {} // no-op
+        } else {
+            factory(descriptor, annotationConfig.retention.isRuntime)
+        }
 
     override fun visit(name: String?, value: Any?) {
         messageVisited = true

@@ -23,24 +23,28 @@ internal fun <T> annotationVisitor(
  */
 internal fun visitSymbolDeclarationAnnotation(
     descriptor: String,
-    visitorFactory: () -> AnnotationVisitor,
+    visible: Boolean,
+    visitorFactory: (String, Boolean) -> AnnotationVisitor,
 ): AnnotationVisitor = when (descriptor) {
     HIDE_FROM_KOTLIN_DESC -> RestriktDefinedAnnotationVisitor(
+        descriptor,
         PluginConfiguration.hideFromKotlin,
         HideFromKotlin::reason.name,
         visitorFactory
-    ) //HideFromKotlinVisitor.new(annotationDescriptor, runtimeVisibility, visitorFactory)
+    )
     HIDE_FROM_JAVA_DESC -> RestriktDefinedAnnotationVisitor(
+        descriptor,
         PluginConfiguration.hideFromJava,
         HideFromJava::reason.name,
         visitorFactory
     )
     PACKAGE_PRIVATE_DESC -> RestriktDefinedAnnotationVisitor(
+        descriptor,
         PluginConfiguration.packagePrivate,
         PackagePrivate::reason.name,
         visitorFactory
     )
-    else -> visitorFactory()
+    else -> visitorFactory(descriptor, visible)
 }
 
 /**

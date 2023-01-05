@@ -21,9 +21,23 @@ internal object PluginConfiguration {
         var enabled = true
             get() = annotationProcessing && field
 
-        var keepAnnotation = true
+        var retention = Retention.BINARY
 
         var defaultReason: String? = null
+
+        enum class Retention {
+            SOURCE,
+            BINARY,
+            RUNTIME,
+            ;
+
+            val isRuntime: Boolean
+                get() = this == RUNTIME
+
+            val writeToClassFile: Boolean
+                get() = this == RUNTIME || this == BINARY
+
+        }
 
     }
 

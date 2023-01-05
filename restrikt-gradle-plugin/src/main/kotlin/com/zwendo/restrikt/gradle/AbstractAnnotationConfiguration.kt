@@ -4,17 +4,32 @@ sealed class AbstractAnnotationConfiguration {
 
     /**
      * Whether the compiler plugin should run.
+     *
+     * **Default:** `true`
      */
     var enabled: Boolean? = null
 
     /**
-     * Whether plugin annotations should be kept or removed in the generated code.
+     * The retention policy of the annotation.
+     *
+     * **Default:** `BINARY`
      */
-    var keepAnnotation: Boolean? = null
+    var retention: RestriktAnnotationRetention? = null
 
     /**
      * The default reason that will be used when no reason is provided.
+     *
+     * **Default:** none
      */
     var defaultReason: String? = null
+
+    val RUNTIME: RestriktAnnotationRetention
+        get() = RestriktAnnotationRetention.RUNTIME
+
+    val BINARY: RestriktAnnotationRetention
+        get() = RestriktAnnotationRetention.BINARY
+
+    val SOURCE: RestriktAnnotationRetention
+        get() = RestriktAnnotationRetention.SOURCE
 
 }

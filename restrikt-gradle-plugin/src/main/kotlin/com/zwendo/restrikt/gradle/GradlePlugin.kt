@@ -17,7 +17,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         )
 
         target.dependencies.apply { // add the annotations to the project
-            add("implementation", ANNOTATION_DEPENDENCY)
+            add("compileOnly", ANNOTATION_DEPENDENCY)
         }
     }
 
@@ -29,7 +29,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         val parameters = mutableListOf<SubpluginOption>()
 
-        extension.enabled.let {
+        extension.enabled?.let {
             parameters.add(SubpluginOption("enabled", it.toString()))
         }
 
@@ -74,8 +74,8 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
             list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_ENABLED}", it.toString())
         }
 
-        config.keepAnnotation?.let {
-            list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_KEEP_ANNOTATION}", it.toString())
+        config.retention?.let {
+            list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_RETENTION}", it.toString())
         }
 
         config.defaultReason?.let {
@@ -88,7 +88,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         config: HideFromKotlinConfiguration,
     ) {
         annotationConfiguration(list, BuildConfig.HIDE_FROM_KOTLIN, config)
-        config.deprecatedMessageField?.let {
+        config.deprecatedMessage?.let {
             list += SubpluginOption("${BuildConfig.HIDE_FROM_KOTLIN}-${BuildConfig.ANNOTATION_POSTFIX_DEPRECATED_REASON}", it)
         }
     }

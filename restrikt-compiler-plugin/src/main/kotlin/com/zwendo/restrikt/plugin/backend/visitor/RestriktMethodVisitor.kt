@@ -23,7 +23,7 @@ internal class RestriktMethodVisitor(
     override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
         preVisitSymbolDeclarationAnnotation(descriptor, context)
         return annotationVisitor(context) {
-            visitSymbolDeclarationAnnotation(descriptor) { visitAnnotation(descriptor, visible) }
+            visitSymbolDeclarationAnnotation(descriptor, visible) { d, v -> visitAnnotation(d, v) }
         }
     }
 
