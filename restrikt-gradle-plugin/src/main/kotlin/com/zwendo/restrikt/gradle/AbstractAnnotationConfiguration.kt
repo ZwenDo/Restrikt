@@ -23,13 +23,4 @@ sealed class AbstractAnnotationConfiguration {
      */
     var defaultReason: String? = null
 
-    val RUNTIME: RestriktAnnotationRetention
-        get() = RestriktAnnotationRetention.RUNTIME
-
-    val BINARY: RestriktAnnotationRetention
-        get() = RestriktAnnotationRetention.BINARY
-
-    val SOURCE: RestriktAnnotationRetention
-        get() = RestriktAnnotationRetention.SOURCE
-
 }
