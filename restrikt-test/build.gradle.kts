@@ -1,7 +1,7 @@
 plugins {
     java
     kotlin("jvm") version "1.7.10"
-    id("com.zwendo.restrikt") version "3.0.0"
+    id("com.zwendo.restrikt") version "3.0.1"
     id("com.github.gmazzo.buildconfig") version "3.1.0"
 }
 
