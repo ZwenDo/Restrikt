@@ -63,7 +63,8 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         BuildConfig.VERSION,
     )
 
-    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean =
+        kotlinCompilation.compilationName != KotlinCompilation.TEST_COMPILATION_NAME
 
     private fun annotationConfiguration(
         list: MutableList<SubpluginOption>,
@@ -89,7 +90,10 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
     ) {
         annotationConfiguration(list, BuildConfig.HIDE_FROM_KOTLIN, config)
         config.deprecatedMessage?.let {
-            list += SubpluginOption("${BuildConfig.HIDE_FROM_KOTLIN}-${BuildConfig.ANNOTATION_POSTFIX_DEPRECATED_REASON}", it)
+            list += SubpluginOption(
+                "${BuildConfig.HIDE_FROM_KOTLIN}-${BuildConfig.ANNOTATION_POSTFIX_DEPRECATED_REASON}",
+                it
+            )
         }
     }
 
