@@ -93,8 +93,8 @@ subprojects {
                     name = "MavenCentral"
                     setUrl(repositoryUrl)
                     credentials {
-                        username = (project.properties["ossrhUsername"] as String?)!!
-                        password = (project.properties["ossrhPassword"] as String?)!!
+                        username = (project.properties["ossrhUsername"] as? String) ?: ""
+                        password = (project.properties["ossrhPassword"] as? String) ?: ""
                     }
                 }
             }
@@ -116,12 +116,14 @@ val packagePrivate: String by project
 val annotationPostfixEnabled: String by project
 val annotationPostfixKeepAnnotation: String by project
 val annotationPostfixDefaultReason: String by project
+val annotationPostfixDeprecatedReason: String by project
+val deprecatedDefaultReason: String by project
 
 
 fun buildConfigGenericSetup(vararg projects: Project) {
     projects.forEach {
         it.buildConfig {
-            buildConfigField("String", "PLUGIN_ID", "\"$projectGroup.${rootProject.name.toLowerCase()}\"")
+            buildConfigField("String", "PLUGIN_ID", "\"${rootProject.name.toLowerCase()}\"")
             buildConfigField("String", "TOPLEVEL_PRIVATE_CONSTRUCTOR", "\"$toplevelPrivateConstructor\"")
             buildConfigField("String", "AUTOMATIC_INTERNAL_HIDING", "\"$automaticInternalHiding\"")
             buildConfigField("String", "ANNOTATION_PROCESSING", "\"$annotationProcessing\"")
@@ -129,8 +131,10 @@ fun buildConfigGenericSetup(vararg projects: Project) {
             buildConfigField("String", "HIDE_FROM_KOTLIN", "\"$hideFromKotlin\"")
             buildConfigField("String", "PACKAGE_PRIVATE", "\"$packagePrivate\"")
             buildConfigField("String", "ANNOTATION_POSTFIX_ENABLED", "\"$annotationPostfixEnabled\"")
-            buildConfigField("String", "ANNOTATION_POSTFIX_KEEP_ANNOTATION", "\"$annotationPostfixKeepAnnotation\"")
+            buildConfigField("String", "ANNOTATION_POSTFIX_RETENTION", "\"$annotationPostfixKeepAnnotation\"")
             buildConfigField("String", "ANNOTATION_POSTFIX_DEFAULT_REASON", "\"$annotationPostfixDefaultReason\"")
+            buildConfigField("String", "ANNOTATION_POSTFIX_DEPRECATED_REASON", "\"$annotationPostfixDeprecatedReason\"")
+            buildConfigField("String", "DEPRECATED_DEFAULT_REASON", "\"$deprecatedDefaultReason\"")
 
             useKotlinOutput {
                 internalVisibility = true

@@ -16,7 +16,8 @@ internal class RestriktCommandLineProcessor : CommandLineProcessor {
     /**
      * List of options that can be used by the plugin.
      */
-    override val pluginOptions = Option.CLI_OPTIONS
+    override val pluginOptions
+        get() = Option.OPTIONS
 
     /**
      * Function called for each option encountered
@@ -25,8 +26,17 @@ internal class RestriktCommandLineProcessor : CommandLineProcessor {
         option: AbstractCliOption,
         value: String,
         configuration: CompilerConfiguration,
-    ) = Option.NAME_TO_OPTION[option.optionName]?.action?.invoke(value)
-        ?: throw CliOptionProcessingException("Unknown option: ${option.optionName}")
+    ) {
+        val opt = Option.NAME_TO_OPTION[option.optionName]
+            ?: throw CliOptionProcessingException("Unknown option: ${option.optionName}")
+        try {
+            opt.applyToCompilation(value)
+        } catch (e: Exception) {
+            throw CliOptionProcessingException(
+                "Invalid value for option ${option.optionName} expected ${option.valueDescription} but was $value",
+            )
+        }
+    }
 
 }
 

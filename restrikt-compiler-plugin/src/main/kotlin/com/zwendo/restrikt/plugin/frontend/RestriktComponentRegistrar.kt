@@ -17,11 +17,9 @@ import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 internal class RestriktComponentRegistrar : ComponentRegistrar {
 
     override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
-        // if both plugin features are disabled
-        if (!PluginConfiguration.automaticInternalHiding && !PluginConfiguration.annotationProcessing) return
+        if (!PluginConfiguration.enabled) return
 
-        val interceptor = ClassGenerationInterceptor()
-        ClassBuilderInterceptorExtension.registerExtension(project, interceptor)
+        ClassBuilderInterceptorExtension.registerExtension(project, ClassGenerationInterceptor)
     }
 
 }
@@ -29,7 +27,7 @@ internal class RestriktComponentRegistrar : ComponentRegistrar {
 /**
  * Class that intercepts bytecode generation and adds custom code to it
  */
-private class ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
+private object ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
 
     /**
      * Methods that provides a factory for class builders (class builder is the class that will parse the kotlinc

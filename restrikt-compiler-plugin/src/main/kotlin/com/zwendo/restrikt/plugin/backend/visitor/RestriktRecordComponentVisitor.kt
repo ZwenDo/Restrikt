@@ -1,41 +1,32 @@
 package com.zwendo.restrikt.plugin.backend.visitor
 
-import com.zwendo.restrikt.plugin.backend.RestriktContext as context
 import com.zwendo.restrikt.plugin.backend.ASM_VERSION
+import com.zwendo.restrikt.plugin.backend.symbol.SymbolData
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 import org.jetbrains.org.objectweb.asm.Attribute
 import org.jetbrains.org.objectweb.asm.RecordComponentVisitor
 import org.jetbrains.org.objectweb.asm.TypePath
 
 internal class RestriktRecordComponentVisitor(
-    factory: () -> RecordComponentVisitor,
+    private val context: SymbolData<RecordComponentVisitor>,
 ) : RecordComponentVisitor(ASM_VERSION) {
 
-    private val original: RecordComponentVisitor by lazy { factory() }
-
-    override fun getDelegate(): RecordComponentVisitor = this
-
-    override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-        context.addAction {
-            visitor = visitSymbolDeclarationAnnotation(descriptor, visible, original::visitAnnotation)
-        }
-        return RestriktAnnotationVisitor { visitor }
-    }
+    override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor =
+        annotationVisitor(context) { visitAnnotation(descriptor, visible) }
 
     override fun visitTypeAnnotation(
         typeRef: Int,
         typePath: TypePath?,
         descriptor: String?,
         visible: Boolean,
-    ): AnnotationVisitor {
-        lateinit var visitor: AnnotationVisitor
-        context.addAction { visitor = visitTypeAnnotation(typeRef, typePath, descriptor, visible) }
-        return RestriktAnnotationVisitor { visitor }
+    ): AnnotationVisitor = annotationVisitor(context) {
+        visitTypeAnnotation(typeRef, typePath, descriptor, visible)
     }
 
-    override fun visitAttribute(attribute: Attribute?) = context.addAction { original.visitAttribute(attribute) }
+    override fun visitAttribute(attribute: Attribute?) = queue { visitAttribute(attribute) }
 
-    override fun visitEnd() = context.addAction { original.visitEnd() }
+    override fun visitEnd() = queue { visitEnd() }
+
+    private inline fun queue(crossinline action: RecordComponentVisitor.() -> Unit) = context.queueAction { action() }
 
 }

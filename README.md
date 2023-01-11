@@ -3,7 +3,7 @@
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/com.zwendo.restrikt?color=%2366dcb8&logo=gradle)](https://plugins.gradle.org/plugin/com.zwendo.restrikt)
 [![Maven Central](https://img.shields.io/maven-central/v/com.zwendo/restrikt-annotation)](https://search.maven.org/artifact/com.zwendo/restrikt-annotation)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.7.10-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.8.0-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 
 <div align="center">
 <h3><i>A Kotlin/JVM compiler plugin to restrict symbols access, from external project sources.</i></h3>
@@ -23,16 +23,17 @@
 ## Summary
 
 1. [Dependency](#dependency)
-   1. [Gradle plugins DSL](#using-the-gradle-plugin-dsl-gradle-21)
-   2. [Gradle apply method](#using-apply-method-gradle-prior-to-21)
-   3. [Maven (Coming soon)](#using-maven)
+   1. [Gradle plugins DSL](#using-the-gradle-plugin-dsl--gradle-21-)
+   2. [Gradle apply method](#using-apply-method--gradle-prior-to-21-)
+   3. [Maven](#using-maven)
 2. [Plugin Configuration](#plugin-configuration)
-   1. [Gradle](#gradle)
-   2. [Maven (Coming soon)](#maven)
+   1. [Available options](#available-options)
+   2. [Gradle](#gradle)
+   3. [Maven](#maven)
 3. [Usage](#usage)
    1. [Internal symbols hiding](#internal-symbols-hiding)
    2. [Private constructors for Top-level classes](#private-constructors-for-top-level-classes)
-   3. ['Hide' Annotations](#hide-annotations)
+   3. ['Hide' Annotations](#-hide-annotations)
    4. [PackagePrivate annotation](#packageprivate-annotation)
    5. [Important notes](#important-notes)
 4. [Known issues](#known-issues)
@@ -114,9 +115,94 @@ apply plugin: 'com.zwendo.restrikt'
 
 ### Using Maven
 
-*Coming soon*
+<details>
+    <summary>Click to expand</summary>
+
+First of all, you need to add the compiler plugin to the kotlin's maven plugin dependencies:
+```xml
+<dependency>
+    <groupId>com.zwendo</groupId>
+    <artifactId>restrikt-compiler-plugin</artifactId>
+    <version>[latest-version]</version>
+</dependency>
+```
+
+Then, you need to add the annotations to your project's dependencies:
+```xml
+<dependency>
+    <groupId>com.zwendo</groupId>
+    <artifactId>restrikt-annotation</artifactId>
+    <version>[latest-version]</version>
+</dependency>
+```
+
+Your `pom.xml` should look like this:
+```xml
+<project>
+    <!-- ... -->
+    <build>
+        <!-- ... -->
+        <plugins>
+            <!-- ... -->
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>[kotlin-version]</version>
+                <!-- ... -->
+                <dependencies>
+                    <dependency>
+                        <groupId>com.zwendo</groupId>
+                        <artifactId>restrikt-compiler-plugin</artifactId>
+                        <version>[latest-version]</version>
+                    </dependency>
+                    <!-- ... -->
+                </dependencies>
+            </plugin>
+        </plugins>
+    </build>
+    <dependencies>
+        <!-- ... -->
+        <dependency>
+            <groupId>com.zwendo</groupId>
+            <artifactId>restrikt-annotation</artifactId>
+            <version>[latest-version]</version>
+        </dependency>
+    </dependencies>
+</project>
+```
+</details>
 
 ## Plugin Configuration
+
+### Available options
+
+<details>
+    <summary>Click to expand</summary>
+
+Here are the currently supported default configuration options:
+
+|             name             |  type   | default | description                                                               |
+|:----------------------------:|:-------:|:-------:|---------------------------------------------------------------------------|
+|          `enabled`           | boolean | `true`  | Whether the plugin is enabled                                             |
+|  `automaticInternalHiding`   | boolean | `true`  | Whether the internal symbols should be automatically hidden.              |
+|    `annotationProcessing`    | boolean | `true`  | Whether the plugin annotations should be parsed to manually hide symbols. |
+| `toplevelPrivateConstructor` | boolean | `true`  | Whether to generate private constructor for top-level classes.            |
+
+Moreover, all annotations of the plugin can be individually configured using their own DSL (`hideFromKotlin`,
+`hideFromJava` or `packagePrivate`), with the following configuration options:
+
+|      name       |  type   | default  | description                                                                                                   |
+|:---------------:|:-------:|:--------:|---------------------------------------------------------------------------------------------------------------|
+|    `enabled`    | boolean |  `true`  | Whether the annotation should be processed to hide symbols. (works only if `annotationProcessing` is `true`). |
+|   `retention`   | boolean | `binary` | The retention policy of the annotation.                                                                       |
+| `defaultReason` | string  |  `none`  | The default reason written on the annotation if no specific reason is provided.                               |
+
+In addition to the options above, `HideFromKotlin` annotation can be configured using the following options:
+
+|        name         |  type  | default | description                                        |
+|:-------------------:|:------:|:-------:|----------------------------------------------------|
+| `deprecatedMessage` | string | `none`  | The message written on the `Deprecated`annotation. |
+</details>
 
 ### Gradle
 
@@ -132,34 +218,28 @@ restrikt {
 }
 ```
 
-Here are the currently supported default configuration options:
+To configure the annotations, a DSL function is available for each annotation:
 
-|             name             |  type   | default | description                                                               |
-|:----------------------------:|:-------:|:-------:|---------------------------------------------------------------------------|
-|  `automaticInternalHiding`   | boolean | `true`  | Whether the internal symbols should be automatically hidden.              |
-|    `annotationProcessing`    | boolean | `true`  | Whether the plugin annotations should be parsed to manually hide symbols. |
-| `toplevelPrivateConstructor` | boolean | `true`  | Whether to generate private constructor for top-level classes.            |
-
-Moreover, all annotations of the plugin can be individually configured using their own DSL (`hideFromKotlin`,
-`hideFromJava` or `packagePrivate`), with the following configuration options:
-
-|       name       |  type   | default | description                                                                                                   |
-|:----------------:|:-------:|:-------:|---------------------------------------------------------------------------------------------------------------|
-|    `enabled`     | boolean | `true`  | Whether the annotation should be processed to hide symbols. (works only if `annotationProcessing` is `true`). |
-| `keepAnnotation` | boolean | `true`  | Whether the annotation should be written to the classfile.                                                    |
-| `defaultReason`  | string  | `none`  | The default reason written on the annotation if no specific reason is provided.                               |
-
+```kotlin
+restrikt {
+    hideFromKotlin {
+        option = value
+        // ...
+    }
+}
+```
 </details>
 
 ### Maven
 
-*Coming soon*
+Currently, the plugin is not configurable using Maven. The [default](#available-options) configuration
+will be used.
 
 ## Usage
 
 ### Internal symbols hiding
 
-Restrikt plugin features automatic hiding of internal symbols in Kotlin sources. At compile time, all symbols with the
+Restrikt plugin features automatic hiding from internal symbols in Kotlin sources. At compile time, all symbols with the
 `internal` visibility automatically receives the JVM `ACC_SYNTHETIC` flag, making them invisible to Java sources.
 
 ### Private constructors for Top-level classes
@@ -200,7 +280,7 @@ class Bar { // will be hidden from kotlin sources
 
 Because sometimes you just want to hide code to the outside of your package, and because Kotlin doesn't provide a
 `package-private` visibility modifier, Restrikt plugin provides a `PackagePrivate` annotation to hide symbols from
-outside of their package.
+outside their package.
 
 ### Important notes
 
@@ -209,85 +289,27 @@ outside of their package.
 - Symbols hidden from Kotlin will still be accessible at compile-time from Kotlin sources in the same class (there is
   some very specific exceptions but the only access that always work is from the same class).
 - Most IDEs won't warn you on the usage of a symbol made package-private by the `@PackagePrivate` annotation. However,
-  at runtime, you will get an `IllegalAccessError` if you try to access it from outside of its package.
+  at runtime, you will get an `IllegalAccessError` if you try to access it from outside its package.
 
 ## Known issues
 
-<h4>Problems listed below are in the process of being resolved. If you encounter an issue that doesn't seems to be in
+<h4>Problems listed below are in the process of being resolved. If you encounter an issue that doesn't seem to be in
 this list, feel free to open an issue for it.</h4>
 
 <br/>
 
-### **from 2.0.0**
-
-<details>
-    <summary>Anonymous object with crossinline lambda capture</summary>
-
-With the new way of modifying the compilation, the plugin will run into an error if called to compile a project that
-meets all the following conditions:
-
-- Define an inline function that takes a `crossinline` functional type and returns an anonymous object. The lambda
-  must be captured by the anonymous object ;
-- Define a function calling the previous function with a literal lambda.
-
-These conditions can be illustrated by the following example:
-
-```kotlin
-// first requirement
-inline fun inlinedAnonymous(crossinline lambda: () -> Unit) = object {
-
-      fun bar() = lambda()
-
-   }
-
-// second requirement
-fun problem() = inlinedAnonymous {
-   /* the lambda inlining causes the error */
-}
-
-fun valid(lambda: () -> Unit) = inlinedAnonymous(lambda)
-```
-
-**WORKAROUND** : A simple solution (if performances are not a critical issue) is just to remove the inline modifier from
-the function.
-
-</details>
-
-<br/>
-
-<details>
-    <summary>Internal hiding not working on MultiFileClass facade class</summary>
-
-There is a bug causing the `internal` symbols hiding not working on elements of a class generated by the
-[@JvmMultifileClass](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-multifile-class/) annotation. These
-elements remain visible to Java sources.
-
-This bug is due to the fact that this class is generated by the Kotlin compiler without any relevant data in its
-Metadata to identify internal symbols.
-
-**WORKAROUND**: The current simplest workaround is to use the `@HideFromJava` annotation on the symbols to manually hide
-them.
-
-</details>
+*All known issues have been resolved.*
 
 ## How it works
 
-This sections is intended for curious people and aims at describing the most specific parts of how this project
+This section is intended for curious people and aims at describing the most specific parts of how this project
 works.
-
-### Automatic internal symbols detection
-
-All Kotlin specific informations of a classfile is stored in an annotation (the
-[@Metatdata](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-metadata/) annotation) placed on the class
-declaration. At compile-time be able to parse this annotation is the only way to access Kotlin specific data. Thank to
-the [kotlinx-metadata](https://github.com/JetBrains/kotlin/tree/master/libraries/kotlinx-metadata) parser
-library, this parsing is made possible and allows to know at compile-time which symbols are `internal` in order to
-hide them.
 
 ### Java hiding
 
 Like the Kotlin [@JvmSynthetic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-synthetic/), this
-annotation induce the generation of the JVM `ACC_SYNTHETIC`, hiding symbols from Java sources.
+annotation induce the generation of the JVM `ACC_SYNTHETIC`, hiding class members from Java sources. As for classes,
+because the `ACC_SYNTHETIC` doesn't work on them, the flag is applied to all the class members instead.
 
 ### Kotlin hiding
 
@@ -313,42 +335,12 @@ class Foo {
 }
 ```
 
-**NOTE:** The message of the `HideFromKotlin` annotation will be transferred to the `Deprecated` annotation.
-
 Generating the `Deprecated` annotation or simply using it directly have slightly different outcomes. Indeed, the
 `Deprecated` annotation (with `HIDDEN` level) acts as a flag for the Kotlin compiler. The latter will add the JVM
 `ACC_SYNTHETIC` flag for the element in the produced classfile, making it also invisible for Java sources. The hack is
 that the Kotlin compiler runs before calling the compiler plugin, so when it writes the classfile, the `Deprecated`
 annotation is not present meaning that the `ACC_SYNTHETIC` flag is not set.
 
-### Compilation order workaround
-
-The main difficulty while developing Kotlin compiler plugins is that.
-
-1. Metadata is parsed at the end of the file parsing, meaning that all "Kotlin informations" are known when the entire
-   file has already been defined.
-2. Symbol annotation processing is done after that the involved symbol has been declared, which is problem when it comes
-   to change a symbol modifiers depending on its annotations.
-
-To solve both of these problems, this project uses a singleton representing a context. Each writing instruction is
-delayed by queueing the associated action (as a `() -> Unit` lambda) in a list in the context. These actions can
-reference external values that aren't already resolved until the right symbol is parsed, like demonstrated below
-(simplified example):
-
-```kotlin
-lateinit var isInternal: Boolean // will be filled by an other function
-
-fun functionDeclaration(signature: String, modifiers: Int, /* ... */) {
-
-   Context.queue { // when this lambda will be executed, isInternal value will been set
-      val actualModifiers = if (isInternal) modifier or Modifiers.SYNTHETIC else actualModifiers
-      writeFunctionDeclaration(signature, actualModifiers, /* ... */)
-   }
-}
-```
-
-Finally, when the last symbol of the file has been correctly queued, all lambdas are called in the right order,
-to keep output classfile integrity.
 
 ## Future Plans
 
@@ -358,6 +350,29 @@ to keep output classfile integrity.
   symbols of a project to simplify Kotlin project obfuscation with [ProGuard](https://www.guardsquare.com/proguard).
 
 ## Changelog
+
+### 3.0.1 - 2023-01-11
+
+**Bugfixes** : 
+
+- Fixed bug were Restrikt caused errors when compiling tests by disabling the plugin for test sources.
+
+### 3.0.0 - 2023-01-09
+
+**Breaking Changes** :
+
+- Option `keepAnnotation` has been replaced by the new `retention` option.
+
+**Features** :
+
+- Annotation retentions are now individually configurable
+- Slightly improved performance by using a more efficient way to retrieve information from symbols.
+- Plugin now works with maven projects.
+
+**Bugfix** :
+
+- Plugin now works with inline functions
+- Plugin now correctly hides multi file classes functions
 
 ### 2.1.0 - 2022.09.05
 
@@ -377,6 +392,6 @@ to keep output classfile integrity.
 
 **Features** :
 
-- Automatic detection and hiding of internal symbols ;
+- Automatic detection and hiding from internal symbols ;
 - Added the `HideFromJava` annotation to hide symbols from Java sources ;
 - New gradle plugin configuration options for each annotation and internal hiding.

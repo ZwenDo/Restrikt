@@ -17,7 +17,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         )
 
         target.dependencies.apply { // add the annotations to the project
-            add("implementation", ANNOTATION_DEPENDENCY)
+            add("compileOnly", ANNOTATION_DEPENDENCY)
         }
     }
 
@@ -28,6 +28,10 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
             ?: RestriktConfiguration()
 
         val parameters = mutableListOf<SubpluginOption>()
+
+        extension.enabled?.let {
+            parameters.add(SubpluginOption("enabled", it.toString()))
+        }
 
         extension.toplevelPrivateConstructor?.let {
             parameters += SubpluginOption(BuildConfig.TOPLEVEL_PRIVATE_CONSTRUCTOR, it.toString())
@@ -42,7 +46,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         }
 
         annotationConfiguration(parameters, BuildConfig.HIDE_FROM_JAVA, extension.hideFromJava)
-        annotationConfiguration(parameters, BuildConfig.HIDE_FROM_KOTLIN, extension.hideFromKotlin)
+        hideFromKotlinConfiguration(parameters, extension.hideFromKotlin)
         annotationConfiguration(parameters, BuildConfig.PACKAGE_PRIVATE, extension.packagePrivate)
 
         return project.provider { parameters }
@@ -59,23 +63,37 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         BuildConfig.VERSION,
     )
 
-    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean =
+        kotlinCompilation.compilationName != KotlinCompilation.TEST_COMPILATION_NAME
 
     private fun annotationConfiguration(
         list: MutableList<SubpluginOption>,
         annotationName: String,
-        config: AnnotationConfiguration,
+        config: AbstractAnnotationConfiguration,
     ) {
         config.enabled?.let {
             list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_ENABLED}", it.toString())
         }
 
-        config.keepAnnotation?.let {
-            list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_KEEP_ANNOTATION}", it.toString())
+        config.retention?.let {
+            list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_RETENTION}", it.toString())
         }
 
         config.defaultReason?.let {
             list += SubpluginOption("$annotationName-${BuildConfig.ANNOTATION_POSTFIX_DEFAULT_REASON}", it)
+        }
+    }
+
+    private fun hideFromKotlinConfiguration(
+        list: MutableList<SubpluginOption>,
+        config: HideFromKotlinConfiguration,
+    ) {
+        annotationConfiguration(list, BuildConfig.HIDE_FROM_KOTLIN, config)
+        config.deprecatedMessage?.let {
+            list += SubpluginOption(
+                "${BuildConfig.HIDE_FROM_KOTLIN}-${BuildConfig.ANNOTATION_POSTFIX_DEPRECATED_REASON}",
+                it
+            )
         }
     }
 

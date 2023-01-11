@@ -36,7 +36,7 @@ class InternalHidingTest {
         val property = instance::internalProperty
 
         property.javaField.assertNotNullAnd {
-            assertTrue(isSynthetic)
+            assertFalse(isSynthetic)
         }
 
         property.javaGetter.assertNotNullAnd {
@@ -202,7 +202,7 @@ class InternalHidingTest {
         val property = ::internalProperty
 
         property.javaField.assertNotNullAnd {
-            assertTrue(isSynthetic)
+            assertFalse(isSynthetic)
         }
 
         property.javaGetter.assertNotNullAnd {

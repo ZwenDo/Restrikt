@@ -18,26 +18,19 @@ class HideFromKotlinTest {
     }
 
     @Test
-    fun `Annotated property is hidden and default message is correctly applied`() {
-        val property = invisiblePropertyDefaultMessageAccessor
+    fun `Annotated property is hidden and message is correctly applied`() {
+        val property = invisiblePropertyAccessor
         assertTrue(property.isHiddenFromKotlin)
-        assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, property.hideFromKotlinMessage)
+        assertEquals(BuildConfig.DEPRECATED_REASON, property.deprecatedMessage)
     }
 
     @Test
-    fun `Annotated field is hidden and default message is correctly applied`() {
-        val property = ::invisibleFieldDefaultMessage
+    fun `Annotated field is hidden and message is correctly applied`() {
+        val property = ::invisibleField
         property.javaField.assertNotNullAnd {
             assertTrue(isHiddenFromKotlin)
-            assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, hideFromKotlinMessage)
+            assertEquals(BuildConfig.DEPRECATED_REASON, deprecatedMessage)
         }
-    }
-
-    @Test
-    fun `Annotated property is hidden and custom message is correctly applied`() {
-        val property = invisiblePropertyCustomMessageAccessor
-        assertTrue(property.isHiddenFromKotlin)
-        assertEquals(CUSTOM_MESSAGE, property.hideFromKotlinMessage)
     }
 
     @Test
@@ -63,23 +56,16 @@ class HideFromKotlinTest {
     }
 
     @Test
-    fun `Annotated method is hidden and default message is correctly applied`() {
-        val property = invisibleFunctionDefaultMessageAccessor
+    fun `Annotated method is hidden and message is correctly applied`() {
+        val property = invisibleFunctionAccessor
         assertTrue(property.isHiddenFromKotlin)
-        assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, property.hideFromKotlinMessage)
-    }
-
-    @Test
-    fun `Annotated method is hidden and custom message is correctly applied`() {
-        val property = invisibleFunctionCustomMessageAccessor
-        assertTrue(property.isHiddenFromKotlin)
-        assertEquals(CUSTOM_MESSAGE_2, property.hideFromKotlinMessage)
+        assertEquals(BuildConfig.DEPRECATED_REASON, property.deprecatedMessage)
     }
 
     @Test
     fun `Not annotated constructor is not hidden`() {
         val constructor = VisibleClass::class.constructors.first {
-            it.parameters.isNotEmpty() && it.parameters[0].name == "visible"
+            it.parameters.isEmpty()
         }
 
         constructor.assertNotNullAnd {
@@ -88,24 +74,14 @@ class HideFromKotlinTest {
     }
 
     @Test
-    fun `Annotated constructor is hidden and default message is correctly applied`() {
+    fun `Annotated constructor is hidden and message is correctly applied`() {
         val constructor = VisibleClass::class.constructors.first {
             it.parameters.isNotEmpty() && it.parameters[0].name == "invisible"
         }
 
         constructor.assertNotNullAnd {
             assertTrue(isHiddenFromKotlin)
-            assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, hideFromKotlinMessage)
-        }
-    }
-
-    @Test
-    fun `Annotated constructor is hidden and custom message is correctly applied`() {
-        val constructor = VisibleClass::class.constructors.first { it.parameters.isEmpty() }
-
-        constructor.assertNotNullAnd {
-            assertTrue(isHiddenFromKotlin)
-            assertEquals(CUSTOM_MESSAGE_3, hideFromKotlinMessage)
+            assertEquals(BuildConfig.DEPRECATED_REASON, deprecatedMessage)
         }
     }
 
@@ -116,10 +92,10 @@ class HideFromKotlinTest {
     }
 
     @Test
-    fun `Annotated class is hidden and default message is correctly applied`() {
-        val clazz = invisibleClassDefaultMessageAccessor
+    fun `Annotated class is hidden and message is correctly applied`() {
+        val clazz = invisibleClassAccessor
         assertTrue(clazz.isHiddenFromKotlin)
-        assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, clazz.hideFromKotlinMessage)
+        assertEquals(BuildConfig.DEPRECATED_REASON, clazz.deprecatedMessage)
     }
 
     @Test
@@ -129,17 +105,10 @@ class HideFromKotlinTest {
     }
 
     @Test
-    fun `Annotated annotation is hidden and default message is correctly applied`() {
-        val annotation = invisibleAnnotationDefaultMessageAccessor
+    fun `Annotated annotation is hidden and message is correctly applied`() {
+        val annotation = invisibleAnnotationAccessor
         assertTrue(annotation.isHiddenFromKotlin)
-        assertEquals(BuildConfig.KOTLIN_DEFAULT_REASON, annotation.hideFromKotlinMessage)
-    }
-
-    @Test
-    fun `Annotated annotation is hidden and custom message is correctly applied`() {
-        val annotation = invisibleAnnotationCustomMessageAccessor
-        assertTrue(annotation.isHiddenFromKotlin)
-        assertEquals(CUSTOM_MESSAGE_4, annotation.hideFromKotlinMessage)
+        assertEquals(BuildConfig.DEPRECATED_REASON, annotation.deprecatedMessage)
     }
 
 
@@ -149,12 +118,12 @@ class HideFromKotlinTest {
     private val AnnotatedElement.isHiddenFromKotlin: Boolean
         get() = annotations.any { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
 
-    private val KAnnotatedElement.hideFromKotlinMessage: String
+    private val KAnnotatedElement.deprecatedMessage: String
         get() = annotations.find { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
             ?.let { (it as Deprecated).message }
             ?: throw AssertionError("Element $this is not hidden from kotlin")
 
-    private val AnnotatedElement.hideFromKotlinMessage: String
+    private val AnnotatedElement.deprecatedMessage: String
         get() = annotations.find { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
             ?.let { (it as Deprecated).message }
             ?: throw AssertionError("Element $this is not hidden from kotlin")

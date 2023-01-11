@@ -8,20 +8,13 @@ val visibleProperty = 5
 val visiblePropertyAccessor = ::visibleProperty
 
 @HideFromKotlin
-val invisiblePropertyDefaultMessage = "a"
+val invisibleProperty = "a"
 
 @JvmField
 @field:HideFromKotlin
-val invisibleFieldDefaultMessage = "b"
+val invisibleField = "b"
 
-val invisiblePropertyDefaultMessageAccessor = ::invisiblePropertyDefaultMessage
-
-const val CUSTOM_MESSAGE = "custom message"
-
-@HideFromKotlin(CUSTOM_MESSAGE)
-val invisiblePropertyCustomMessage = 2
-
-val invisiblePropertyCustomMessageAccessor = ::invisiblePropertyCustomMessage
+val invisiblePropertyAccessor = ::invisibleProperty
 
 @get:HideFromKotlin
 var invisiblePropertyGetter = 3
@@ -40,29 +33,19 @@ fun visibleFunction() {
 val visibleFunctionAccessor = ::visibleFunction
 
 @HideFromKotlin
-fun invisibleFunctionWithDefaultMessage() {
+fun invisibleFunction() {
 
 }
 
-val invisibleFunctionDefaultMessageAccessor = ::invisibleFunctionWithDefaultMessage
+val invisibleFunctionAccessor = ::invisibleFunction
 
-const val CUSTOM_MESSAGE_2 = "custom message 2"
 
-@HideFromKotlin(CUSTOM_MESSAGE_2)
-fun invisibleFunctionCustomMessage() {
-
-}
-
-val invisibleFunctionCustomMessageAccessor = ::invisibleFunctionCustomMessage
-
-const val CUSTOM_MESSAGE_3 = "custom message 3"
-
-class VisibleClass @HideFromKotlin(CUSTOM_MESSAGE_3) constructor() {
+class VisibleClass {
 
     @HideFromKotlin
-    constructor(invisible: Int) : this()
+    constructor(invisible: Int)
 
-    constructor(visible: Any) : this()
+    constructor()
 
     @HideFromKotlin
     companion object
@@ -72,9 +55,9 @@ class VisibleClass @HideFromKotlin(CUSTOM_MESSAGE_3) constructor() {
 val visibleClassAccessor = VisibleClass::class
 
 @HideFromKotlin
-class InvisibleClassDefaultMessage
+class InvisibleClass
 
-val invisibleClassDefaultMessageAccessor = InvisibleClassDefaultMessage::class
+val invisibleClassAccessor = InvisibleClass::class
 
 
 annotation class VisibleAnnotation
@@ -82,13 +65,7 @@ annotation class VisibleAnnotation
 val visibleAnnotationAccessor = VisibleAnnotation::class
 
 @HideFromKotlin
-annotation class InvisibleAnnotationDefaultMessage
+annotation class InvisibleAnnotation
 
-val invisibleAnnotationDefaultMessageAccessor = InvisibleAnnotationDefaultMessage::class
+val invisibleAnnotationAccessor = InvisibleAnnotation::class
 
-const val CUSTOM_MESSAGE_4 = "custom message 4"
-
-@HideFromKotlin(CUSTOM_MESSAGE_4)
-annotation class InvisibleAnnotationCustomMessage
-
-val invisibleAnnotationCustomMessageAccessor = InvisibleAnnotationCustomMessage::class
