@@ -351,6 +351,12 @@ annotation is not present meaning that the `ACC_SYNTHETIC` flag is not set.
 
 ## Changelog
 
+### 3.0.1 - 2023-01-11
+
+**Bugfixes** : 
+
+- Fixed bug were Restrikt caused errors when compiling tests by disabling the plugin for test sources.
+
 ### 3.0.0 - 2023-01-09
 
 **Breaking Changes** :
