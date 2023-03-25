@@ -6,7 +6,6 @@ package com.zwendo.restrikt.annotation.runtime
  * **NOTE**: This annotation is available at runtime only if the annotation retention has been set to `RUNTIME` in the
  * plugin configuration.
  */
-@Retention(AnnotationRetention.RUNTIME)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -17,6 +16,8 @@ package com.zwendo.restrikt.annotation.runtime
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
+@RestriktGeneratedAnnotation
+@Retention(AnnotationRetention.RUNTIME)
 annotation class HideFromKotlin(val reason: String)
 
 /**
@@ -25,7 +26,6 @@ annotation class HideFromKotlin(val reason: String)
  * **NOTE**: This annotation is available at runtime only if the annotation retention has been set to `RUNTIME` in the
  * plugin configuration.
  */
-@Retention(AnnotationRetention.RUNTIME)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -37,6 +37,8 @@ annotation class HideFromKotlin(val reason: String)
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
+@RestriktGeneratedAnnotation
+@Retention(AnnotationRetention.RUNTIME)
 annotation class HideFromJava(val reason: String)
 
 /**
@@ -45,7 +47,6 @@ annotation class HideFromJava(val reason: String)
  * **NOTE**: This annotation is available at runtime only if the annotation retention has been set to `RUNTIME` in the
  * plugin configuration.
  */
-@Retention(AnnotationRetention.RUNTIME)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -57,4 +58,6 @@ annotation class HideFromJava(val reason: String)
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
+@RestriktGeneratedAnnotation
+@Retention(AnnotationRetention.RUNTIME)
 annotation class PackagePrivate(val reason: String)

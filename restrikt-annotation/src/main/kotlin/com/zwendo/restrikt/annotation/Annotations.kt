@@ -14,8 +14,6 @@ package com.zwendo.restrikt.annotation
  * alternative, you can use the [com.zwendo.restrikt.annotation.runtime.HideFromKotlin] annotation, which is available
  * at runtime.
  */
-@MustBeDocumented
-@Retention(AnnotationRetention.SOURCE)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -26,6 +24,8 @@ package com.zwendo.restrikt.annotation
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
+@MustBeDocumented
+@Retention(AnnotationRetention.SOURCE)
 annotation class HideFromKotlin(val reason: String = "")
 
 /**
@@ -36,8 +36,6 @@ annotation class HideFromKotlin(val reason: String = "")
  * alternative, you can use the [com.zwendo.restrikt.annotation.runtime.HideFromJava] annotation, which is available
  * at runtime.
  */
-@MustBeDocumented
-@Retention(AnnotationRetention.SOURCE)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -49,6 +47,8 @@ annotation class HideFromKotlin(val reason: String = "")
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
+@MustBeDocumented
+@Retention(AnnotationRetention.SOURCE)
 annotation class HideFromJava(val reason: String = "")
 
 /**
@@ -61,8 +61,6 @@ annotation class HideFromJava(val reason: String = "")
  * alternative, you can use the [com.zwendo.restrikt.annotation.runtime.PackagePrivate] annotation, which is available
  * at runtime.
  */
-@MustBeDocumented
-@Retention(AnnotationRetention.SOURCE)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -74,4 +72,6 @@ annotation class HideFromJava(val reason: String = "")
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
+@MustBeDocumented
+@Retention(AnnotationRetention.SOURCE)
 annotation class PackagePrivate(val reason: String = "")
