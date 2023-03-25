@@ -12,7 +12,7 @@ import org.jetbrains.kotlin.descriptors.impl.DeclarationDescriptorVisitorEmptyBo
 import org.jetbrains.kotlin.descriptors.runtime.structure.desc
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 
-val DeclarationDescriptor?.isInternal: Boolean
+internal val DeclarationDescriptor?.isInternal: Boolean
     get() = this?.accept(InternalVisibilityVisitor, Unit) ?: false
 
 private object InternalVisibilityVisitor : DeclarationDescriptorVisitorEmptyBodies<Boolean, Unit>() {

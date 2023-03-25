@@ -37,7 +37,7 @@ internal class FieldData(
 
 internal class RecordComponentData(
     classData: ClassData,
-    symbolFactory: (Int) -> RecordComponentVisitor
+    symbolFactory: (Int) -> RecordComponentVisitor,
 ) : AbstractSymbolData<RecordComponentVisitor>(classData, 0, symbolFactory) {
 
     override val descriptor: DeclarationDescriptor?

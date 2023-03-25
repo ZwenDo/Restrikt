@@ -102,6 +102,9 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         return RestriktMetadataVisitor(RestriktClassBuildingContext.currentClassData, data)
     }
 
-    override fun done() = RestriktClassBuildingContext.done()
+    override fun done(generateSmapCopyToAnnotation: Boolean) {
+        RestriktClassBuildingContext.done()
+        super.done(generateSmapCopyToAnnotation)
+    }
 
 }

@@ -1,7 +1,9 @@
 package com.zwendo.restrikt.plugin.backend.symbol
 
 import com.zwendo.restrikt.annotation.HideFromKotlin
+import com.zwendo.restrikt.plugin.backend.logger
 import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
+import java.io.Closeable
 import org.jetbrains.kotlin.codegen.ClassBuilder
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.kotlin.descriptors.PackageFragmentDescriptor
@@ -58,7 +60,7 @@ internal class ClassData(
 
     override fun symbolWriting(symbol: ClassVisitor) {
         if (PluginConfiguration.toplevelPrivateConstructor && topLevel) {
-           generatePrivateConstructor()
+            generatePrivateConstructor()
         }
         super.symbolWriting(symbol)
     }

@@ -46,7 +46,7 @@ internal class RestriktClassVisitor(private val context: ClassData) : ClassVisit
         throw AssertionError("Should not be called")
 
     override fun visitOuterClass(owner: String?, name: String?, descriptor: String?) =
-        throw AssertionError("Should not be called")
+        queue { visitOuterClass(owner, name, descriptor) }
 
     override fun visitInnerClass(name: String?, outerName: String?, innerName: String?, access: Int) =
         throw AssertionError("Should not be called")

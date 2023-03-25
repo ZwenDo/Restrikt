@@ -1,11 +1,13 @@
 package com.zwendo.restrikt.plugin.frontend
 
 import com.zwendo.restrikt.plugin.backend.RestriktClassBuilder
+import org.jetbrains.kotlin.asJava.UltraLightClassModifierExtension.Companion.registerExtension
 import org.jetbrains.kotlin.codegen.ClassBuilder
 import org.jetbrains.kotlin.codegen.ClassBuilderFactory
 import org.jetbrains.kotlin.codegen.extensions.ClassBuilderInterceptorExtension
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
-import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.diagnostics.DiagnosticSink
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -14,12 +16,15 @@ import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 /**
  * Class that registers plugin custom class generation interceptor
  */
-internal class RestriktComponentRegistrar : ComponentRegistrar {
+@OptIn(ExperimentalCompilerApi::class)
+internal class RestriktComponentRegistrar : CompilerPluginRegistrar() {
 
-    override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
+    override val supportsK2: Boolean
+        get() = false
+
+    override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         if (!PluginConfiguration.enabled) return
-
-        ClassBuilderInterceptorExtension.registerExtension(project, ClassGenerationInterceptor)
+        ClassBuilderInterceptorExtension.registerExtension(ClassGenerationInterceptor)
     }
 
 }
