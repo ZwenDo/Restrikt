@@ -9,9 +9,13 @@ package com.zwendo.restrikt.annotation
  *
  * Like [JvmSynthetic] acts to hide elements to Java, this annotation is intended for API designers who want to hide a
  * Java-specific target from Kotlin language, in order to keep an idiomatic API for both languages.
+ *
+ * **NOTE**: This annotation retention is set to `SOURCE` by default, so it will not be available at runtime. As an
+ * alternative, you can use the [com.zwendo.restrikt.annotation.runtime.HideFromKotlin] annotation, which is available
+ * at runtime.
  */
 @MustBeDocumented
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.SOURCE)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -27,9 +31,13 @@ annotation class HideFromKotlin(val reason: String = "")
 /**
  * Used with the [Restrikt compiler plugin](https://github.com/ZwenDo/Restrikt), this annotation acts like
  * [JvmSynthetic] annotation, but can be used on all symbol declarations.
+ *
+ * **NOTE**: This annotation retention is set to `SOURCE` by default, so it will not be available at runtime. As an
+ * alternative, you can use the [com.zwendo.restrikt.annotation.runtime.HideFromJava] annotation, which is available
+ * at runtime.
  */
 @MustBeDocumented
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.SOURCE)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
@@ -47,10 +55,14 @@ annotation class HideFromJava(val reason: String = "")
  * Used with the [Restrikt compiler plugin](https://github.com/ZwenDo/Restrikt), this annotation is used to force
  * `package-private` visibility on Kotlin symbols.
  *
- * NOTE: the original visibility will be overridden by the compiler plugin.
+ * **NOTE**: the original visibility will be overridden by the compiler plugin.
+ *
+ * **NOTE**: This annotation retention is set to `SOURCE` by default, so it will not be available at runtime. As an
+ * alternative, you can use the [com.zwendo.restrikt.annotation.runtime.PackagePrivate] annotation, which is available
+ * at runtime.
  */
 @MustBeDocumented
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.SOURCE)
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
