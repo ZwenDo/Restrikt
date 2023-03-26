@@ -1,10 +1,16 @@
-package com.zwendo.restrikt.annotation.runtime
+package com.zwendo.restrikt.annotation
 
 /**
  * Runtime mirror of the [HideFromKotlin] annotation.
  *
- * **NOTE**: This annotation is available at runtime only if the annotation retention has been set to `RUNTIME` in the
- * plugin configuration.
+ * &nbsp;
+ *
+ * **NOTE**: This annotation is available at runtime, **only if** the annotation retention has been set to `RUNTIME` in
+ * the plugin configuration.
+ *
+ * &nbsp;
+ *
+ * @param reason The reason why the element is hidden.
  */
 @Target(
     AnnotationTarget.CLASS,
@@ -18,13 +24,19 @@ package com.zwendo.restrikt.annotation.runtime
 )
 @RestriktGeneratedAnnotation
 @Retention(AnnotationRetention.RUNTIME)
-annotation class HideFromKotlin(val reason: String)
+annotation class HideFromKotlinMarker(val reason: String)
 
 /**
  * Runtime mirror of the [HideFromJava] annotation.
  *
- * **NOTE**: This annotation is available at runtime only if the annotation retention has been set to `RUNTIME` in the
- * plugin configuration.
+ * &nbsp;
+ *
+ * **NOTE**: This annotation is available at runtime, **only if** the annotation retention has been set to `RUNTIME` in
+ * the plugin configuration.
+ *
+ * &nbsp;
+ *
+ * @param reason The reason why the element is hidden.
  */
 @Target(
     AnnotationTarget.CLASS,
@@ -39,13 +51,19 @@ annotation class HideFromKotlin(val reason: String)
 )
 @RestriktGeneratedAnnotation
 @Retention(AnnotationRetention.RUNTIME)
-annotation class HideFromJava(val reason: String)
+annotation class HideFromJavaMarker(val reason: String)
 
 /**
  * Runtime mirror of the [PackagePrivate] annotation.
  *
- * **NOTE**: This annotation is available at runtime only if the annotation retention has been set to `RUNTIME` in the
- * plugin configuration.
+ * &nbsp;
+ *
+ * **NOTE**: This annotation is available at runtime, **only if** the annotation retention has been set to `RUNTIME` in
+ * the plugin configuration.
+ *
+ * &nbsp;
+ *
+ * @param reason The reason why the element is hidden.
  */
 @Target(
     AnnotationTarget.CLASS,
@@ -60,4 +78,4 @@ annotation class HideFromJava(val reason: String)
 )
 @RestriktGeneratedAnnotation
 @Retention(AnnotationRetention.RUNTIME)
-annotation class PackagePrivate(val reason: String)
+annotation class PackagePrivateMarker(val reason: String)
