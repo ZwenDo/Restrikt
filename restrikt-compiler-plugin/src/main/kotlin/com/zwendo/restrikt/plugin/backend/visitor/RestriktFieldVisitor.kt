@@ -1,40 +1,25 @@
 package com.zwendo.restrikt.plugin.backend.visitor
 
-import com.zwendo.restrikt.plugin.backend.ASM_VERSION
-import com.zwendo.restrikt.plugin.backend.symbol.SymbolData
+import com.zwendo.restrikt.plugin.backend.generateDeprecatedHidden
+import com.zwendo.restrikt.plugin.backend.hasHideFromKotlin
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
-import org.jetbrains.org.objectweb.asm.Attribute
 import org.jetbrains.org.objectweb.asm.FieldVisitor
-import org.jetbrains.org.objectweb.asm.TypePath
-
 
 internal class RestriktFieldVisitor(
-    private val context: SymbolData<FieldVisitor>
-) : FieldVisitor(ASM_VERSION) {
+    descriptor: DeclarationDescriptor?,
+    original: FieldVisitor,
+) : FieldVisitor(ASM_VERSION, original) {
 
-
-    override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
-        preVisitSymbolDeclarationAnnotation(descriptor, context)
-        return annotationVisitor(context) {
-            visitSymbolDeclarationAnnotation(descriptor, visible) { d, v -> visitAnnotation(d, v) }
+    init {
+        if (descriptor.hasHideFromKotlin) {
+            generateDeprecatedHidden(original::visitAnnotation)
         }
     }
 
-    override fun visitTypeAnnotation(
-        typeRef: Int,
-        typePath: TypePath?,
-        descriptor: String?,
-        visible: Boolean,
-    ): AnnotationVisitor = annotationVisitor(context) {
-        visitTypeAnnotation(typeRef, typePath, descriptor, visible)
-    }
-
-    override fun visitAttribute(attribute: Attribute?) = queue { visitAttribute(attribute) }
-
-    override fun visitEnd() = queue { visitEnd() }
-
-    private inline fun queue(crossinline action: FieldVisitor.() -> Unit) {
-        context.queueAction { action() }
-    }
+    override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor =
+        visitSymbolDeclarationAnnotation(descriptor, visible,) { s, v ->
+            super.visitAnnotation(s, v)
+        }
 
 }
