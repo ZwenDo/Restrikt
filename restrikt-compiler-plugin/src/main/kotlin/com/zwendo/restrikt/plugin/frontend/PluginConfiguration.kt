@@ -10,11 +10,14 @@ internal object PluginConfiguration {
 
     var annotationProcessing = true
 
+    var defaultGenerationPolicy = Retention.BINARY
+
     var hideFromJava = AnnotationConfiguration()
 
     var hideFromKotlin = HideFromKotlinConfiguration()
 
     var packagePrivate = AnnotationConfiguration()
+
 
     open class AnnotationConfiguration {
 
@@ -24,20 +27,6 @@ internal object PluginConfiguration {
         var retention = Retention.BINARY
 
         var defaultReason: String? = null
-
-        enum class Retention {
-            SOURCE,
-            BINARY,
-            RUNTIME,
-            ;
-
-            val isRuntime: Boolean
-                get() = this == RUNTIME
-
-            val writeToClassFile: Boolean
-                get() = this == RUNTIME || this == BINARY
-
-        }
 
     }
 
@@ -50,6 +39,24 @@ internal object PluginConfiguration {
             set(value) {
                 deprecatedReasonField = value
             }
+
+    }
+
+    enum class Retention {
+        NO_PROCESSING,
+        NO_GENERATION,
+        BINARY,
+        RUNTIME,
+        ;
+
+        val isRuntime: Boolean
+            get() = this == RUNTIME
+
+        val doProcess: Boolean
+            get() = this != NO_PROCESSING
+
+        val writeToClassFile: Boolean
+            get() = this == RUNTIME || this == BINARY
 
     }
 

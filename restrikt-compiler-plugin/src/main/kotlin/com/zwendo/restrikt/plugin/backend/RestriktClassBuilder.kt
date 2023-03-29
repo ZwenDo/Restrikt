@@ -1,41 +1,26 @@
 package com.zwendo.restrikt.plugin.backend
 
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktClassVisitor
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktFieldVisitor
 import com.zwendo.restrikt.plugin.backend.visitor.RestriktMethodVisitor
+import com.zwendo.restrikt.plugin.backend.visitor.generateMarkers
 import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
-import org.jetbrains.kotlin.backend.common.peek
-import org.jetbrains.kotlin.backend.common.pop
 import org.jetbrains.kotlin.codegen.ClassBuilder
 import org.jetbrains.kotlin.codegen.DelegatingClassBuilder
 import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.descriptors.PackageFragmentDescriptor
+import org.jetbrains.kotlin.descriptors.isTopLevelInPackage
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOriginKind
-import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.FieldVisitor
 import org.jetbrains.org.objectweb.asm.MethodVisitor
 import org.jetbrains.org.objectweb.asm.Opcodes
 
 
-internal class RestriktClassBuilder(private val original: ClassBuilder) : DelegatingClassBuilder() {
-
-    private var currentVisitor: RestriktClassVisitor? = null
+internal class RestriktClassBuilder(
+    private val original: ClassBuilder,
+    private val classDescriptor: DeclarationDescriptor?,
+) : DelegatingClassBuilder() {
 
     override fun getDelegate(): ClassBuilder = original
-
-    override fun getVisitor(): ClassVisitor {
-        val originalVisitor = super.getVisitor()
-        val current = classStack.last()
-        return if (current.written) {
-            originalVisitor
-        } else {
-            RestriktClassVisitor(original.visitor, current::forceWrite, false).also {
-                currentVisitor = it
-            }
-        }
-    }
 
     override fun newMethod(
         origin: JvmDeclarationOrigin,
@@ -45,16 +30,9 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         signature: String?,
         exceptions: Array<out String>?,
     ): MethodVisitor {
-        updateClassContext(origin)
-        val original = super.newMethod(
-            origin,
-            origin.descriptor.computeModifiers(access),
-            name,
-            desc,
-            signature,
-            exceptions
-        )
-        return RestriktMethodVisitor(origin.descriptor, original)
+        val actualAccess = origin.descriptor.computeModifiers(access, classDescriptor)
+        val original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
+        return RestriktMethodVisitor(origin.descriptor, classDescriptor, original)
     }
 
     override fun newField(
@@ -65,15 +43,14 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         signature: String?,
         value: Any?,
     ): FieldVisitor {
-        updateClassContext(origin)
-        val original = super.newField(origin, origin.descriptor.computeModifiers(access), name, desc, signature, value)
-        return RestriktFieldVisitor(origin.descriptor, original)
-    }
-
-    override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) {
-        val self = classStack.findLast { it.name == name }
-        val actualAccess = self?.descriptor.computeModifiers(access)
-        super.visitInnerClass(name, outerName, innerName, actualAccess)
+        val descriptor = origin.descriptor
+        val actualAccess = descriptor.computeModifiers(access, classDescriptor)
+        return super.newField(origin, actualAccess, name, desc, signature, value).apply {
+            generateMarkers(descriptor, classDescriptor, this::visitAnnotation)
+            if (descriptor.hasHideFromKotlin) {
+                generateDeprecatedHidden(this::visitAnnotation)
+            }
+        }
     }
 
     override fun defineClass(
@@ -85,69 +62,18 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         superName: String,
         interfaces: Array<out String>,
     ) {
-        classStack += ClassContext(original, name) {
-            original.defineClass(origin, version, it(access), name, signature, superName, interfaces)
-        }
-    }
-
-    override fun done(generateSmapCopyToAnnotation: Boolean) {
-        val top = classStack.pop()
-        if (!top.written) {
-            top.forceWrite()
-        }
-        currentVisitor?.write()
-        currentVisitor = null
-        super.done(generateSmapCopyToAnnotation)
-    }
-
-    private fun updateClassContext(origin: JvmDeclarationOrigin) {
-        classStack.peek()?.setDescriptor(origin.descriptor?.containingDeclaration)
-    }
-
-    private companion object {
-
-        val classStack = ArrayList<ClassContext>()
-
-    }
-
-}
-
-private class ClassContext(
-    private val builder: ClassBuilder,
-    val name: String,
-    private var definitionLambda: ((Int) -> Int) -> Unit,
-) {
-
-    var descriptor: DeclarationDescriptor? = null
-        private set
-
-    var written: Boolean = false
-        private set
-
-    fun setDescriptor(descriptor: DeclarationDescriptor?) {
-        if (written || descriptor == null) return
-        this.descriptor = descriptor
-        write(this.descriptor::computeModifiers)
-    }
-
-    fun forceWrite(block: (Int) -> Int = { it }) {
-        require(!written) { "Class $name already written" }
-        write(block)
-    }
-
-    private fun write(block: (Int) -> Int) {
-        written = true
-        if (PluginConfiguration.toplevelPrivateConstructor && descriptor is PackageFragmentDescriptor) {
+        val actualAccess = classDescriptor.computeModifiers(access, null)
+        original.defineClass(origin, version, actualAccess, name, signature, superName, interfaces)
+        if (PluginConfiguration.toplevelPrivateConstructor && classDescriptor?.isTopLevelInPackage() == true) {
             generatePrivateConstructor()
         }
-        definitionLambda(block)
     }
 
     private fun generatePrivateConstructor() {
         val origin = JvmDeclarationOrigin(JvmDeclarationOriginKind.OTHER, null, null, null)
         val name = "<init>"
         val desc = "()V"
-        val visitor = builder.newMethod(origin, Opcodes.ACC_PRIVATE, name, desc, null, null)
+        val visitor = original.newMethod(origin, Opcodes.ACC_PRIVATE, name, desc, null, null)
         visitor.apply {
             visitCode()
             visitVarInsn(Opcodes.ALOAD, 0)
@@ -169,7 +95,5 @@ private class ClassContext(
             visitEnd()
         }
     }
-
-    override fun toString(): String = "$name $written"
 
 }

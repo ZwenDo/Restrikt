@@ -48,7 +48,8 @@ private object ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
          * Methods that return the class builder for the given class.
          */
         override fun newClassBuilder(origin: JvmDeclarationOrigin): ClassBuilder = RestriktClassBuilder(
-            interceptedFactory.newClassBuilder(origin)
+            interceptedFactory.newClassBuilder(origin),
+            origin.descriptor,
         )
 
     }

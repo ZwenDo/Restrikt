@@ -14,17 +14,19 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.org.objectweb.asm.AnnotationVisitor
 import org.jetbrains.org.objectweb.asm.Opcodes
 
-fun DeclarationDescriptor?.computeModifiers(initial: Int): Int {
+internal fun DeclarationDescriptor?.computeModifiers(initial: Int, classDescriptor: DeclarationDescriptor?): Int {
     if (this == null) return initial
     var access = initial
 
-    if (this !is ClassDescriptor && mustBeSynthetic) access = access or Opcodes.ACC_SYNTHETIC
+    if (this !is ClassDescriptor && mustBeSynthetic || classDescriptor.mustBeSynthetic) {
+        access = access or Opcodes.ACC_SYNTHETIC
+    }
     if (hasPackagePrivate) access = access and PACKAGE_PRIVATE_MASK
 
     return access
 }
 
-fun generateDeprecatedHidden(visitorFactory: (String, Boolean) -> AnnotationVisitor) {
+internal fun generateDeprecatedHidden(visitorFactory: (String, Boolean) -> AnnotationVisitor) {
     visitorFactory(DEPRECATED_DESC, true).apply {
         val reason = PluginConfiguration.hideFromKotlin.deprecatedReason
         visit(DEPRECATED_MESSAGE_NAME, reason)
@@ -33,8 +35,14 @@ fun generateDeprecatedHidden(visitorFactory: (String, Boolean) -> AnnotationVisi
     }
 }
 
-val DeclarationDescriptor?.hasHideFromKotlin: Boolean
+internal val DeclarationDescriptor?.hasHideFromKotlin: Boolean
     get() = PluginConfiguration.hideFromKotlin.enabled && hasAnnotation(HIDE_FROM_KOTLIN_FQNAME)
+
+internal val HIDE_FROM_KOTLIN_FQNAME = FqName(HideFromKotlin::class.java.canonicalName)
+
+internal val HIDE_FROM_JAVA_FQNAME = FqName(HideFromJava::class.java.canonicalName)
+
+internal val PACKAGE_PRIVATE_FQNAME = FqName(PackagePrivate::class.java.canonicalName)
 
 private val DeclarationDescriptor?.hasHideFromJava: Boolean
     get() = PluginConfiguration.hideFromJava.enabled && hasAnnotation(HIDE_FROM_JAVA_FQNAME)
@@ -50,10 +58,11 @@ private val DeclarationDescriptor?.isInternal: Boolean
                 && this is DeclarationDescriptorWithVisibility
                 && visibility == DescriptorVisibilities.INTERNAL
 
-private fun DeclarationDescriptor?.hasAnnotation(fqName: FqName): Boolean =
-    this != null
-                && annotations.hasAnnotation(fqName)
+private fun DeclarationDescriptor?.hasAnnotation(fqName: FqName): Boolean {
+    if (this == null) return false
+    return annotations.hasAnnotation(fqName)
                 || (this is PropertyAccessorDescriptor && correspondingProperty.hasAnnotation(fqName))
+}
 
 private val DEPRECATED_DESC = Deprecated::class.java.desc
 
@@ -62,12 +71,6 @@ private val DEPRECATION_LEVEL_DESC = DeprecationLevel::class.java.desc
 private val DEPRECATED_MESSAGE_NAME = Deprecated::message.name
 
 private val DEPRECATED_LEVEL_NAME = Deprecated::level.name
-
-private val HIDE_FROM_KOTLIN_FQNAME = FqName(HideFromKotlin::class.java.canonicalName)
-
-private val HIDE_FROM_JAVA_FQNAME = FqName(HideFromJava::class.java.canonicalName)
-
-private val PACKAGE_PRIVATE_FQNAME = FqName(PackagePrivate::class.java.canonicalName)
 
 private const val PACKAGE_PRIVATE_MASK =
     0.inv() xor Opcodes.ACC_PUBLIC xor Opcodes.ACC_PRIVATE xor Opcodes.ACC_PROTECTED

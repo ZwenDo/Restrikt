@@ -88,7 +88,7 @@ private fun annotationKeeping(
     "$annotationName-${BuildConfig.ANNOTATION_POSTFIX_RETENTION}",
     "<source|binary|runtime>",
     "Whether the plugin should keep the $annotationName annotation.",
-) { annotationConfiguration.retention = PluginConfiguration.AnnotationConfiguration.Retention.valueOf(it) }
+) { annotationConfiguration.retention = PluginConfiguration.Retention.valueOf(it) }
 
 private fun annotationDefaultReason(
     annotationName: String,
