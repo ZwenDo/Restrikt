@@ -17,7 +17,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         )
 
         target.dependencies.apply { // add the annotations to the project
-            add("compileOnly", ANNOTATION_DEPENDENCY)
+            add("implementation", ANNOTATION_DEPENDENCY)
         }
     }
 
