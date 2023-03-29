@@ -21,13 +21,14 @@ package com.zwendo.restrikt.annotation
  *
  * @param reason The reason why the element is hidden. This will be used as the message of the [Deprecated] annotation,
  * and also as the message of the [HideFromKotlinMarker] annotation.
- * @param retention The retention policy of the generated [HideFromKotlinMarker] annotation.
+ * @param generation The generation policy for the [HideFromKotlinMarker] annotation.
  */
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
     AnnotationTarget.CONSTRUCTOR,
     AnnotationTarget.ANNOTATION_CLASS,
+    AnnotationTarget.FILE,
     AnnotationTarget.FIELD,
     AnnotationTarget.PROPERTY,
     AnnotationTarget.PROPERTY_GETTER,
@@ -37,7 +38,7 @@ package com.zwendo.restrikt.annotation
 @Retention(AnnotationRetention.SOURCE)
 annotation class HideFromKotlin(
     val reason: String = "",
-    val retention: RestriktRetention = RestriktRetention.DEFAULT,
+    val generation: AnnotationGeneration = AnnotationGeneration.DEFAULT,
 )
 
 /**
@@ -53,7 +54,7 @@ annotation class HideFromKotlin(
  *
  * @param reason The reason why the element is hidden. This will be used as the message of the [HideFromJavaMarker]
  * annotation.
- * @param retention The retention policy of the generated [HideFromJavaMarker] annotation.
+ * @param generation The generation policy for the [HideFromJavaMarker] annotation.
  */
 @Target(
     AnnotationTarget.CLASS,
@@ -70,7 +71,7 @@ annotation class HideFromKotlin(
 @Retention(AnnotationRetention.SOURCE)
 annotation class HideFromJava(
     val reason: String = "",
-    val retention: RestriktRetention = RestriktRetention.DEFAULT,
+    val generation: AnnotationGeneration = AnnotationGeneration.DEFAULT,
 )
 
 /**
@@ -90,7 +91,7 @@ annotation class HideFromJava(
  *
  * @param reason The reason why the element is hidden. This will be used as the message of the [PackagePrivateMarker]
  * annotation.
- * @param retention The retention policy of the generated [PackagePrivateMarker] annotation.
+ * @param generation The generation policy for the [PackagePrivateMarker] annotation.
  */
 @Target(
     AnnotationTarget.CLASS,
@@ -107,31 +108,31 @@ annotation class HideFromJava(
 @Retention(AnnotationRetention.SOURCE)
 annotation class PackagePrivate(
     val reason: String = "",
-    val retention: RestriktRetention = RestriktRetention.DEFAULT,
+    val generation: AnnotationGeneration = AnnotationGeneration.DEFAULT,
 )
 
 /**
- * Retention policy for the generated annotations.
+ * Runtime annotation generation policy.
  */
-enum class RestriktRetention {
+enum class AnnotationGeneration {
 
     /**
-     * Use the default retention policy defined in the plugin configuration.
+     * Use the default policy defined in the plugin configuration.
      */
     DEFAULT,
 
     /**
      * Do not generate the marker annotation.
      */
-    SOURCE,
+    NONE,
 
     /**
-     * Generate the marker annotation with the retention policy [AnnotationRetention.BINARY].
+     * Generate the annotation with the retention policy [AnnotationRetention.BINARY].
      */
     BINARY,
 
     /**
-     * Generate the marker annotation with the retention policy [AnnotationRetention.RUNTIME].
+     * Generate the annotation with the retention policy [AnnotationRetention.RUNTIME].
      */
     RUNTIME,
     ;

@@ -10,6 +10,6 @@ package com.zwendo.restrikt.annotation
         To generate this element, use its corresponding annotation. You can freely opt-in for this element if you intend
         to use it through reflection.""",
 )
-@Target(AnnotationTarget.CLASS)
+@Target(AnnotationTarget.ANNOTATION_CLASS)
 @Retention(AnnotationRetention.BINARY)
 annotation class RestriktGeneratedAnnotation

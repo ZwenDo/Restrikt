@@ -23,8 +23,7 @@ package com.zwendo.restrikt.annotation
     AnnotationTarget.PROPERTY_SETTER,
 )
 @RestriktGeneratedAnnotation
-@Retention(AnnotationRetention.RUNTIME)
-annotation class HideFromKotlinMarker(val reason: String)
+annotation class HideFromKotlinMarker(val reason: String = "")
 
 /**
  * Runtime mirror of the [HideFromJava] annotation.
@@ -50,8 +49,7 @@ annotation class HideFromKotlinMarker(val reason: String)
     AnnotationTarget.PROPERTY_SETTER,
 )
 @RestriktGeneratedAnnotation
-@Retention(AnnotationRetention.RUNTIME)
-annotation class HideFromJavaMarker(val reason: String)
+annotation class HideFromJavaMarker(val reason: String = "")
 
 /**
  * Runtime mirror of the [PackagePrivate] annotation.
@@ -77,5 +75,4 @@ annotation class HideFromJavaMarker(val reason: String)
     AnnotationTarget.PROPERTY_SETTER,
 )
 @RestriktGeneratedAnnotation
-@Retention(AnnotationRetention.RUNTIME)
-annotation class PackagePrivateMarker(val reason: String)
+annotation class PackagePrivateMarker(val reason: String = "")
