@@ -3,7 +3,7 @@ package com.zwendo.restrikt.annotation
 /**
  * This annotation is used to hide elements from kotlin sources.
  *
- * Used with the [Restrikt compiler plugin](https://github.com/ZwenDo/Restrikt), this annotation causes the generation
+ * Used with the [Restrikt compiler plugin](https://github.com/ZwenDo/Restrikt), this annotation causes the retention
  * of the [Deprecated] annotation with the level [DeprecationLevel.HIDDEN], which hides the element for Kotlin sources.
  * However, elements will still be accessible at runtime from compiled Kotlin files.
  *
@@ -14,31 +14,24 @@ package com.zwendo.restrikt.annotation
  *
  * &nbsp;
  *
- * **NOTE**: This annotation retention is set to `SOURCE`, so it will not be available at runtime. As an alternative,
- * you can use the [HideFromKotlinMarker] annotation, which is available at runtime.
- *
- * &nbsp;
- *
- * @param reason The reason why the element is hidden. This will be used as the message of the [Deprecated] annotation,
- * and also as the message of the [HideFromKotlinMarker] annotation.
- * @param generation The generation policy for the [HideFromKotlinMarker] annotation.
+ * @param reason The reason why the element is hidden. This will be used as the message of the [Deprecated] annotation.
+ * @param retention The retention policy of the annotation.
  */
 @Target(
     AnnotationTarget.CLASS,
     AnnotationTarget.FUNCTION,
     AnnotationTarget.CONSTRUCTOR,
     AnnotationTarget.ANNOTATION_CLASS,
-    AnnotationTarget.FILE,
     AnnotationTarget.FIELD,
     AnnotationTarget.PROPERTY,
     AnnotationTarget.PROPERTY_GETTER,
     AnnotationTarget.PROPERTY_SETTER,
 )
 @MustBeDocumented
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.RUNTIME)
 annotation class HideFromKotlin(
     val reason: String = "",
-    val generation: AnnotationGeneration = AnnotationGeneration.DEFAULT,
+    val retention: RestriktRetention = RestriktRetention.DEFAULT,
 )
 
 /**
@@ -47,14 +40,9 @@ annotation class HideFromKotlin(
  *
  * &nbsp;
  *
- * **NOTE**: This annotation retention is set to `SOURCE`, so it will not be available at runtime. As an alternative,
- * you can use the [HideFromJavaMarker] annotation, which is available at runtime.
- *
- * &nbsp;
- *
- * @param reason The reason why the element is hidden. This will be used as the message of the [HideFromJavaMarker]
+ * @param reason The reason why the element is hidden.
  * annotation.
- * @param generation The generation policy for the [HideFromJavaMarker] annotation.
+ * @param retention The retention policy of the annotation.
  */
 @Target(
     AnnotationTarget.CLASS,
@@ -68,10 +56,10 @@ annotation class HideFromKotlin(
     AnnotationTarget.PROPERTY_SETTER,
 )
 @MustBeDocumented
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.RUNTIME)
 annotation class HideFromJava(
     val reason: String = "",
-    val generation: AnnotationGeneration = AnnotationGeneration.DEFAULT,
+    val retention: RestriktRetention = RestriktRetention.DEFAULT,
 )
 
 /**
@@ -84,14 +72,8 @@ annotation class HideFromJava(
  *
  * &nbsp;
  *
- * **NOTE**: This annotation retention is set to `SOURCE`, so it will not be available at runtime. As an alternative,
- * you can use the [PackagePrivateMarker] annotation, which is available at runtime.
- *
- * &nbsp;
- *
- * @param reason The reason why the element is hidden. This will be used as the message of the [PackagePrivateMarker]
- * annotation.
- * @param generation The generation policy for the [PackagePrivateMarker] annotation.
+ * @param reason The reason why the element is hidden.
+ * @param retention The retention policy of the annotation.
  */
 @Target(
     AnnotationTarget.CLASS,
@@ -105,16 +87,16 @@ annotation class HideFromJava(
     AnnotationTarget.PROPERTY_SETTER,
 )
 @MustBeDocumented
-@Retention(AnnotationRetention.SOURCE)
+@Retention(AnnotationRetention.RUNTIME)
 annotation class PackagePrivate(
     val reason: String = "",
-    val generation: AnnotationGeneration = AnnotationGeneration.DEFAULT,
+    val retention: RestriktRetention = RestriktRetention.DEFAULT,
 )
 
 /**
- * Runtime annotation generation policy.
+ * Runtime annotation retention policy.
  */
-enum class AnnotationGeneration {
+enum class RestriktRetention {
 
     /**
      * Use the default policy defined in the plugin configuration.
@@ -122,17 +104,17 @@ enum class AnnotationGeneration {
     DEFAULT,
 
     /**
-     * Do not generate the marker annotation.
+     * The annotation will have the retention policy [AnnotationRetention.SOURCE].
      */
-    NONE,
+    SOURCE,
 
     /**
-     * Generate the annotation with the retention policy [AnnotationRetention.BINARY].
+     * The annotation will have the retention policy [AnnotationRetention.BINARY].
      */
     BINARY,
 
     /**
-     * Generate the annotation with the retention policy [AnnotationRetention.RUNTIME].
+     * The annotation will have the retention policy [AnnotationRetention.RUNTIME].
      */
     RUNTIME,
     ;
