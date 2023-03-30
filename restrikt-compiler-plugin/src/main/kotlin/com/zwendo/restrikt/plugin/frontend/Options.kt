@@ -20,6 +20,7 @@ internal sealed interface Option : AbstractCliOption {
             toplevelPrivateConstructor,
             automaticInternalHiding,
             annotationProcessing,
+            defaultRetentionPolicy,
             *annotationConfiguration(BuildConfig.HIDE_FROM_JAVA, PluginConfiguration.hideFromJava),
             *hideFromKotlinConfiguration(),
             *annotationConfiguration(BuildConfig.PACKAGE_PRIVATE, PluginConfiguration.packagePrivate),
@@ -66,6 +67,12 @@ private val annotationProcessing = OptionImpl(
     "Whether the plugin should process annotations.",
 ) { PluginConfiguration.annotationProcessing = it.toBooleanStrict() }
 
+private val defaultRetentionPolicy = OptionImpl(
+    BuildConfig.DEFAULT_RETENTION_POLICY,
+    "<source|binary|runtime>",
+    "The default retention policy for the plugin annotations.",
+) { PluginConfiguration.defaultRetentionPolicy = PluginConfiguration.RestriktGenerationPolicy.valueOf(it) }
+
 private val deprecatedReason = OptionImpl(
     "${BuildConfig.HIDE_FROM_KOTLIN}-${BuildConfig.ANNOTATION_POSTFIX_DEPRECATED_REASON}",
     "<reason>",
@@ -88,7 +95,7 @@ private fun annotationKeeping(
     "$annotationName-${BuildConfig.ANNOTATION_POSTFIX_RETENTION}",
     "<source|binary|runtime>",
     "Whether the plugin should keep the $annotationName annotation.",
-) { annotationConfiguration.retention = PluginConfiguration.Retention.valueOf(it) }
+) { annotationConfiguration.generationPolicy = PluginConfiguration.RestriktGenerationPolicy.valueOf(it) }
 
 private fun annotationDefaultReason(
     annotationName: String,
