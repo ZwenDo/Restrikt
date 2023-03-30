@@ -10,7 +10,7 @@ internal object PluginConfiguration {
 
     var annotationProcessing = true
 
-    var defaultGenerationPolicy = Retention.BINARY
+    var defaultRetentionPolicy = RestriktGenerationPolicy.BINARY
 
     var hideFromJava = AnnotationConfiguration()
 
@@ -24,7 +24,8 @@ internal object PluginConfiguration {
         var enabled = true
             get() = annotationProcessing && field
 
-        var retention = Retention.BINARY
+        var generationPolicy: RestriktGenerationPolicy? = null
+            get() = field ?: defaultRetentionPolicy
 
         var defaultReason: String? = null
 
@@ -42,18 +43,14 @@ internal object PluginConfiguration {
 
     }
 
-    enum class Retention {
-        NO_PROCESSING,
-        NO_GENERATION,
+    enum class RestriktGenerationPolicy {
+        SOURCE,
         BINARY,
         RUNTIME,
         ;
 
         val isRuntime: Boolean
             get() = this == RUNTIME
-
-        val doProcess: Boolean
-            get() = this != NO_PROCESSING
 
         val writeToClassFile: Boolean
             get() = this == RUNTIME || this == BINARY

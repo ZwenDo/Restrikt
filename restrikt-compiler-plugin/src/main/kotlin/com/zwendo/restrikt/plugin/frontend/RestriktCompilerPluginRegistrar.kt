@@ -1,11 +1,9 @@
 package com.zwendo.restrikt.plugin.frontend
 
 import com.zwendo.restrikt.plugin.backend.RestriktClassBuilder
-import org.jetbrains.kotlin.asJava.UltraLightClassModifierExtension.Companion.registerExtension
 import org.jetbrains.kotlin.codegen.ClassBuilder
 import org.jetbrains.kotlin.codegen.ClassBuilderFactory
 import org.jetbrains.kotlin.codegen.extensions.ClassBuilderInterceptorExtension
-import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
@@ -17,13 +15,14 @@ import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
  * Class that registers plugin custom class generation interceptor
  */
 @OptIn(ExperimentalCompilerApi::class)
-internal class RestriktComponentRegistrar : CompilerPluginRegistrar() {
+internal class RestriktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
     override val supportsK2: Boolean
         get() = false
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         if (!PluginConfiguration.enabled) return
+
         ClassBuilderInterceptorExtension.registerExtension(ClassGenerationInterceptor)
     }
 
@@ -32,7 +31,7 @@ internal class RestriktComponentRegistrar : CompilerPluginRegistrar() {
 /**
  * Class that intercepts bytecode generation and adds custom code to it
  */
-private object ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
+internal object ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
 
     /**
      * Methods that provides a factory for class builders (class builder is the class that will parse the kotlinc
@@ -49,7 +48,7 @@ private object ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
          */
         override fun newClassBuilder(origin: JvmDeclarationOrigin): ClassBuilder = RestriktClassBuilder(
             interceptedFactory.newClassBuilder(origin),
-            origin.descriptor,
+            origin,
         )
 
     }
