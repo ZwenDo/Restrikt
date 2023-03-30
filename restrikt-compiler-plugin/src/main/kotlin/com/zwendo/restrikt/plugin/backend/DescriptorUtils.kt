@@ -26,23 +26,9 @@ internal fun DeclarationDescriptor?.computeModifiers(initial: Int, classDescript
     return access
 }
 
-internal fun generateDeprecatedHidden(visitorFactory: (String, Boolean) -> AnnotationVisitor) {
-    visitorFactory(DEPRECATED_DESC, true).apply {
-        val reason = PluginConfiguration.hideFromKotlin.deprecatedReason
-        visit(DEPRECATED_MESSAGE_NAME, reason)
-        visitEnum(DEPRECATED_LEVEL_NAME, DEPRECATION_LEVEL_DESC, DeprecationLevel.HIDDEN.toString())
-        visitEnd()
-    }
-}
+private val HIDE_FROM_JAVA_FQNAME = FqName(HideFromJava::class.java.canonicalName)
 
-internal val DeclarationDescriptor?.hasHideFromKotlin: Boolean
-    get() = PluginConfiguration.hideFromKotlin.enabled && hasAnnotation(HIDE_FROM_KOTLIN_FQNAME)
-
-internal val HIDE_FROM_KOTLIN_FQNAME = FqName(HideFromKotlin::class.java.canonicalName)
-
-internal val HIDE_FROM_JAVA_FQNAME = FqName(HideFromJava::class.java.canonicalName)
-
-internal val PACKAGE_PRIVATE_FQNAME = FqName(PackagePrivate::class.java.canonicalName)
+private val PACKAGE_PRIVATE_FQNAME = FqName(PackagePrivate::class.java.canonicalName)
 
 private val DeclarationDescriptor?.hasHideFromJava: Boolean
     get() = PluginConfiguration.hideFromJava.enabled && hasAnnotation(HIDE_FROM_JAVA_FQNAME)
@@ -63,14 +49,6 @@ private fun DeclarationDescriptor?.hasAnnotation(fqName: FqName): Boolean {
     return annotations.hasAnnotation(fqName)
                 || (this is PropertyAccessorDescriptor && correspondingProperty.hasAnnotation(fqName))
 }
-
-private val DEPRECATED_DESC = Deprecated::class.java.desc
-
-private val DEPRECATION_LEVEL_DESC = DeprecationLevel::class.java.desc
-
-private val DEPRECATED_MESSAGE_NAME = Deprecated::message.name
-
-private val DEPRECATED_LEVEL_NAME = Deprecated::level.name
 
 private const val PACKAGE_PRIVATE_MASK =
     0.inv() xor Opcodes.ACC_PUBLIC xor Opcodes.ACC_PRIVATE xor Opcodes.ACC_PROTECTED

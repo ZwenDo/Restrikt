@@ -32,9 +32,10 @@ internal class RestriktClassBuilder(
         signature: String?,
         exceptions: Array<out String>?,
     ): MethodVisitor {
-        val actualAccess = origin.descriptor.computeModifiers(access, classDescriptor)
+        val descriptor = origin.descriptor
+        val actualAccess = descriptor.computeModifiers(access, classDescriptor)
         val original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
-        return RestriktMethodVisitor(origin.descriptor, classDescriptor, original)
+        return RestriktMethodVisitor(descriptor, original)
     }
 
     override fun newField(
@@ -48,9 +49,6 @@ internal class RestriktClassBuilder(
         val descriptor = origin.descriptor
         val actualAccess = descriptor.computeModifiers(access, classDescriptor)
         val original = super.newField(origin, actualAccess, name, desc, signature, value)
-        if (descriptor.hasHideFromKotlin) {
-            generateDeprecatedHidden(original::visitAnnotation)
-        }
         return RestriktFieldVisitor(descriptor, original)
     }
 

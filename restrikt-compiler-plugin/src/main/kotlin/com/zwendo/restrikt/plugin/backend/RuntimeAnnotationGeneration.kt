@@ -4,10 +4,8 @@ import com.zwendo.restrikt.annotation.HideFromJava
 import com.zwendo.restrikt.annotation.HideFromKotlin
 import com.zwendo.restrikt.annotation.PackagePrivate
 import com.zwendo.restrikt.annotation.RestriktRetention
-import com.zwendo.restrikt.plugin.Logger
 import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
-import org.jetbrains.kotlin.descriptors.annotations.AnnotationDescriptor
 import org.jetbrains.kotlin.descriptors.runtime.structure.desc
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -19,11 +17,14 @@ internal fun generateRuntimeAnnotation(
     visible: Boolean,
     visitorFactory: (String, Boolean) -> AnnotationVisitor,
 ): AnnotationVisitor {
+    // try to find the annotation data for the given descriptor
     val annotationData = findAnnotationData(desc) ?: return visitorFactory(desc, visible)
 
+    // try to find the annotation descriptor for the given data
     val annotationDescriptor = descriptor?.annotations?.findAnnotation(annotationData.fqName)
         ?: return visitorFactory(desc, visible)
 
+    // retrieve the annotation retention from the descriptor
     val retention = annotationDescriptor.allValueArguments[annotationData.retentionName]?.let {
         @Suppress("UNCHECKED_CAST")
         val value = (it.value as Pair<*, Name>).second.asString()
@@ -31,12 +32,11 @@ internal fun generateRuntimeAnnotation(
     } ?: RestriktRetention.DEFAULT
 
     val pluginPolicy = annotationData.annotationConfig.generationPolicy!!
-    Logger.error(retention, pluginPolicy)
     if (
         retention == RestriktRetention.SOURCE
         || (retention == RestriktRetention.DEFAULT && !pluginPolicy.writeToClassFile)
     ) {
-        return AnnotationRemovingVisitor
+        return annotationRemovingVisitor
     }
 
     val isRuntime = retention == RestriktRetention.RUNTIME
@@ -100,9 +100,7 @@ private class RestriktAnnotationVisitor(
     private var hasReason = false
 
     override fun visit(name: String?, value: Any?) {
-        if (name == data.reasonName) {
-            hasReason = true
-        }
+        if (name == data.reasonName) hasReason = true
         super.visit(name, value)
     }
 
@@ -117,16 +115,4 @@ private class RestriktAnnotationVisitor(
 
 }
 
-private object AnnotationRemovingVisitor : AnnotationVisitor(ASM_VERSION) {
-
-    override fun visit(name: String?, value: Any?) = Unit
-
-    override fun visitEnum(name: String?, descriptor: String?, value: String?) = Unit
-
-    override fun visitAnnotation(name: String?, descriptor: String?): AnnotationVisitor = this
-
-    override fun visitArray(name: String?): AnnotationVisitor = this
-
-    override fun visitEnd() = Unit
-
-}
+private val annotationRemovingVisitor = object : AnnotationVisitor(ASM_VERSION) {}
