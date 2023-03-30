@@ -12,7 +12,7 @@ sealed class AbstractAnnotationConfiguration {
     /**
      * The retention policy of the annotation.
      *
-     * **Default:** `BINARY`
+     * **Default:** [RestriktConfiguration.defaultRetentionPolicy]
      */
     var retention: RestriktAnnotationRetention? = null
 

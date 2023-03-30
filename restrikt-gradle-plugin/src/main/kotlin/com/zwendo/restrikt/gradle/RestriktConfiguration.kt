@@ -34,6 +34,13 @@ open class RestriktConfiguration {
     var annotationProcessing: Boolean? = null
 
     /**
+     * The default retention policy for the annotations.
+     *
+     * **Default:** `BINARY`
+     */
+    var defaultRetentionPolicy: RestriktAnnotationRetention? = null
+
+    /**
      * Configure the HideFromJava annotation.
      */
     fun hideFromJava(block: AnnotationConfiguration.() -> Unit) = hideFromJava.block()

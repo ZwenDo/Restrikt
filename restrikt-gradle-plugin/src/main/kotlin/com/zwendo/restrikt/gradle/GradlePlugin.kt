@@ -45,6 +45,10 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
             parameters += SubpluginOption(BuildConfig.ANNOTATION_PROCESSING, it.toString())
         }
 
+        extension.defaultRetentionPolicy?.let {
+            parameters += SubpluginOption(BuildConfig.DEFAULT_RETENTION_POLICY, it.name)
+        }
+
         annotationConfiguration(parameters, BuildConfig.HIDE_FROM_JAVA, extension.hideFromJava)
         hideFromKotlinConfiguration(parameters, extension.hideFromKotlin)
         annotationConfiguration(parameters, BuildConfig.PACKAGE_PRIVATE, extension.packagePrivate)
