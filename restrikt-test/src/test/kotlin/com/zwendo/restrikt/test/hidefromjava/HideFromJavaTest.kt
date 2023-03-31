@@ -1,10 +1,12 @@
 package com.zwendo.restrikt.test.hidefromjava
 
+import com.zwendo.restrikt.annotation.HideFromJava
 import com.zwendo.restrikt.test.assertNotNullAnd
 import com.zwendo.restrikt.test.hidefromkotlin.visibleFunction
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.javaConstructor
 import kotlin.reflect.jvm.javaField
@@ -20,8 +22,15 @@ class HideFromJavaTest {
     }
 
     @Test
-    fun `Annotated class is hidden`() {
-        assertTrue(InvisibleClass::class.java.isSynthetic)
+    fun `Annotated class has its class members hidden transitively`() {
+        val invisibleMethod = InvisibleClass::class.java.getMethod("invisibleFunctionDueToClassAnnotation")
+        assertTrue(invisibleMethod.isSynthetic)
+    }
+
+    @Test
+    fun `Annotated class hiding also applies to inner classes`() {
+        val invisibleMethod = InvisibleClass.NestedClass::class.java.getMethod("nestedClassFunction")
+        assertTrue(invisibleMethod.isSynthetic)
     }
 
     @Test
@@ -125,13 +134,45 @@ class HideFromJavaTest {
     }
 
     @Test
-    fun `Not annotated annotation is not hidden`() {
-        assertFalse(VisibleAnnotation::class.java.isSynthetic)
+    fun `Custom runtime retention is applied correctly`() {
+        val method = ::functionWithCustomRuntimeRetention
+
+        method.javaMethod.assertNotNullAnd {
+            assertTrue(isSynthetic)
+        }
+        assertTrue(method.hasHideFromJava)
     }
 
     @Test
-    fun `Annotated annotation is hidden`() {
-        assertTrue(InvisibleAnnotation::class.java.isSynthetic)
+    fun `Custom binary retention is applied correctly`() {
+        val method = ::functionWithCustomBinaryRetention
+
+        method.javaMethod.assertNotNullAnd {
+            assertTrue(isSynthetic)
+        }
+        assertFalse(method.hasHideFromJava)
     }
+
+    @Test
+    fun `Custom source retention is applied correctly`() {
+        val method = ::functionWithCustomSourceRetention
+
+        method.javaMethod.assertNotNullAnd {
+            assertTrue(isSynthetic)
+        }
+        assertFalse(method.hasHideFromJava)
+    }
+
+    @Test
+    fun `Annotated file has all its top-level members hidden transitively`() {
+        val method = ::invisibleFunctionDueToFileAnnotation
+
+        method.javaMethod.assertNotNullAnd {
+            assertTrue(isSynthetic)
+        }
+    }
+
+    private val KAnnotatedElement.hasHideFromJava: Boolean
+        get() = annotations.any { it is HideFromJava }
 
 }

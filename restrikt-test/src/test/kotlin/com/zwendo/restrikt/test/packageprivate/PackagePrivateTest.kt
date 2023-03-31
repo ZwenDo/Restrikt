@@ -1,11 +1,13 @@
 package com.zwendo.restrikt.test.packageprivate
 
+import com.zwendo.restrikt.annotation.PackagePrivate
 import com.zwendo.restrikt.test.assertNotNullAnd
 import java.lang.reflect.Constructor
 import java.lang.reflect.Modifier
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.primaryConstructor
 import kotlin.reflect.jvm.javaConstructor
 import kotlin.reflect.jvm.javaField
@@ -137,6 +139,33 @@ class PackagePrivateTest {
                 assertTrue(modifiers.isPackagePrivate)
             }
         }
+    }
+
+    @Test
+    fun `Custom runtime retention is applied correctly`() {
+        val function = ::functionWithCustomRuntimeRetention
+        function.javaMethod.assertNotNullAnd {
+            assertTrue(modifiers.isPackagePrivate)
+        }
+        assertTrue(function.hasAnnotation<PackagePrivate>())
+    }
+
+    @Test
+    fun `Custom binary retention is applied correctly`() {
+        val function = ::functionWithCustomBinaryRetention
+        function.javaMethod.assertNotNullAnd {
+            assertTrue(modifiers.isPackagePrivate)
+        }
+        assertFalse(function.hasAnnotation<PackagePrivate>())
+    }
+
+    @Test
+    fun `Custom source retention is applied correctly`() {
+        val function = ::functionWithCustomSourceRetention
+        function.javaMethod.assertNotNullAnd {
+            assertTrue(modifiers.isPackagePrivate)
+        }
+        assertFalse(function.hasAnnotation<PackagePrivate>())
     }
 
 

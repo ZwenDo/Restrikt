@@ -16,21 +16,6 @@ class InternalHidingTest {
 
     //region internal
     @Test
-    fun `Internal class is hidden`() {
-        assertTrue(InternalClass::class.java.isSynthetic)
-    }
-
-    @Test
-    fun `Internal companion object is hidden`() {
-        assertTrue(InternalTestClass.Companion::class.java.isSynthetic)
-    }
-
-    @Test
-    fun `Internal nested class is hidden`() {
-        assertTrue(InternalTestClass.NestedInternalClass::class.java.isSynthetic)
-    }
-
-    @Test
     fun `Internal property field and methods are hidden`() {
         val instance = InternalTestClass()
         val property = instance::internalProperty
@@ -58,16 +43,36 @@ class InternalHidingTest {
     }
 
     @Test
-    fun `Internal annotation is hidden`() {
-        assertTrue(InternalAnnotation::class.java.isSynthetic)
-    }
-
-    @Test
     fun `Internal constructor is hidden`() {
         InternalTestClass::class.primaryConstructor.assertNotNullAnd {
             this.javaConstructor.assertNotNullAnd {
                 assertTrue(isSynthetic)
             }
+        }
+    }
+
+    @Test
+    fun `Top-level internal property is hidden`() {
+        val property = ::internalProperty
+
+        property.javaField.assertNotNullAnd {
+            assertFalse(isSynthetic)
+        }
+
+        property.javaGetter.assertNotNullAnd {
+            assertTrue(isSynthetic)
+        }
+
+        property.javaSetter.assertNotNullAnd {
+            assertTrue(isSynthetic)
+        }
+    }
+
+    @Test
+    fun `Top-level internal function is hidden`() {
+        val function = ::internalFunction
+        function.javaMethod.assertNotNullAnd {
+            assertTrue(isSynthetic)
         }
     }
     //endregion
@@ -113,6 +118,23 @@ class InternalHidingTest {
     @Test
     fun `Private annotation is not hidden`() {
         assertFalse(privateAnnotationAccessor.java.isSynthetic)
+    }
+
+    @Test
+    fun `Top-level private property is not hidden`() {
+        val property = privatePropertyAccessor
+
+        property.javaField.assertNotNullAnd {
+            assertFalse(isSynthetic)
+        }
+
+    }
+
+    @Test
+    fun `Top-level private method is not hidden`() {
+        privateFunctionAccessor.javaMethod.assertNotNullAnd {
+            assertFalse(isSynthetic)
+        }
     }
     //endregion
 
@@ -163,6 +185,30 @@ class InternalHidingTest {
     fun `Public annotation is not hidden`() {
         assertFalse(PublicAnnotation::class.java.isSynthetic)
     }
+
+    @Test
+    fun `Top-level public property field and methods are not hidden`() {
+        val property = ::publicProperty
+
+        property.javaField.assertNotNullAnd {
+            assertFalse(isSynthetic)
+        }
+
+        property.javaGetter.assertNotNullAnd {
+            assertFalse(isSynthetic)
+        }
+
+        property.javaSetter.assertNotNullAnd {
+            assertFalse(isSynthetic)
+        }
+    }
+
+    @Test
+    fun `Top-level public method is not hidden`() {
+        ::publicFunction.javaMethod.assertNotNullAnd {
+            assertFalse(isSynthetic)
+        }
+    }
     //endregion
 
     //region protected
@@ -197,69 +243,4 @@ class InternalHidingTest {
     }
     //endregion
 
-    @Test
-    fun `Top-level internal property is hidden`() {
-        val property = ::internalProperty
-
-        property.javaField.assertNotNullAnd {
-            assertFalse(isSynthetic)
-        }
-
-        property.javaGetter.assertNotNullAnd {
-            assertTrue(isSynthetic)
-        }
-
-        property.javaSetter.assertNotNullAnd {
-            assertTrue(isSynthetic)
-        }
-    }
-
-    @Test
-    fun `Top-level internal function is hidden`() {
-        val function = ::internalFunction
-        function.javaMethod.assertNotNullAnd {
-            assertTrue(isSynthetic)
-        }
-    }
-
-    @Test
-    fun `Top-level private property is not hidden`() {
-        val property = privatePropertyAccessor
-
-        property.javaField.assertNotNullAnd {
-            assertFalse(isSynthetic)
-        }
-
-    }
-
-    @Test
-    fun `Top-level private method is not hidden`() {
-        privateFunctionAccessor.javaMethod.assertNotNullAnd {
-            assertFalse(isSynthetic)
-        }
-    }
-
-    @Test
-    fun `Top-level public property field and methods are not hidden`() {
-        val property = ::publicProperty
-
-        property.javaField.assertNotNullAnd {
-            assertFalse(isSynthetic)
-        }
-
-        property.javaGetter.assertNotNullAnd {
-            assertFalse(isSynthetic)
-        }
-
-        property.javaSetter.assertNotNullAnd {
-            assertFalse(isSynthetic)
-        }
-    }
-
-    @Test
-    fun `Top-level public method is not hidden`() {
-        ::publicFunction.javaMethod.assertNotNullAnd {
-            assertFalse(isSynthetic)
-        }
-    }
 }

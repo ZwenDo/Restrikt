@@ -18,7 +18,6 @@ internal object PluginConfiguration {
 
     var packagePrivate = AnnotationConfiguration()
 
-
     open class AnnotationConfiguration {
 
         var enabled = true
