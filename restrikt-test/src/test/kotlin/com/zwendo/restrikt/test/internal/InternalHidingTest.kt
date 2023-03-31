@@ -14,7 +14,6 @@ import kotlin.reflect.jvm.javaSetter
 
 class InternalHidingTest {
 
-    //region internal
     @Test
     fun `Internal property field and methods are hidden`() {
         val instance = InternalTestClass()
@@ -75,9 +74,7 @@ class InternalHidingTest {
             assertTrue(isSynthetic)
         }
     }
-    //endregion
 
-    //region private
     @Test
     fun `Private class is not hidden`() {
         assertFalse(privateClassAccessor.java.isSynthetic)
@@ -136,9 +133,7 @@ class InternalHidingTest {
             assertFalse(isSynthetic)
         }
     }
-    //endregion
 
-    //region public
     @Test
     fun `Public class is not hidden`() {
         assertFalse(PublicClass::class.java.isSynthetic)
@@ -209,9 +204,7 @@ class InternalHidingTest {
             assertFalse(isSynthetic)
         }
     }
-    //endregion
 
-    //region protected
     @Test
     fun `Protected property field and methods are not hidden`() {
         val instance = InternalTestClass()
@@ -241,6 +234,14 @@ class InternalHidingTest {
         val instance = InternalTestClass()
         assertFalse(instance.nestedProtectedClassAccessor.java.isSynthetic)
     }
-    //endregion
+
+    @Test
+    fun `Internal class members are hidden`() {
+        val method = InternalClass::publicFunction
+
+        method.javaMethod.assertNotNullAnd {
+            assertTrue(isSynthetic)
+        }
+    }
 
 }

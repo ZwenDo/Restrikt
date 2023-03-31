@@ -23,14 +23,18 @@ class HideFromJavaTest {
 
     @Test
     fun `Annotated class has its class members hidden transitively`() {
-        val invisibleMethod = InvisibleClass::class.java.getMethod("invisibleFunctionDueToClassAnnotation")
-        assertTrue(invisibleMethod.isSynthetic)
+        val invisibleMethod = InvisibleClass::invisibleFunctionDueToClassAnnotation.javaMethod
+        invisibleMethod.assertNotNullAnd {
+            assertTrue(isSynthetic)
+        }
     }
 
     @Test
     fun `Annotated class hiding also applies to inner classes`() {
-        val invisibleMethod = InvisibleClass.NestedClass::class.java.getMethod("nestedClassFunction")
-        assertTrue(invisibleMethod.isSynthetic)
+        val invisibleMethod = InvisibleClass.NestedClass::nestedClassFunction.javaMethod
+        invisibleMethod.assertNotNullAnd {
+            assertTrue(isSynthetic)
+        }
     }
 
     @Test
