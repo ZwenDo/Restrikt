@@ -1,11 +1,11 @@
-# Restrikt
+<div align="center">
+<h1>Restrikt</h1>
 
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/com.zwendo.restrikt?color=%2366dcb8&logo=gradle)](https://plugins.gradle.org/plugin/com.zwendo.restrikt)
 [![Maven Central](https://img.shields.io/maven-central/v/com.zwendo/restrikt-annotation)](https://search.maven.org/artifact/com.zwendo/restrikt-annotation)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-1.8.0-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 
-<div align="center">
 <h3><i>A Kotlin/JVM compiler plugin to restrict symbols access, from external project sources.</i></h3>
 </div>
 
@@ -55,7 +55,7 @@ Using Kotlin DSL:
 
 ```kotlin
 plugins {
-   id("com.zwendo.restrikt") version "[latest-version]"
+   id("com.zwendo.restrikt") version "4.0.0"
 }
 ```
 
@@ -63,7 +63,7 @@ Using Groovy DSL:
 
 ```groovy
 plugins {
-   id 'com.zwendo.restrikt' version '[latest-version]'
+   id 'com.zwendo.restrikt' version '4.0.0'
 }
 ```
 
@@ -85,7 +85,7 @@ buildscript {
    }
 
    dependencies {
-      classpath("gradle.plugin.com.restrikt:restrikt:[latest-version]")
+      classpath("gradle.plugin.com.restrikt:restrikt:4.0.0")
    }
 }
 
@@ -103,7 +103,7 @@ buildscript {
    }
 
    dependencies {
-      classpath 'gradle.plugin.com.restrikt:restrikt:[latest-version]'
+      classpath 'gradle.plugin.com.restrikt:restrikt:4.0.0'
    }
 }
 
@@ -181,12 +181,13 @@ Your `pom.xml` should look like this:
 
 Here are the currently supported default configuration options:
 
-|             name             |  type   | default | description                                                               |
-|:----------------------------:|:-------:|:-------:|---------------------------------------------------------------------------|
-|          `enabled`           | boolean | `true`  | Whether the plugin is enabled                                             |
-|  `automaticInternalHiding`   | boolean | `true`  | Whether the internal symbols should be automatically hidden.              |
-|    `annotationProcessing`    | boolean | `true`  | Whether the plugin annotations should be parsed to manually hide symbols. |
-| `toplevelPrivateConstructor` | boolean | `true`  | Whether to generate private constructor for top-level classes.            |
+|             name             |  type   | default  | description                                                               |
+|:----------------------------:|:-------:|:--------:|---------------------------------------------------------------------------|
+|          `enabled`           | boolean |  `true`  | Whether the plugin is enabled                                             |
+|  `automaticInternalHiding`   | boolean |  `true`  | Whether the internal symbols should be automatically hidden.              |
+|    `annotationProcessing`    | boolean |  `true`  | Whether the plugin annotations should be parsed to manually hide symbols. |
+| `toplevelPrivateConstructor` | boolean |  `true`  | Whether to generate private constructor for top-level classes.            |
+|   `defaultRetentionPolicy`   | string  | `binary` | The default retention for the plugin's annotation                         |
 
 Moreover, all annotations of the plugin can be individually configured using their own DSL (`hideFromKotlin`,
 `hideFromJava` or `packagePrivate`), with the following configuration options:
@@ -270,8 +271,19 @@ Both annotations also accepts a string parameter to indicate the reason of the r
 the default message defined in the plugin configuration will be used instead.
 
 ```kotlin
-@HideFromKotlin("This class is designed for Java")
+@HideFromKotlin(reason = "This class is designed for Java")
 class Bar { // will be hidden from kotlin sources
+   // ...
+}
+```
+
+Moreover, it is possible to configure the annotation retention directly on the annotation, using the `retention`
+parameter. This parameter accepts the following enum values: `source`, `binary`, `runtime` and `default`. If no value is
+provided, the default retention policy defined in the plugin configuration will be used instead.
+
+```kotlin
+@HideFromKotlin(retention = RestriktRetention.SOURCE) // will not be added to the class file
+class Foo { // will be hidden from kotlin sources
    // ...
 }
 ```
@@ -320,7 +332,7 @@ level, makes the element invisible to Kotlin sources, but still visible to Java 
 
 ```kotlin
 // Foo.kt
-@HideFromKotlin("java only")
+@HideFromKotlin(reason = "java only")
 class Foo {
     // ...
 }
@@ -328,7 +340,7 @@ class Foo {
 // will be compiled to ...
 
 // Foo.class
-@HideFromKotlin
+@HideFromKotlin(reason = "java only")
 @Deprecated("java only", DeprecationLevel.HIDDEN)
 class Foo {
     // ...
@@ -345,11 +357,26 @@ annotation is not present meaning that the `ACC_SYNTHETIC` flag is not set.
 ## Future Plans
 
 - Add plugin support for maven projects ;
-- Create a Restrikt IntelliJ plugin to prevent restricted symbols misuse ;
+- Create a Restrikt IDEA plugin to prevent restricted symbols misuse ;
 - Add support for generating annotations on all `public` (to be able to differentiate `internal` and `public`)
   symbols of a project to simplify Kotlin project obfuscation with [ProGuard](https://www.guardsquare.com/proguard).
 
 ## Changelog
+
+### 4.0.0 - 2023-03-31
+
+**Breaking Changes** :
+
+- Annotations now accepts a `retention` parameter to specify the annotation retention.
+
+**Features** :
+
+- Performance improvements by using a more efficient way to process symbols. Plugin is now lighter (from 900 to less 
+than 300 lines for the plugin's backend).
+
+**Bugfixes** :
+
+- Plugin now properly works with inline functions.
 
 ### 3.0.1 - 2023-01-11
 
