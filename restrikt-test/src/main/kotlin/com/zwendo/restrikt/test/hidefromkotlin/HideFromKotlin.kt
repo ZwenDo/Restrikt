@@ -1,6 +1,7 @@
 package com.zwendo.restrikt.test.hidefromkotlin
 
 import com.zwendo.restrikt.annotation.HideFromKotlin
+import com.zwendo.restrikt.annotation.RestriktRetention
 
 
 val visibleProperty = 5
@@ -68,4 +69,25 @@ val visibleAnnotationAccessor = VisibleAnnotation::class
 annotation class InvisibleAnnotation
 
 val invisibleAnnotationAccessor = InvisibleAnnotation::class
+
+@HideFromKotlin(retention = RestriktRetention.RUNTIME)
+fun invisibleFunctionWithRuntimeRetention() {
+
+}
+
+val invisibleFunctionWithRuntimeRetentionAccessor = ::invisibleFunctionWithRuntimeRetention
+
+@HideFromKotlin(retention = RestriktRetention.BINARY)
+fun invisibleFunctionWithBinaryRetention() {
+
+}
+
+val invisibleFunctionWithBinaryRetentionAccessor = ::invisibleFunctionWithBinaryRetention
+
+@HideFromKotlin(retention = RestriktRetention.SOURCE)
+fun invisibleFunctionWithSourceRetention() {
+
+}
+
+val invisibleFunctionWithSourceRetentionAccessor = ::invisibleFunctionWithSourceRetention
 

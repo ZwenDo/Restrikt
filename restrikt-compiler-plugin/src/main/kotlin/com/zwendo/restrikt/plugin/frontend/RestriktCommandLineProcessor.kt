@@ -4,11 +4,13 @@ import com.zwendo.restrikt_compiler_plugin.BuildConfig
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
 import org.jetbrains.kotlin.compiler.plugin.CliOptionProcessingException
 import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 
 /**
  * Class that process command line to retrieve the configuration of the plugin.
  */
+@OptIn(ExperimentalCompilerApi::class)
 internal class RestriktCommandLineProcessor : CommandLineProcessor {
 
     override val pluginId = BuildConfig.PLUGIN_ID

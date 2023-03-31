@@ -102,9 +102,9 @@ subprojects {
     }
 
     signing {
-        useGpgCmd()
-        sign(publishing.publications["mavenJava"])
+        sign(publishing.publications)
     }
+
 }
 
 val toplevelPrivateConstructor: String by project
@@ -118,6 +118,7 @@ val annotationPostfixKeepAnnotation: String by project
 val annotationPostfixDefaultReason: String by project
 val annotationPostfixDeprecatedReason: String by project
 val deprecatedDefaultReason: String by project
+val defaultAnnotationRetention: String by project
 
 
 fun buildConfigGenericSetup(vararg projects: Project) {
@@ -135,6 +136,7 @@ fun buildConfigGenericSetup(vararg projects: Project) {
             buildConfigField("String", "ANNOTATION_POSTFIX_DEFAULT_REASON", "\"$annotationPostfixDefaultReason\"")
             buildConfigField("String", "ANNOTATION_POSTFIX_DEPRECATED_REASON", "\"$annotationPostfixDeprecatedReason\"")
             buildConfigField("String", "DEPRECATED_DEFAULT_REASON", "\"$deprecatedDefaultReason\"")
+            buildConfigField("String", "DEFAULT_RETENTION_POLICY", "\"$defaultAnnotationRetention\"")
 
             useKotlinOutput {
                 internalVisibility = true

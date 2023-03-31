@@ -1,6 +1,7 @@
 package com.zwendo.restrikt.test.packageprivate
 
 import com.zwendo.restrikt.annotation.PackagePrivate
+import com.zwendo.restrikt.annotation.RestriktRetention
 
 class VisibleClass
 
@@ -43,3 +44,17 @@ class DummyClass @PackagePrivate constructor() {
 
 }
 
+@PackagePrivate(retention = RestriktRetention.RUNTIME)
+fun functionWithCustomRuntimeRetention() {
+
+}
+
+@PackagePrivate(retention = RestriktRetention.BINARY)
+fun functionWithCustomBinaryRetention() {
+
+}
+
+@PackagePrivate(retention = RestriktRetention.SOURCE)
+fun functionWithCustomSourceRetention() {
+
+}

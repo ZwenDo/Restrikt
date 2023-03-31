@@ -1,37 +1,28 @@
 package com.zwendo.restrikt.plugin.backend
 
-import com.zwendo.restrikt.plugin.backend.symbol.RestriktClassBuildingContext
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktClassVisitor
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktClassVisitorProxy
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktFieldVisitor
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktMetadataVisitor
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktMethodVisitor
-import com.zwendo.restrikt.plugin.backend.visitor.RestriktRecordComponentVisitor
+import com.zwendo.restrikt.plugin.frontend.PluginConfiguration
 import org.jetbrains.kotlin.codegen.ClassBuilder
 import org.jetbrains.kotlin.codegen.DelegatingClassBuilder
 import org.jetbrains.kotlin.com.intellij.psi.PsiElement
+import org.jetbrains.kotlin.descriptors.DeclarationDescriptor
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.descriptors.IrBasedClassDescriptor
 import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
-import org.jetbrains.org.objectweb.asm.AnnotationVisitor
+import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOriginKind
 import org.jetbrains.org.objectweb.asm.ClassVisitor
 import org.jetbrains.org.objectweb.asm.FieldVisitor
 import org.jetbrains.org.objectweb.asm.MethodVisitor
-import org.jetbrains.org.objectweb.asm.RecordComponentVisitor
+import org.jetbrains.org.objectweb.asm.Opcodes
 
 
-internal class RestriktClassBuilder(private val original: ClassBuilder) : DelegatingClassBuilder() {
+internal class RestriktClassBuilder(
+    private val original: ClassBuilder,
+    private val classOrigin: JvmDeclarationOrigin,
+) : DelegatingClassBuilder() {
 
     override fun getDelegate(): ClassBuilder = original
 
-    override fun getVisitor(): ClassVisitor {
-        val classData = RestriktClassBuildingContext.currentClassData
-        // the following if aims to avoid infinite queueing, in the case of the RestriktClassVisitor tries to call
-        // methods from the original visitor (e.g. avoid infinite annotation queueing)
-        return if (classData.isWritten) { // most common case, class containing at least 1 symbol
-            RestriktClassVisitorProxy(classData, original.visitor)
-        } else { // empty interface/annotation class
-            RestriktClassVisitor(classData)
-        }
-    }
+    override fun getVisitor(): ClassVisitor = RestriktClassVisitor(classOrigin.descriptor, original.visitor)
 
     override fun newMethod(
         origin: JvmDeclarationOrigin,
@@ -41,10 +32,10 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         signature: String?,
         exceptions: Array<out String>?,
     ): MethodVisitor {
-        val data = RestriktClassBuildingContext.methodData(origin.descriptor, access) {
-            super.newMethod(origin, it, name, desc, signature, exceptions)
-        }
-        return RestriktMethodVisitor(data)
+        val descriptor = origin.descriptor
+        val actualAccess = descriptor.computeModifiers(access, classDescriptor)
+        val original = super.newMethod(origin, actualAccess, name, desc, signature, exceptions)
+        return RestriktMethodVisitor(descriptor, original)
     }
 
     override fun newField(
@@ -55,16 +46,10 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         signature: String?,
         value: Any?,
     ): FieldVisitor {
-        val data = RestriktClassBuildingContext.fieldData(origin.descriptor, access) {
-            super.newField(origin, it, name, desc, signature, value)
-        }
-        return RestriktFieldVisitor(data)
-    }
-
-    override fun visitInnerClass(name: String, outerName: String?, innerName: String?, access: Int) {
-        RestriktClassBuildingContext.onStartWritingPartWithoutData()
-        val actualAccess = RestriktClassBuildingContext.classAccess(name, access)
-        super.visitInnerClass(name, outerName, innerName, actualAccess)
+        val descriptor = origin.descriptor
+        val actualAccess = descriptor.computeModifiers(access, classDescriptor)
+        val original = super.newField(origin, actualAccess, name, desc, signature, value)
+        return RestriktFieldVisitor(descriptor, original)
     }
 
     override fun defineClass(
@@ -75,33 +60,53 @@ internal class RestriktClassBuilder(private val original: ClassBuilder) : Delega
         signature: String?,
         superName: String,
         interfaces: Array<out String>,
-    ) = RestriktClassBuildingContext.createClassData(original, name, access) {
-        super.defineClass(origin, version, it, name, signature, superName, interfaces)
-        original.visitor
+    ) {
+        val actualAccess = classDescriptor.computeModifiers(access, null)
+        original.defineClass(origin, version, actualAccess, name, signature, superName, interfaces)
+        if (PluginConfiguration.toplevelPrivateConstructor && classOrigin.shouldGeneratePrivateConstructor) {
+            generatePrivateConstructor()
+        }
     }
 
-    override fun newRecordComponent(name: String, desc: String, signature: String?): RecordComponentVisitor {
-        val data = RestriktClassBuildingContext.recordComponentData {
-            super.newRecordComponent(name, desc, signature)
+    private fun generatePrivateConstructor() {
+        val origin = JvmDeclarationOrigin(JvmDeclarationOriginKind.OTHER, null, null, null)
+        val name = "<init>"
+        val desc = "()V"
+        val visitor = original.newMethod(origin, Opcodes.ACC_PRIVATE, name, desc, null, null)
+        visitor.apply {
+            visitCode()
+            visitVarInsn(Opcodes.ALOAD, 0)
+            visitMethodInsn(Opcodes.INVOKESPECIAL, "java/lang/Object", name, desc, false)
+
+            visitTypeInsn(Opcodes.NEW, "java/lang/AssertionError")
+            visitInsn(Opcodes.DUP)
+            visitLdcInsn("This class should not be instantiated")
+            visitMethodInsn(
+                Opcodes.INVOKESPECIAL,
+                "java/lang/AssertionError",
+                "<init>",
+                "(Ljava/lang/Object;)V",
+                false
+            )
+            visitInsn(Opcodes.ATHROW)
+
+            visitMaxs(3, 1)
+            visitEnd()
         }
-        return RestriktRecordComponentVisitor(data)
     }
 
-    override fun newAnnotation(desc: String, visible: Boolean): AnnotationVisitor {
-        // most common case, class containing at least 1 symbol and has already been written, so we do not need to
-        // parse the metadata
-        if (RestriktClassBuildingContext.currentClassData.isWritten) {
-            return super.newAnnotation(desc, visible)
-        }
+    private val classDescriptor: DeclarationDescriptor?
+        get() = classOrigin.descriptor
 
-        // we must parse the metadata to gather the information about the class, as it has an empty body, meaning that
-        // we did not have the possibility to retrieve its descriptor
-        val data = RestriktClassBuildingContext.metadataProxyData {
-            super.newAnnotation(desc, visible)
+    private val JvmDeclarationOrigin.shouldGeneratePrivateConstructor: Boolean
+        get() {
+            if (originKind == JvmDeclarationOriginKind.PACKAGE_PART) return true
+            val desc = descriptor
+            if (desc !is IrBasedClassDescriptor) return false
+            val origin = desc.owner.origin
+            return origin == IrDeclarationOrigin.JVM_MULTIFILE_CLASS
+                        || origin == IrDeclarationOrigin.FILE_CLASS
+                        || origin == IrDeclarationOrigin.SYNTHETIC_FILE_CLASS
         }
-        return RestriktMetadataVisitor(RestriktClassBuildingContext.currentClassData, data)
-    }
-
-    override fun done() = RestriktClassBuildingContext.done()
 
 }

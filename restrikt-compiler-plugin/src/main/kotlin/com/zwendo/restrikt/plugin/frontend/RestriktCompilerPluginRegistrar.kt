@@ -4,8 +4,8 @@ import com.zwendo.restrikt.plugin.backend.RestriktClassBuilder
 import org.jetbrains.kotlin.codegen.ClassBuilder
 import org.jetbrains.kotlin.codegen.ClassBuilderFactory
 import org.jetbrains.kotlin.codegen.extensions.ClassBuilderInterceptorExtension
-import org.jetbrains.kotlin.com.intellij.mock.MockProject
-import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.diagnostics.DiagnosticSink
 import org.jetbrains.kotlin.resolve.BindingContext
@@ -14,12 +14,16 @@ import org.jetbrains.kotlin.resolve.jvm.diagnostics.JvmDeclarationOrigin
 /**
  * Class that registers plugin custom class generation interceptor
  */
-internal class RestriktComponentRegistrar : ComponentRegistrar {
+@OptIn(ExperimentalCompilerApi::class)
+internal class RestriktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 
-    override fun registerProjectComponents(project: MockProject, configuration: CompilerConfiguration) {
+    override val supportsK2: Boolean
+        get() = false
+
+    override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         if (!PluginConfiguration.enabled) return
 
-        ClassBuilderInterceptorExtension.registerExtension(project, ClassGenerationInterceptor)
+        ClassBuilderInterceptorExtension.registerExtension(ClassGenerationInterceptor)
     }
 
 }
@@ -27,7 +31,7 @@ internal class RestriktComponentRegistrar : ComponentRegistrar {
 /**
  * Class that intercepts bytecode generation and adds custom code to it
  */
-private object ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
+internal object ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
 
     /**
      * Methods that provides a factory for class builders (class builder is the class that will parse the kotlinc
@@ -43,7 +47,8 @@ private object ClassGenerationInterceptor : ClassBuilderInterceptorExtension {
          * Methods that return the class builder for the given class.
          */
         override fun newClassBuilder(origin: JvmDeclarationOrigin): ClassBuilder = RestriktClassBuilder(
-            interceptedFactory.newClassBuilder(origin)
+            interceptedFactory.newClassBuilder(origin),
+            origin,
         )
 
     }

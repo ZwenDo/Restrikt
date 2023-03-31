@@ -17,7 +17,7 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
         )
 
         target.dependencies.apply { // add the annotations to the project
-            add("compileOnly", ANNOTATION_DEPENDENCY)
+            add("implementation", ANNOTATION_DEPENDENCY)
         }
     }
 
@@ -43,6 +43,10 @@ internal class GradlePlugin : KotlinCompilerPluginSupportPlugin {
 
         extension.annotationProcessing?.let {
             parameters += SubpluginOption(BuildConfig.ANNOTATION_PROCESSING, it.toString())
+        }
+
+        extension.defaultRetentionPolicy?.let {
+            parameters += SubpluginOption(BuildConfig.DEFAULT_RETENTION_POLICY, it.name)
         }
 
         annotationConfiguration(parameters, BuildConfig.HIDE_FROM_JAVA, extension.hideFromJava)

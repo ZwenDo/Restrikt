@@ -1,5 +1,6 @@
 package com.zwendo.restrikt.test.hidefromkotlin
 
+import com.zwendo.restrikt.annotation.HideFromKotlin
 import com.zwendo.restrikt.test.assertNotNullAnd
 import java.lang.reflect.AnnotatedElement
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -111,6 +112,27 @@ class HideFromKotlinTest {
         assertEquals(BuildConfig.DEPRECATED_REASON, annotation.deprecatedMessage)
     }
 
+    @Test
+    fun `Custom runtime retention is correctly applied`() {
+        val function = invisibleFunctionWithRuntimeRetentionAccessor
+        assertTrue(function.isHiddenFromKotlin)
+        assertTrue(function.hasHideFromKotlin)
+    }
+
+    @Test
+    fun `Custom binary retention is correctly applied`() {
+        val function = invisibleFunctionWithBinaryRetentionAccessor
+        assertTrue(function.isHiddenFromKotlin)
+        assertFalse(function.hasHideFromKotlin)
+    }
+
+    @Test
+    fun `Custom source retention is correctly applied`() {
+        val function = invisibleFunctionWithSourceRetentionAccessor
+        assertTrue(function.isHiddenFromKotlin)
+        assertFalse(function.hasHideFromKotlin)
+    }
+
 
     private val KAnnotatedElement.isHiddenFromKotlin: Boolean
         get() = annotations.any { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
@@ -127,4 +149,7 @@ class HideFromKotlinTest {
         get() = annotations.find { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
             ?.let { (it as Deprecated).message }
             ?: throw AssertionError("Element $this is not hidden from kotlin")
+
+    private val KAnnotatedElement.hasHideFromKotlin: Boolean
+        get() = annotations.any { it is HideFromKotlin }
 }

@@ -1,11 +1,22 @@
 package com.zwendo.restrikt.test.hidefromjava
 
 import com.zwendo.restrikt.annotation.HideFromJava
+import com.zwendo.restrikt.annotation.RestriktRetention
 
 class VisibleClass
 
 @HideFromJava
-class InvisibleClass
+class InvisibleClass {
+
+    fun invisibleFunctionDueToClassAnnotation() {
+    }
+
+    class NestedClass {
+        fun nestedClassFunction() {
+        }
+    }
+
+}
 
 var visibleProperty = 5
 
@@ -36,8 +47,17 @@ class VisibleConstructorClass
 
 class InvisibleConstructorClass @HideFromJava constructor()
 
+@HideFromJava(retention = RestriktRetention.RUNTIME)
+fun functionWithCustomRuntimeRetention() {
 
-annotation class VisibleAnnotation
+}
 
-@HideFromJava
-annotation class InvisibleAnnotation
+@HideFromJava(retention = RestriktRetention.BINARY)
+fun functionWithCustomBinaryRetention() {
+
+}
+
+@HideFromJava(retention = RestriktRetention.SOURCE)
+fun functionWithCustomSourceRetention() {
+
+}
