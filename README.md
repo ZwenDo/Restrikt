@@ -4,7 +4,7 @@
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/com.zwendo.restrikt?color=%2366dcb8&logo=gradle)](https://plugins.gradle.org/plugin/com.zwendo.restrikt)
 [![Maven Central](https://img.shields.io/maven-central/v/com.zwendo/restrikt-annotation)](https://search.maven.org/artifact/com.zwendo/restrikt-annotation)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
-[![Kotlin](https://img.shields.io/badge/Kotlin-1.7.21-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-1.8.10-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 
 <h3><i>A Kotlin/JVM compiler plugin to restrict symbols access, from external project sources.</i></h3>
 </div>
