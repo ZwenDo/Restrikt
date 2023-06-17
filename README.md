@@ -382,7 +382,7 @@ than 300 lines for the plugin's backend).
 
 **Bugfixes** : 
 
-- Fixed bug were Restrikt caused errors when compiling tests by disabling the plugin for test sources.
+- Fixed bug were Restrikt caused errors when compiling tests, solved by disabling the plugin for test sources.
 
 ### 3.0.0 - 2023-01-09
 
