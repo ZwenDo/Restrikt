@@ -30,7 +30,6 @@ gradlePlugin {
 
 buildConfig {
     buildConfigField("String", "GROUP_ID", "\"$projectGroup\"")
-    buildConfigField("String", "ANNOTATION_ID", "\"${project(":restrikt-annotation").name}\"")
     buildConfigField("String", "VERSION", "\"$projectVersion\"")
     buildConfigField("String", "EXTENSION_NAME", "\"${rootProject.name.toLowerCase()}\"")
     buildConfigField("String", "COMPILER_PLUGIN_ID", "\"${project(":restrikt-compiler-plugin").name}\"")
