@@ -12,7 +12,7 @@ val projectGroup: String by project
 val projectVersion: String by project
 val jvmVersion: String by project
 val junitVersion: String by project
-val javaVersion = JavaVersion.VERSION_1_8
+val javaVersion = JavaVersion.toVersion(jvmVersion)
 
 subprojects {
     apply(plugin = "java")
@@ -35,15 +35,15 @@ subprojects {
         withJavadocJar()
     }
 
+    kotlin {
+        jvmToolchain {
+            languageVersion.set(JavaLanguageVersion.of(javaVersion.majorVersion))
+        }
+    }
+
     tasks {
         test {
             useJUnitPlatform()
-        }
-
-        compileKotlin {
-            kotlinOptions {
-                jvmTarget = jvmVersion
-            }
         }
     }
 
@@ -60,7 +60,7 @@ subprojects {
             create<MavenPublication>("mavenJava") {
                 from(components["java"])
                 groupId = project.group.toString()
-                artifactId = project.name.toLowerCase()
+                artifactId = project.name
                 version = project.version.toString()
 
                 pom {
@@ -93,8 +93,8 @@ subprojects {
                     name = "MavenCentral"
                     setUrl(repositoryUrl)
                     credentials {
-                        username = (project.properties["ossrhUsername"] as? String) ?: ""
-                        password = (project.properties["ossrhPassword"] as? String) ?: ""
+                        username = (project.properties["ossrhUsername"] as? String) ?: throw AssertionError("ossrhUsername is missing or invalid")
+                        password = (project.properties["ossrhPassword"] as? String) ?: throw AssertionError("ossrhPassword is missing or invalid")
                     }
                 }
             }
@@ -107,36 +107,27 @@ subprojects {
 
 }
 
+val pluginEnabled: String by project
 val toplevelPrivateConstructor: String by project
 val automaticInternalHiding: String by project
 val annotationProcessing: String by project
 val hideFromJava: String by project
 val hideFromKotlin: String by project
 val packagePrivate: String by project
-val annotationPostfixEnabled: String by project
-val annotationPostfixKeepAnnotation: String by project
-val annotationPostfixDefaultReason: String by project
-val annotationPostfixDeprecatedReason: String by project
-val deprecatedDefaultReason: String by project
-val defaultAnnotationRetention: String by project
-
+val removeDefaultAnnotations: String by project
 
 fun buildConfigGenericSetup(vararg projects: Project) {
     projects.forEach {
         it.buildConfig {
-            buildConfigField("String", "PLUGIN_ID", "\"${rootProject.name.toLowerCase()}\"")
+            buildConfigField("String", "PLUGIN_ID", "\"$projectGroup.${rootProject.name}\"")
+            buildConfigField("String", "ENABLED", "\"$pluginEnabled\"")
             buildConfigField("String", "TOPLEVEL_PRIVATE_CONSTRUCTOR", "\"$toplevelPrivateConstructor\"")
             buildConfigField("String", "AUTOMATIC_INTERNAL_HIDING", "\"$automaticInternalHiding\"")
             buildConfigField("String", "ANNOTATION_PROCESSING", "\"$annotationProcessing\"")
-            buildConfigField("String", "HIDE_FROM_JAVA", "\"$hideFromJava\"")
-            buildConfigField("String", "HIDE_FROM_KOTLIN", "\"$hideFromKotlin\"")
-            buildConfigField("String", "PACKAGE_PRIVATE", "\"$packagePrivate\"")
-            buildConfigField("String", "ANNOTATION_POSTFIX_ENABLED", "\"$annotationPostfixEnabled\"")
-            buildConfigField("String", "ANNOTATION_POSTFIX_RETENTION", "\"$annotationPostfixKeepAnnotation\"")
-            buildConfigField("String", "ANNOTATION_POSTFIX_DEFAULT_REASON", "\"$annotationPostfixDefaultReason\"")
-            buildConfigField("String", "ANNOTATION_POSTFIX_DEPRECATED_REASON", "\"$annotationPostfixDeprecatedReason\"")
-            buildConfigField("String", "DEPRECATED_DEFAULT_REASON", "\"$deprecatedDefaultReason\"")
-            buildConfigField("String", "DEFAULT_RETENTION_POLICY", "\"$defaultAnnotationRetention\"")
+            buildConfigField("String", "HIDE_FROM_JAVA_ANNOTATION", "\"$hideFromJava\"")
+            buildConfigField("String", "HIDE_FROM_KOTLIN_ANNOTATION", "\"$hideFromKotlin\"")
+            buildConfigField("String", "PACKAGE_PRIVATE_ANNOTATION", "\"$packagePrivate\"")
+            buildConfigField("String", "IGNORE_DEFAULT_ANNOTATIONS", "\"$removeDefaultAnnotations\"")
 
             useKotlinOutput {
                 internalVisibility = true
@@ -146,6 +137,6 @@ fun buildConfigGenericSetup(vararg projects: Project) {
 }
 
 buildConfigGenericSetup(
-    project(":restrikt-gradle-plugin"),
-    project(":restrikt-compiler-plugin"),
+    project(":restrikt2-gradle-plugin"),
+    project(":restrikt2-compiler-plugin"),
 )

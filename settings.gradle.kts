@@ -1,6 +1,7 @@
-rootProject.name = "Restrikt"
+rootProject.name = "restrikt2"
 
 include(
-    ":restrikt-compiler-plugin",
-    ":restrikt-gradle-plugin",
+    ":restrikt2-annotations",
+    ":restrikt2-compiler-plugin",
+    ":restrikt2-gradle-plugin",
 )
