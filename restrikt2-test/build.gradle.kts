@@ -17,9 +17,9 @@ dependencies {
 }
 
 restrikt2 {
-    hideFromJavaAnnotations = setOf("com/zwendo/restrikt/test/HFJ")
-    hideFromKotlinAnnotations = setOf("com/zwendo/restrikt/test/HFK")
-    packagePrivateAnnotations = setOf("com/zwendo/restrikt/test/PP")
+    hideFromJavaAnnotations = setOf("com/zwendo/restrikt2/test/HFJ")
+    hideFromKotlinAnnotations = setOf("com/zwendo/restrikt2/test/HFK")
+    packagePrivateAnnotations = setOf("com/zwendo/restrikt2/test/PP")
 }
 
 

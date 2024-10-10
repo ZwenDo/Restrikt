@@ -22,7 +22,7 @@ gradlePlugin {
             id = "com.zwendo.restrikt2"
             displayName = "Restrikt 2.0 gradle plugin"
             description = "Gradle plugin for Restrikt 2.0 compiler plugin"
-            implementationClass = "com.zwendo.restrikt.gradle.GradlePlugin"
+            implementationClass = "com.zwendo.restrikt2.gradle.RestriktGradlePlugin"
             tags = listOf(
                 "kotlin", "k2", "java", "library", "jvm", "compiler-plugin", "hide-code", "library-development"
             )
