@@ -2,15 +2,19 @@
 <h1>Restrikt 2.0</h1>
 
 <h4>Gradle Plugin</h4>
+
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/com.zwendo.restrikt2?color=%2366dcb8&logo=gradle)](https://plugins.gradle.org/plugin/com.zwendo.restrikt2)
 
 <h4>Compiler Plugin</h4>
+
 [![Maven Central](https://img.shields.io/maven-central/v/com.zwendo/restrikt2-compiler-plugin)](https://search.maven.org/artifact/com.zwendo/restrikt2-compiler-plugin)
 
 <h4>Annotations</h4>
+
 [![Maven Central](https://img.shields.io/maven-central/v/com.zwendo/restrikt2-annotations)](https://search.maven.org/artifact/com.zwendo/restrikt2-annotations)
 
 <h4>Others</h4>
+
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.20-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 [![Java](https://img.shields.io/badge/Java-8-%23ED8B00.svg?logo=openJdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
@@ -222,12 +226,6 @@ To the add default annotations to your project, you simply need to add the jars 
 
 ### Available options
 
-> [!IMPORTANT]
-> This section contains important information about the syntax to add annotations to the plugin configuration.
-
-<details>
-    <summary>Click to expand</summary>
-
 Here are the currently supported default configuration options:
 
 |              name              |             type              |           default            | allow multiple occurrences | description                                                                                       |
@@ -251,6 +249,7 @@ Here are the currently supported default configuration options:
 > - A `Foo` annotation declared in the `a.b.c` package could be added with `a/b/c/Foo`.
 > - A `Bar` annotation declared in the `Base` class itself in the `bar` package could be added with `bar/Base.Bar`.
 
+
 <a id="options-note-2"></a>
 **Note 2:** `none` means that no annotation is added by default, except for the annotations controlled by the
 `ignore-default-annotations` option.
@@ -265,8 +264,6 @@ Here are the currently supported default configuration options:
 > [!IMPORTANT]
 > Any custom annotation added to the plugin must have the `BINARY` or `RUNTIME` retention policy, for the plugin to be
 > able to see it during the compilation process.
-
-</details>
 
 ### Gradle
 
