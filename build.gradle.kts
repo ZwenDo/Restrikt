@@ -47,13 +47,11 @@ subprojects {
         }
     }
 
-    val repositoryUrl =
-        if (version.toString()
-                .endsWith("SNAPSHOT")
-        )
-            "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-        else
-            "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+    val repositoryUrl = if (version.toString().endsWith("SNAPSHOT")) {
+        "https://s01.oss.sonatype.org/content/repositories/snapshots/"
+    } else {
+        "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+    }
 
     publishing {
         publications {
@@ -93,8 +91,12 @@ subprojects {
                     name = "MavenCentral"
                     setUrl(repositoryUrl)
                     credentials {
-                        username = (project.properties["ossrhUsername"] as? String) ?: throw AssertionError("ossrhUsername is missing or invalid")
-                        password = (project.properties["ossrhPassword"] as? String) ?: throw AssertionError("ossrhPassword is missing or invalid")
+                        username =
+                            (project.properties["ossrhUsername"] as? String)
+                                ?: throw AssertionError("ossrhUsername is missing or invalid")
+                        password =
+                            (project.properties["ossrhPassword"] as? String)
+                                ?: throw AssertionError("ossrhPassword is missing or invalid")
                     }
                 }
             }
@@ -114,7 +116,8 @@ val annotationProcessing: String by project
 val hideFromJava: String by project
 val hideFromKotlin: String by project
 val packagePrivate: String by project
-val removeDefaultAnnotations: String by project
+val ignoreDefaultAnnotations: String by project
+val ignoreLegacyAnnotations: String by project
 
 fun buildConfigGenericSetup(vararg projects: Project) {
     projects.forEach {
@@ -127,7 +130,7 @@ fun buildConfigGenericSetup(vararg projects: Project) {
             buildConfigField("String", "HIDE_FROM_JAVA_ANNOTATION", "\"$hideFromJava\"")
             buildConfigField("String", "HIDE_FROM_KOTLIN_ANNOTATION", "\"$hideFromKotlin\"")
             buildConfigField("String", "PACKAGE_PRIVATE_ANNOTATION", "\"$packagePrivate\"")
-            buildConfigField("String", "IGNORE_DEFAULT_ANNOTATIONS", "\"$removeDefaultAnnotations\"")
+            buildConfigField("String", "IGNORE_DEFAULT_ANNOTATIONS", "\"$ignoreDefaultAnnotations\"")
 
             useKotlinOutput {
                 internalVisibility = true
