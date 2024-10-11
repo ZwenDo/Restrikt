@@ -246,10 +246,9 @@ Here are the currently supported default configuration options:
 > **Note 1:** The syntax to add annotation with any option accepting an annotation is its fully qualified name where all
 > packages
 > are separated by a slash (`/`) and all inner classes are separated by a dot (`.`).
->
 > Here are few examples:
-> -A `Foo` annotation declared in the `a.b.c` package could be added with `a/b/c/Foo`.
-> -A `Bar` annotation declared in the `Base` class itself in the `bar` package could be added with `bar/Base.Bar`.
+> - A `Foo` annotation declared in the `a.b.c` package could be added with `a/b/c/Foo`.
+> - A `Bar` annotation declared in the `Base` class itself in the `bar` package could be added with `bar/Base.Bar`.
 
 <a id="options-note-2"></a>
 **Note 2:** `none` means that no annotation is added by default, except for the annotations controlled by the
