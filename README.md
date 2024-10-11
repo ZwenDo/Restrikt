@@ -1,8 +1,16 @@
 <div align="center">
 <h1>Restrikt 2.0</h1>
 
+<h4>Gradle Plugin</h4>
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/com.zwendo.restrikt2?color=%2366dcb8&logo=gradle)](https://plugins.gradle.org/plugin/com.zwendo.restrikt2)
+
+<h4>Compiler Plugin</h4>
+[![Maven Central](https://img.shields.io/maven-central/v/com.zwendo/restrikt2-compiler-plugin)](https://search.maven.org/artifact/com.zwendo/restrikt2-compiler-plugin)
+
+<h4>Annotations</h4>
 [![Maven Central](https://img.shields.io/maven-central/v/com.zwendo/restrikt2-annotations)](https://search.maven.org/artifact/com.zwendo/restrikt2-annotations)
+
+<h4>Others</h4>
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.20-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 [![Java](https://img.shields.io/badge/Java-8-%23ED8B00.svg?logo=openJdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
