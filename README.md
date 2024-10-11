@@ -242,6 +242,7 @@ Here are the currently supported default configuration options:
 |  `ignore-default-annotations`  |            boolean            |           `false`            |          `false`           | Whether to ignore default marking annotations when processing annotations. [(3)](#options-note-3) |
 
 <a id="options-note-1"></a>
+
 > [!IMPORTANT]  
 > **Note 1:** The syntax to add annotation with any option accepting an annotation is its fully qualified name where all
 > packages
