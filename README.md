@@ -222,12 +222,6 @@ To the add default annotations to your project, you simply need to add the jars 
 
 ### Available options
 
-> [!IMPORTANT]
-> This section contains important information about the syntax to add annotations to the plugin configuration.
-
-<details>
-    <summary>Click to expand</summary>
-
 Here are the currently supported default configuration options:
 
 |              name              |             type              |           default            | allow multiple occurrences | description                                                                                       |
@@ -244,9 +238,13 @@ Here are the currently supported default configuration options:
 <a id="options-note-1"></a>
 > [!IMPORTANT]  
 > **Note 1:** The syntax to add annotation with any option accepting an annotation is its fully qualified name where all
-> packages are separated by a slash (`/`) and all inner classes are separated by a dot (`.`), meaning that a `Foo`
-> annotation declared in the `a.b.c` package could be added with `a/b/c/Foo` and a `Bar` annotation declared in the `Base` class
-> itself in the `bar` package could be added with `bar/Base.Bar`.
+> packages
+> are separated by a slash (`/`) and all inner classes are separated by a dot (`.`).
+>
+> Here are few examples:
+> - A `Foo` annotation declared in the `a.b.c` package could be added with `a/b/c/Foo`.
+> - A `Bar` annotation declared in the `Base` class itself in the `bar` package could be added with `bar/Base.Bar`.
+
 
 <a id="options-note-2"></a>
 **Note 2:** `none` means that no annotation is added by default, except for the annotations controlled by the
@@ -262,8 +260,6 @@ Here are the currently supported default configuration options:
 > [!IMPORTANT]
 > Any custom annotation added to the plugin must have the `BINARY` or `RUNTIME` retention policy, for the plugin to be
 > able to see it during the compilation process.
-
-</details>
 
 ### Gradle
 
