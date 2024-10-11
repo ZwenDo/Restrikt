@@ -37,7 +37,7 @@ class HFJTest {
 
     @Test
     fun `Not annotated property is not hidden`() {
-        val property = ::visibleProperty
+        val property = ::visiblePropertyHFJ
 
         property.javaField.assertNotNullAnd {
             assertFalse(isSynthetic)

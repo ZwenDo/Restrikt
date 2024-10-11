@@ -71,7 +71,7 @@ internal class RestriktGradlePlugin : KotlinCompilerPluginSupportPlugin {
         BuildConfig.VERSION,
     )
 
-    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean =
-        kotlinCompilation.compilationName != KotlinCompilation.TEST_COMPILATION_NAME
+    override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
+//        kotlinCompilation.compilationName != KotlinCompilation.TEST_COMPILATION_NAME
 
 }

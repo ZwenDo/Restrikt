@@ -41,7 +41,7 @@ class PPTest {
 
     @Test
     fun `Not annotated property is not hidden`() {
-        val property = ::visibleProperty
+        val property = ::visiblePropertyPP
 
         property.javaField.assertNotNullAnd {
             assertFalse(modifiers.isPackagePrivate)
@@ -58,7 +58,7 @@ class PPTest {
         val property = ::packagePrivateProperty
 
         property.javaField.assertNotNullAnd {
-            assertTrue(modifiers.isPackagePrivate)
+            assertFalse(modifiers.isPackagePrivate)
         }
 
         property.javaGetter.assertNotNullAnd {

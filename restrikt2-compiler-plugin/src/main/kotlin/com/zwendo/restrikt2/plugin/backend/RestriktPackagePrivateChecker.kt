@@ -4,7 +4,8 @@ import com.zwendo.restrikt2.plugin.backend.RestriktPackagePrivateChecker.Lazy.VI
 import com.zwendo.restrikt2.plugin.frontend.PluginConfiguration
 import org.jetbrains.kotlin.com.intellij.psi.PsiElement
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporter
-import org.jetbrains.kotlin.diagnostics.error1
+import org.jetbrains.kotlin.diagnostics.error2
+import org.jetbrains.kotlin.diagnostics.rendering.CommonRenderers
 import org.jetbrains.kotlin.diagnostics.reportOn
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.MppCheckerKind
@@ -19,6 +20,7 @@ import org.jetbrains.kotlin.fir.expressions.FirResolvable
 import org.jetbrains.kotlin.fir.expressions.FirStatement
 import org.jetbrains.kotlin.fir.packageFqName
 import org.jetbrains.kotlin.fir.references.symbol
+import org.jetbrains.kotlin.fir.references.toResolvedNamedFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 
 /**
@@ -43,7 +45,8 @@ internal class RestriktPackagePrivateChecker(session: FirSession) : FirAdditiona
 
             // We check if the callee is in the same package as where we currently are. If they are the same, we can
             // skip the check as we should be able to access the symbol anyway.
-            if (calleeSymbol.packageFqName() == currentFile.packageFqName) return
+            val calleePackage = calleeSymbol.packageFqName()
+            if (calleePackage == currentFile.packageFqName) return
 
             // We check if the callee has a package-private annotation or if it is in a class that has it.
             val isAnnotated = PluginConfiguration.packagePrivateAnnotations.any {
@@ -53,20 +56,21 @@ internal class RestriktPackagePrivateChecker(session: FirSession) : FirAdditiona
             if (!isAnnotated) return
 
             // If we reached this point, we detected an error and we report it.
-            reporter.reportOn(expression.source, VISIBILITY_ERROR, calleeSymbol, context)
+            reporter.reportOn(expression.source, VISIBILITY_ERROR, calleeSymbol, calleeSymbol.toString(), context)
         }
 
     }
 
     private object Lazy {
 
-        val VISIBILITY_ERROR by error1<PsiElement, FirBasedSymbol<*>>()
+        val VISIBILITY_ERROR by error2<PsiElement, FirBasedSymbol<*>, String>()
 
         init {
             FirErrorsDefaultMessages.MAP.put(
                 VISIBILITY_ERROR,
-                "Symbol ''{0}'' has package-private visibility and therefore cannot be accessed outside of its package.",
-                FirDiagnosticRenderers.SYMBOL
+                "Cannot access ''{0}'': it is package-private in package ''{1}''",
+                FirDiagnosticRenderers.DECLARATION_NAME,
+                CommonRenderers.STRING
             )
         }
 

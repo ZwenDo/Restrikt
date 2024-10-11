@@ -2,7 +2,7 @@
 <h1>Restrikt 2.0</h1>
 
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/com.zwendo.restrikt2?color=%2366dcb8&logo=gradle)](https://plugins.gradle.org/plugin/com.zwendo.restrikt2)
-[![Maven Central](https://img.shields.io/maven-central/v/com.zwendo/restrikt-annotations2)](https://search.maven.org/artifact/com.zwendo/restrikt2-annotation)
+[![Maven Central](https://img.shields.io/maven-central/v/com.zwendo/restrikt2-annotations)](https://search.maven.org/artifact/com.zwendo/restrikt2-annotations)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0.20-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 [![Java](https://img.shields.io/badge/Java-8-%23ED8B00.svg?logo=openJdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
@@ -334,7 +334,7 @@ look like this:
             </plugin>
         </plugins>
     </build>
-<configuration>
+</project>
 ```
 
 </details>
@@ -363,10 +363,66 @@ Here is a concrete example:
 Restrikt plugin features automatic hiding from internal symbols in Kotlin sources. At compile time, all symbols with the
 `internal` visibility automatically receives the JVM `ACC_SYNTHETIC` flag, making them invisible to Java sources.
 
+Thus, the following code:
+
+```kotlin
+// Foo.kt
+internal class Foo {
+    fun bar() {
+        // ...
+    }
+}
+
+internal fun baz() {
+    // ...
+}
+```
+
+Will be compiled to:
+
+```java
+class Foo {
+   // $FF: synthetic method
+    public void bar() {
+        
+    }
+}
+
+class FooKt {
+    // $FF: synthetic method
+    public static void baz() {
+        // ...
+    }
+}
+```
+
 ### Private constructors for Top-level classes
 
 Restrikt plugin also features the generation of private constructors for top-level classes. This is done to prevent
 instantiation of top-level classes from Java sources.
+
+It will compile the following code:
+
+```kotlin
+// Foo.kt
+fun bar() {
+    // ...
+}
+```
+
+To:
+
+```java
+public final class Foo {
+    private Foo() {
+        throw new AssertionError();
+    }
+
+    public static void bar() {
+        // ...
+    }
+}
+```
 
 ### 'Hide' annotations
 
@@ -407,7 +463,12 @@ this list, feel free to open an issue for it.</h4>
 
 <br/>
 
-*All known issues have been resolved.*
+### Limitation on platform specific elements
+
+Due to the way compiler plugins work (they are called before platform specific elements are generated), the plugin
+cannot perform certain operations on platform specific elements. Here are the current known limitations:
+- Apply visibility restrictions on value class members ;
+- Generate private constructor to MultiFileClass facades.
 
 ## How it works
 
@@ -416,8 +477,8 @@ works.
 
 ### Java hiding
 
-Like the Kotlin [@JvmSynthetic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-synthetic/), this
-annotation induce the generation of the JVM `ACC_SYNTHETIC`, hiding class members from Java sources. As for classes,
+Like the Kotlin [@JvmSynthetic](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.jvm/-jvm-synthetic/), marked
+elements will have an `ACC_SYNTHETIC` accessor added to them, hiding class members from Java sources. As for classes,
 because the `ACC_SYNTHETIC` doesn't work on them, the flag is applied to all the class members instead.
 
 ### Kotlin hiding
@@ -438,7 +499,7 @@ class Foo {
 
 // Foo.class
 @HideFromKotlin
-@Deprecated("", DeprecationLevel.HIDDEN)
+@Deprecated(message = "", level = DeprecationLevel.HIDDEN)
 class Foo {
     // ...
 }
@@ -456,6 +517,13 @@ that the Kotlin compiler processing of `Deprecated` annotations runs **before** 
   symbols of a project to simplify Kotlin project obfuscation with [ProGuard](https://www.guardsquare.com/proguard).
 
 ## Changelog
+
+### 0.1.1 - 2024-10-11
+
+**Bugfixes** :
+
+- Fixed parent state transitivity for fields and property methods ;
+- Disabled plugin on Value classes as it did not work properly.
 
 ### 0.1.0 - 2024-10-11
 

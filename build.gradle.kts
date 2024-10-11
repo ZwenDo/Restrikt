@@ -9,10 +9,11 @@ plugins {
 }
 
 val projectGroup: String by project
-val projectVersion: String by project
+
 val jvmVersion: String by project
 val junitVersion: String by project
 val javaVersion = JavaVersion.toVersion(jvmVersion)
+val pluginVersion: String by project
 
 subprojects {
     apply(plugin = "java")
@@ -22,7 +23,13 @@ subprojects {
     apply(plugin = "com.github.gmazzo.buildconfig")
 
     group = projectGroup
-    version = projectVersion
+    version = when (project.name) {
+        "restrikt2-gradle-plugin",
+        "restrikt2-compiler-plugin" -> pluginVersion
+        "restrikt2-annotations" -> project.properties["annotationsVersion"]
+        else -> throw AssertionError("Unknown project name: ${project.name}")
+    } as String
+
 
     repositories {
         mavenCentral()
@@ -91,12 +98,8 @@ subprojects {
                     name = "MavenCentral"
                     setUrl(repositoryUrl)
                     credentials {
-                        username =
-                            (project.properties["ossrhUsername"] as? String)
-                                ?: throw AssertionError("ossrhUsername is missing or invalid")
-                        password =
-                            (project.properties["ossrhPassword"] as? String)
-                                ?: throw AssertionError("ossrhPassword is missing or invalid")
+                        username = project.properties["ossrhUsername"] as String
+                        password = project.properties["ossrhPassword"] as String
                     }
                 }
             }

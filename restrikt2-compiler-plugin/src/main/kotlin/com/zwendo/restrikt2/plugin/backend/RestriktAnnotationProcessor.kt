@@ -10,6 +10,7 @@ import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOriginImpl
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationWithVisibility
 import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
 import org.jetbrains.kotlin.ir.declarations.IrField
@@ -45,7 +46,7 @@ internal class RestriktAnnotationProcessor(
     private val pluginContext: IrPluginContext,
 ) : IrElementTransformer<ParentState> {
 
-    private val defaultState = ParentState(ParentState.DEFAULT)
+    private val defaultState = ParentState(ParentState.DEFAULT, ParentState.ParentKind.OTHER)
 
     private val deprecatedConstructor: IrConstructorSymbol
     private val deprecatedType: IrSimpleType
@@ -54,6 +55,7 @@ internal class RestriktAnnotationProcessor(
     private val anyConstructor: IrConstructorSymbol
     private val assertionErrorType: IrSimpleType
     private val assertionErrorConstructor: IrConstructorSymbol
+    private var isInValueClass = false
 
     fun processModule(module: IrModuleFragment) {
         module.transform(this, defaultState)
@@ -70,7 +72,7 @@ internal class RestriktAnnotationProcessor(
         if (declaration.hasAnyAnnotation(PluginConfiguration.hideFromKotlinAnnotations)) {
             state = state or ParentState.HAS_HIDE_FROM_KOTLIN
         }
-        return super.visitFile(declaration, ParentState(state)).also {
+        return super.visitFile(declaration, ParentState(state, ParentState.ParentKind.FILE)).also {
             // we add the constructor in the 'also' to avoid visiting it
             // generate private constructor for file if it has at least one top-level decl
             if (declaration.hasChild { it.accept(TopLevelFinder, null) }) {
@@ -79,36 +81,50 @@ internal class RestriktAnnotationProcessor(
         }
     }
 
-    override fun visitClass(declaration: IrClass, data: ParentState): IrStatement =
-        super.visitClass(declaration, processDeclaration(declaration, data))
+    override fun visitClass(declaration: IrClass, data: ParentState): IrStatement {
+        val oldIsInValueClass = isInValueClass
+        return try {
+            isInValueClass = declaration.isValue
+            super.visitClass(declaration, processDeclaration(declaration, data.defaultIfFileState()))
+        } finally {
+            isInValueClass = oldIsInValueClass
+        }
+    }
 
     override fun visitFunction(declaration: IrFunction, data: ParentState): IrStatement =
         super.visitFunction(declaration, processDeclaration(declaration, data))
 
     override fun visitField(declaration: IrField, data: ParentState): IrStatement =
-        super.visitField(declaration, processDeclaration(declaration, data))
+        super.visitField(declaration, processDeclaration(declaration, data, ParentState.ParentKind.FIELD))
 
     override fun visitProperty(declaration: IrProperty, data: ParentState): IrStatement =
-        super.visitProperty(declaration, processDeclaration(declaration, data))
+        super.visitProperty(declaration, processDeclaration(declaration, data, ParentState.ParentKind.PROPERTY))
 
-    private fun processDeclaration(declaration: IrDeclarationWithVisibility, parentState: ParentState): ParentState {
+    private fun processDeclaration(
+        declaration: IrDeclarationWithVisibility,
+        parentState: ParentState,
+        currentKind: ParentState.ParentKind = ParentState.ParentKind.OTHER,
+    ): ParentState {
         var isSynthetic = declaration.origin.isSynthetic
         val pState = parentState.value
         var newState = pState
 
-        if (parentState.isInternal || PluginConfiguration.automaticInternalHiding && DescriptorVisibilities.INTERNAL == declaration.visibility) {
+        if (PluginConfiguration.automaticInternalHiding && (parentState.isInternal || DescriptorVisibilities.INTERNAL == declaration.visibility)) {
             if (!isSynthetic) {
                 declaration.origin = makeSynthetic(declaration.origin)
                 isSynthetic = true
             }
-            // we can use the parent state to determine whether we entered this 'if' due to parent
             newState = newState or ParentState.IS_INTERNAL
         }
 
         if (PluginConfiguration.annotationProcessing) {
-            if (parentState.hasPackagePrivate || declaration.hasAnyAnnotation(PluginConfiguration.packagePrivateAnnotations)) {
+            val parentIsPackagePrivate = (parentState.kind.isFileOrProperty && parentState.hasPackagePrivate)
+            val isField = currentKind == ParentState.ParentKind.FIELD
+            if ((parentIsPackagePrivate && !isField) || declaration.hasAnyAnnotation(PluginConfiguration.packagePrivateAnnotations)) {
                 declaration.visibility = JavaDescriptorVisibilities.PACKAGE_VISIBILITY
-                newState = newState or ParentState.HAS_PACKAGE_PRIVATE
+                if (currentKind == ParentState.ParentKind.PROPERTY) { // we need to propagate the package-private state to the getter and setter
+                    newState = newState or ParentState.HAS_PACKAGE_PRIVATE
+                }
             }
 
             if (parentState.hasHideFromJava || declaration.hasAnyAnnotation(PluginConfiguration.hideFromJavaAnnotations)) {
@@ -118,24 +134,26 @@ internal class RestriktAnnotationProcessor(
                 newState = newState or ParentState.HAS_HIDE_FROM_JAVA
             }
 
-            if (parentState.hasHideFromKotlin || declaration.hasAnyAnnotation(PluginConfiguration.hideFromKotlinAnnotations)) {
+            if ((parentState.kind.isFileOrProperty && parentState.hasHideFromKotlin) || declaration.hasAnyAnnotation(
+                    PluginConfiguration.hideFromKotlinAnnotations
+                )
+            ) {
                 declaration.annotations += deprecatedHiddenAnnotation()
-                newState = newState or ParentState.HAS_HIDE_FROM_KOTLIN
             }
         }
 
-        return if (newState == pState) parentState else ParentState(newState)
+        return ParentState(newState, currentKind)
     }
 
     private fun IrAnnotationContainer.hasAnyAnnotation(annotations: Set<ClassId>): Boolean =
         annotations.any(this::hasAnnotation)
 
-    private fun makeSynthetic(origin: IrDeclarationOrigin): IrDeclarationOrigin = object : IrDeclarationOrigin {
-        override val name: String
-            get() = origin.name
-        override val isSynthetic: Boolean
-            get() = true
-    }
+    private fun makeSynthetic(origin: IrDeclarationOrigin): IrDeclarationOrigin =
+        if (isInValueClass) {
+            origin
+        } else {
+            IrDeclarationOriginImpl("com.zwendo.restrikt2:syntheticMember", true)
+        }
 
     private fun deprecatedHiddenAnnotation(): IrConstructorCall {
         val call = IrConstructorCallImpl.fromSymbolOwner(deprecatedType, deprecatedConstructor)
@@ -191,7 +209,6 @@ internal class RestriktAnnotationProcessor(
         }
         declaration.addChild(constructor)
     }
-
 
     init {
         val deprecatedId = ClassId.fromString("kotlin/Deprecated")

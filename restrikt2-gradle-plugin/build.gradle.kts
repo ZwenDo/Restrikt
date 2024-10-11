@@ -8,7 +8,7 @@ plugins {
 
 val kotlinVersion: String by System.getProperties()
 val projectGroup: String by project
-val projectVersion: String by project
+val pluginVersion: String by project
 
 dependencies {
     compileOnly("org.jetbrains.kotlin", "kotlin-gradle-plugin-api", kotlinVersion)
@@ -31,7 +31,7 @@ gradlePlugin {
 }
 
 buildConfig {
-    buildConfigField("String", "VERSION", "\"$projectVersion\"")
+    buildConfigField("String", "VERSION", "\"$pluginVersion\"")
     buildConfigField("String", "EXTENSION_NAME", "\"${rootProject.name}\"")
     buildConfigField("String", "GROUP_ID", "\"$projectGroup\"")
     buildConfigField(

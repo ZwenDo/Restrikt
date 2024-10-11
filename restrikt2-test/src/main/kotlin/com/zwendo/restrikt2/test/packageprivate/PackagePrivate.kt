@@ -17,7 +17,8 @@ fun packagePrivateFunction() {
 
 }
 
-var visibleProperty = 1
+
+var visiblePropertyPP = 1
 
 @PP
 var packagePrivateProperty = 2

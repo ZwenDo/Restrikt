@@ -3,9 +3,9 @@ package com.zwendo.restrikt2.test.hidefromkotlin
 import com.zwendo.restrikt2.test.HFK
 
 
-val visibleProperty = 5
+val visiblePropertyHFK = 5
 
-val visiblePropertyAccessor = ::visibleProperty
+val visiblePropertyAccessor = ::visiblePropertyHFK
 
 @HFK
 val invisibleProperty = "a"
