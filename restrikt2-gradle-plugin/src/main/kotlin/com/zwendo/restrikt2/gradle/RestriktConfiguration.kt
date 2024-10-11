@@ -39,16 +39,17 @@ open class RestriktConfiguration {
      * **Default:** `false`
      *
      * Default annotations are:
-     * - `com/zwendo/restrikt/annotation/HideFromJava` for hiding symbols from Java
-     * - `com/zwendo/restrikt/annotation/HideFromKotlin` for hiding symbols from Kotlin
-     * - `com/zwendo/restrikt/annotation/PackagePrivate` for marking symbols as package-private
+     * - `com/zwendo/restrikt2/annotation/HideFromJava` for hiding symbols from Java
+     * - `com/zwendo/restrikt2/annotation/HideFromKotlin` for hiding symbols from Kotlin
+     * - `com/zwendo/restrikt2/annotation/PackagePrivate` for marking symbols as package-private
      */
     var ignoreDefaultAnnotations: Boolean? = null
+
 
     /**
      * Annotations marking symbols that should be hidden from Java.
      *
-     * **Default:** `none` (see [ignoreDefaultAnnotations])
+     * **Default:** `none` (except annotations included by [ignoreDefaultAnnotations])
      *
      * Annotations can be added using the fully qualified class name where the package name is separated by a `/` and
      * inner classes are separated by a `.`.
@@ -74,7 +75,7 @@ open class RestriktConfiguration {
     /**
      * Annotations marking symbols that should be hidden from Kotlin.
      *
-     * **Default:** `none` (see [ignoreDefaultAnnotations])
+     * **Default:** `none` (except annotations included by [ignoreDefaultAnnotations])
      *
      * Annotations can be added using the fully qualified class name where the package name is separated by a `/` and
      * inner classes are separated by a `.`.
@@ -100,7 +101,7 @@ open class RestriktConfiguration {
     /**
      * Annotations marking symbols that should be package-private.
      *
-     * **Default:** `none` (see [ignoreDefaultAnnotations])
+     * **Default:** `none` (except annotations included by [ignoreDefaultAnnotations])
      *
      * Annotations can be added using the fully qualified class name where the package name is separated by a `/` and
      * inner classes are separated by a `.`.

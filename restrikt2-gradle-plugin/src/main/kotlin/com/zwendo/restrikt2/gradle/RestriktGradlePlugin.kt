@@ -26,7 +26,7 @@ internal class RestriktGradlePlugin : KotlinCompilerPluginSupportPlugin {
         val parameters = mutableListOf<SubpluginOption>()
 
         extension.enabled?.let {
-            parameters.add(SubpluginOption("enabled", it.toString()))
+            parameters.add(SubpluginOption(BuildConfig.ENABLED, it.toString()))
         }
 
         extension.toplevelPrivateConstructor?.let {

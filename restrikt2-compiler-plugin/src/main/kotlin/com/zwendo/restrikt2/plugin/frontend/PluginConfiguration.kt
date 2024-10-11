@@ -1,6 +1,5 @@
 package com.zwendo.restrikt2.plugin.frontend
 
-import org.jetbrains.kotlin.it.unimi.dsi.fastutil.Hash
 import org.jetbrains.kotlin.name.ClassId
 
 /**
@@ -44,11 +43,10 @@ internal object PluginConfiguration {
      */
     val packagePrivateAnnotations: HashSet<ClassId> = HashSet()
 
-    private val defaults: HashSet<Pair<ClassId, HashSet<ClassId>>> = HashSet()
+    private val default: HashSet<Pair<ClassId, HashSet<ClassId>>> = HashSet()
 
     init {
         val defaultAnnotationsPackage = "com/zwendo/restrikt2/annotation/"
-        val legacyDefaultAnnotationsPackage = "com/zwendo/restrikt/annotation/"
         arrayOf(
             "HideFromJava" to hideFromJavaAnnotations,
             "HideFromKotlin" to hideFromKotlinAnnotations,
@@ -58,16 +56,12 @@ internal object PluginConfiguration {
 
             val default = ClassId.fromString(defaultAnnotationsPackage + annotation)
             set.add(default)
-            defaults.add(default to set)
-
-            val legacyDefault = ClassId.fromString(legacyDefaultAnnotationsPackage + annotation)
-            set.add(legacyDefault)
-            defaults.add(legacyDefault to set)
+            this.default.add(default to set)
         }
     }
 
-    fun removeDefaults() {
-        defaults.forEach { (default, set) ->
+    fun removeDefaultAnnotations() {
+        default.forEach { (default, set) ->
             set.remove(default)
         }
     }

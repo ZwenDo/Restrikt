@@ -21,9 +21,10 @@ internal interface Option : AbstractCliOption {
             toplevelPrivateConstructor,
             automaticInternalHiding,
             annotationProcessing,
-            hideFromJavaAnnotations,
-            hideFromKotlinAnnotations,
-            packagePrivateAnnotations
+            hideFromJavaAnnotation,
+            hideFromKotlinAnnotation,
+            packagePrivateAnnotation,
+            ignoreDefaultAnnotations,
         )
 
         val NAME_TO_OPTION = OPTIONS.associateBy { it.optionName }
@@ -71,33 +72,33 @@ private val annotationProcessing = OptionImpl(
     "Whether the plugin should process annotations.",
 ) { PluginConfiguration.annotationProcessing = it.toBooleanStrict() }
 
-private val removeDefaultAnnotations = OptionImpl(
+private val ignoreDefaultAnnotations = OptionImpl(
     BuildConfig.IGNORE_DEFAULT_ANNOTATIONS,
     "<true|false>",
-    "Whether to ignore the default when parsing the annotations (HideFromJava, HideFromKotlin, PackagePrivate)."
+    "Whether to ignore the default when parsing the annotations (see documentation for more details)."
 ) {
     if (it.toBooleanStrict()) {
-        PluginConfiguration.removeDefaults()
+        PluginConfiguration.removeDefaultAnnotations()
     }
 }
 
-private val hideFromJavaAnnotations = OptionImpl(
+private val hideFromJavaAnnotation = OptionImpl(
     BuildConfig.HIDE_FROM_JAVA_ANNOTATION,
     "<annotation>",
-    "Annotation marking symbols to be hidden from Java.",
+    "Annotation marking symbols to be hidden from Java (package elements must be separated by a '/' and inner classes by a '.', e.g. name/of/the/package/OuterClass.MyAnnotation).",
     true,
 ) { PluginConfiguration.hideFromJavaAnnotations.add(ClassId.fromString(it)) }
 
-private val hideFromKotlinAnnotations = OptionImpl(
+private val hideFromKotlinAnnotation = OptionImpl(
     BuildConfig.HIDE_FROM_KOTLIN_ANNOTATION,
     "<annotation>",
-    "Annotation marking symbols to be hidden from Kotlin.",
+    "Annotation marking symbols to be hidden from Kotlin (package elements must be separated by a '/' and inner classes by a '.', e.g. name/of/the/package/OuterClass.MyAnnotation).",
     true,
 ) { PluginConfiguration.hideFromKotlinAnnotations.add(ClassId.fromString(it)) }
 
-private val packagePrivateAnnotations = OptionImpl(
+private val packagePrivateAnnotation = OptionImpl(
     BuildConfig.PACKAGE_PRIVATE_ANNOTATION,
     "<annotation>",
-    "Annotation marking symbols to have the package-private visibility.",
+    "Annotation marking symbols to have the package-private visibility (package elements must be separated by a '/' and inner classes by a '.', e.g. name/of/the/package/OuterClass.MyAnnotation).",
     true,
 ) { PluginConfiguration.packagePrivateAnnotations.add(ClassId.fromString(it)) }
