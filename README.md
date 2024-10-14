@@ -255,7 +255,7 @@ Here are the currently supported default configuration options:
 `ignore-default-annotations` option.
 
 <a id="options-note-3"></a>
-**Note 2:** Default annotations are:
+**Note 3:** Default annotations are:
 
 - `com/zwendo/restrikt2/annotation/HideFromKotlin`
 - `com/zwendo/restrikt2/annotation/HideFromJava`
