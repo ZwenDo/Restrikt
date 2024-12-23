@@ -40,7 +40,7 @@ annotation class HideFromKotlin
     AnnotationTarget.FILE
 )
 @MustBeDocumented
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.BINARY)
 annotation class HideFromJava
 
 /**
