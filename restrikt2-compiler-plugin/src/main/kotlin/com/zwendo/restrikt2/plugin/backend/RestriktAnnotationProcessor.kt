@@ -4,27 +4,15 @@ import com.zwendo.restrikt2.plugin.frontend.PluginConfiguration
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.jvm.ir.hasChild
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
+import org.jetbrains.kotlin.descriptors.Visibilities
+import org.jetbrains.kotlin.fir.backend.FirMetadataSource
+import org.jetbrains.kotlin.fir.extensions.transform
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
-import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
-import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationOriginImpl
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationWithVisibility
-import org.jetbrains.kotlin.ir.declarations.IrEnumEntry
-import org.jetbrains.kotlin.ir.declarations.IrField
-import org.jetbrains.kotlin.ir.declarations.IrFile
-import org.jetbrains.kotlin.ir.declarations.IrFunction
-import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.declarations.IrProperty
-import org.jetbrains.kotlin.ir.declarations.createBlockBody
-import org.jetbrains.kotlin.ir.expressions.IrConstKind
-import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
-import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
+import org.jetbrains.kotlin.ir.declarations.*
 import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrGetEnumValueImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrThrowImpl
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
@@ -48,10 +36,6 @@ internal class RestriktAnnotationProcessor(
 
     private val defaultState = ParentState(ParentState.DEFAULT, ParentState.ParentKind.OTHER)
 
-    private val deprecatedConstructor: IrConstructorSymbol
-    private val deprecatedType: IrSimpleType
-    private val deprecationLevelType: IrSimpleTypeImpl
-    private val hidden: IrEnumEntry
     private val anyConstructor: IrConstructorSymbol
     private val assertionErrorType: IrSimpleType
     private val assertionErrorConstructor: IrConstructorSymbol
@@ -85,20 +69,47 @@ internal class RestriktAnnotationProcessor(
         val oldIsInValueClass = isInValueClass
         return try {
             isInValueClass = declaration.isValue
-            super.visitClass(declaration, processDeclaration(declaration, data.defaultIfFileState()))
+            val state = processDeclaration(declaration, data.defaultIfFileState())
+            super.visitClass(declaration, state).also {
+                if (state.hasHideFromKotlin) {
+                    val metadata = declaration.metadata as? FirMetadataSource.Class ?: return@also
+                    metadata.fir.replaceStatus(metadata.fir.status.transform(visibility = Visibilities.Internal))
+                }
+            }
         } finally {
             isInValueClass = oldIsInValueClass
         }
     }
 
-    override fun visitFunction(declaration: IrFunction, data: ParentState): IrStatement =
-        super.visitFunction(declaration, processDeclaration(declaration, data))
+    override fun visitFunction(declaration: IrFunction, data: ParentState): IrStatement {
+        val state = processDeclaration(declaration, data)
+        return super.visitFunction(declaration, state).also {
+            if (state.hasHideFromKotlin) {
+                val metadata = declaration.metadata as? FirMetadataSource.Function ?: return@also
+                metadata.fir.replaceStatus(metadata.fir.status.transform(visibility = Visibilities.Internal))
+            }
+        }
+    }
 
-    override fun visitField(declaration: IrField, data: ParentState): IrStatement =
-        super.visitField(declaration, processDeclaration(declaration, data, ParentState.ParentKind.FIELD))
+    override fun visitField(declaration: IrField, data: ParentState): IrStatement {
+        val state = processDeclaration(declaration, data, ParentState.ParentKind.FIELD)
+        return super.visitField(declaration, state).also {
+            if (state.hasHideFromKotlin) {
+                val metadata = declaration.metadata as? FirMetadataSource.Field ?: return@also
+                metadata.fir.replaceStatus(metadata.fir.status.transform(visibility = Visibilities.Internal))
+            }
+        }
+    }
 
-    override fun visitProperty(declaration: IrProperty, data: ParentState): IrStatement =
-        super.visitProperty(declaration, processDeclaration(declaration, data, ParentState.ParentKind.PROPERTY))
+    override fun visitProperty(declaration: IrProperty, data: ParentState): IrStatement {
+        val state = processDeclaration(declaration, data, ParentState.ParentKind.PROPERTY)
+        return super.visitProperty(declaration, state).also {
+            if (state.hasHideFromKotlin) {
+                val metadata = declaration.metadata as? FirMetadataSource.Property ?: return@also
+                metadata.fir.replaceStatus(metadata.fir.status.transform(visibility = Visibilities.Internal))
+            }
+        }
+    }
 
     private fun processDeclaration(
         declaration: IrDeclarationWithVisibility,
@@ -134,11 +145,14 @@ internal class RestriktAnnotationProcessor(
                 newState = newState or ParentState.HAS_HIDE_FROM_JAVA
             }
 
-            if ((parentState.kind.isFileOrProperty && parentState.hasHideFromKotlin) || declaration.hasAnyAnnotation(
-                    PluginConfiguration.hideFromKotlinAnnotations
-                )
+            if (
+                PluginConfiguration.annotationProcessing &&
+                (
+                    (parentState.kind.isFileOrProperty && parentState.hasHideFromKotlin) ||
+                        declaration.hasAnyAnnotation(PluginConfiguration.hideFromKotlinAnnotations)
+                    )
             ) {
-                declaration.annotations += deprecatedHiddenAnnotation()
+                newState = newState or ParentState.HAS_HIDE_FROM_KOTLIN
             }
         }
 
@@ -154,30 +168,6 @@ internal class RestriktAnnotationProcessor(
         } else {
             IrDeclarationOriginImpl("com.zwendo.restrikt2:syntheticMember", true)
         }
-
-    private fun deprecatedHiddenAnnotation(): IrConstructorCall {
-        val call = IrConstructorCallImpl.fromSymbolOwner(deprecatedType, deprecatedConstructor)
-        call.putValueArgument(
-            0,
-            IrConstImpl(
-                UNDEFINED_OFFSET,
-                UNDEFINED_OFFSET,
-                pluginContext.irBuiltIns.stringType,
-                IrConstKind.String,
-                "",
-            )
-        )
-        call.putValueArgument(
-            2,
-            IrGetEnumValueImpl(
-                UNDEFINED_OFFSET,
-                UNDEFINED_OFFSET,
-                deprecationLevelType,
-                hidden.symbol,
-            )
-        )
-        return call
-    }
 
     private fun generatePrivateConstructor(declaration: IrFile) {
         val constructor = pluginContext.irFactory.createConstructor(
@@ -211,36 +201,14 @@ internal class RestriktAnnotationProcessor(
     }
 
     init {
-        val deprecatedId = ClassId.fromString("kotlin/Deprecated")
-
-        deprecatedConstructor = pluginContext.referenceConstructors(deprecatedId).first()
-        deprecatedType = IrSimpleTypeImpl(
-            pluginContext.referenceClass(deprecatedId)!!,
-            SimpleTypeNullability.DEFINITELY_NOT_NULL,
-            listOf(),
-            emptyList()
-        )
-
-        val deprecationLevel = pluginContext.referenceClass(ClassId.fromString("kotlin/DeprecationLevel"))!!
-
-        deprecationLevelType = IrSimpleTypeImpl(
-            deprecationLevel,
-            SimpleTypeNullability.DEFINITELY_NOT_NULL,
-            emptyList(),
-            emptyList()
-        )
-        hidden = @OptIn(UnsafeDuringIrConstructionAPI::class) deprecationLevel.owner
-            .declarations
-            .first { it is IrEnumEntry && it.name == Name.identifier("HIDDEN") } as IrEnumEntry
-
-        anyConstructor =
-            @OptIn(UnsafeDuringIrConstructionAPI::class) pluginContext.irBuiltIns.anyClass.constructors.first()
+        @OptIn(UnsafeDuringIrConstructionAPI::class)
+        anyConstructor = pluginContext.irBuiltIns.anyClass.constructors.first()
 
         val assertionError = ClassId.fromString("java/lang/AssertionError")
         assertionErrorType = IrSimpleTypeImpl(
             pluginContext.referenceClass(assertionError)!!,
             SimpleTypeNullability.DEFINITELY_NOT_NULL,
-            listOf(),
+            emptyList(),
             emptyList()
         )
         assertionErrorConstructor = pluginContext.referenceConstructors(assertionError).find {
