@@ -1,7 +1,7 @@
 package com.zwendo.restrikt2.plugin.frontend
 
-import com.zwendo.restrikt2.plugin.backend.RestriktPackagePrivateChecker
 import com.zwendo.restrikt2.plugin.backend.RestriktAnnotationProcessor
+import com.zwendo.restrikt2.plugin.backend.RestriktPackagePrivateChecker
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -10,7 +10,6 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrar
 import org.jetbrains.kotlin.fir.extensions.FirExtensionRegistrarAdapter
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.platform.jvm.isJvm
 
 /**
  * Class that registers plugin custom class generation interceptor
