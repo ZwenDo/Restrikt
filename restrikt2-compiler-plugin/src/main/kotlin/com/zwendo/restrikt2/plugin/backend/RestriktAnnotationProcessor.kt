@@ -6,6 +6,8 @@ import org.jetbrains.kotlin.backend.jvm.ir.hasChild
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.fir.backend.FirMetadataSource
+import org.jetbrains.kotlin.fir.declarations.FirCallableDeclaration
+import org.jetbrains.kotlin.fir.declarations.FirMemberDeclaration
 import org.jetbrains.kotlin.fir.extensions.transform
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
@@ -73,7 +75,7 @@ internal class RestriktAnnotationProcessor(
             super.visitClass(declaration, state).also {
                 if (state.hasHideFromKotlin) {
                     val metadata = declaration.metadata as? FirMetadataSource.Class ?: return@also
-                    metadata.fir.replaceStatus(metadata.fir.status.transform(visibility = Visibilities.Internal))
+                    metadata.fir.setInternalIfNeeded()
                 }
             }
         } finally {
@@ -86,7 +88,7 @@ internal class RestriktAnnotationProcessor(
         return super.visitFunction(declaration, state).also {
             if (state.hasHideFromKotlin) {
                 val metadata = declaration.metadata as? FirMetadataSource.Function ?: return@also
-                metadata.fir.replaceStatus(metadata.fir.status.transform(visibility = Visibilities.Internal))
+                metadata.fir.setInternalIfNeeded()
             }
         }
     }
@@ -96,7 +98,7 @@ internal class RestriktAnnotationProcessor(
         return super.visitField(declaration, state).also {
             if (state.hasHideFromKotlin) {
                 val metadata = declaration.metadata as? FirMetadataSource.Field ?: return@also
-                metadata.fir.replaceStatus(metadata.fir.status.transform(visibility = Visibilities.Internal))
+                metadata.fir.setInternalIfNeeded()
             }
         }
     }
@@ -106,7 +108,7 @@ internal class RestriktAnnotationProcessor(
         return super.visitProperty(declaration, state).also {
             if (state.hasHideFromKotlin) {
                 val metadata = declaration.metadata as? FirMetadataSource.Property ?: return@also
-                metadata.fir.replaceStatus(metadata.fir.status.transform(visibility = Visibilities.Internal))
+                metadata.fir.setInternalIfNeeded()
             }
         }
     }
@@ -157,6 +159,12 @@ internal class RestriktAnnotationProcessor(
         }
 
         return ParentState(newState, currentKind)
+    }
+
+    private fun FirMemberDeclaration.setInternalIfNeeded() {
+        val visibility = status.visibility
+        if (visibility == Visibilities.Private || visibility == Visibilities.PrivateToThis || visibility == Visibilities.Local) return
+        replaceStatus(status.transform(visibility = Visibilities.Internal))
     }
 
     private fun IrAnnotationContainer.hasAnyAnnotation(annotations: Set<ClassId>): Boolean =
