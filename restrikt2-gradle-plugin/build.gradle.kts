@@ -1,7 +1,5 @@
-import java.util.Locale
-
 plugins {
-    id("java-gradle-plugin")
+    `java-gradle-plugin`
     val gradlePluginPublishVersion: String by System.getProperties()
     id("com.gradle.plugin-publish") version gradlePluginPublishVersion
 }
