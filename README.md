@@ -15,7 +15,7 @@
 
 <h4>Others</h4>
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.20-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 [![Java](https://img.shields.io/badge/Java-8-%23ED8B00.svg?logo=openJdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
 
@@ -488,10 +488,9 @@ because the `ACC_SYNTHETIC` doesn't work on them, the flag is applied to all the
 
 ### Kotlin hiding
 
-To effectively hide elements from Kotlin, the plugin generates on the marked elements the
-[@Deprecated](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-deprecated/) annotation. This annotation used with
-the [DeprecationLevel.HIDDEN](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-deprecation-level/-h-i-d-d-e-n.html)
-level, makes the element invisible to Kotlin sources, but still visible to Java sources.
+To effectively hide elements from Kotlin, the plugin changes the elements visibility to `internal` (this is done only if
+the element visibility is greater than `internal`, currently `public` or `protected`). The elements made `internal` in
+this way are not marked with the `ACC_SYNTHETIC` flag to keep them visible from Java sources.
 
 ```kotlin
 // Foo.kt
@@ -504,17 +503,10 @@ class Foo {
 
 // Foo.class
 @HideFromKotlin
-@Deprecated(message = "", level = DeprecationLevel.HIDDEN)
-class Foo {
+internal class Foo {
     // ...
 }
 ```
-
-Generating the `Deprecated` annotation or simply using it directly have slightly different outcomes. Indeed, the
-`Deprecated` annotation (with `HIDDEN` level) acts as a flag for the Kotlin compiler. The latter will add the JVM
-`ACC_SYNTHETIC` flag for the element in the produced classfile, making it also invisible for Java sources. The hack is
-that the Kotlin compiler processing of `Deprecated` annotations runs **before** the compiler plugin runs, so the
-`Deprecated` annotations will not be present at the time the compiler processes the symbols.
 
 ## Future Plans
 
@@ -522,6 +514,14 @@ that the Kotlin compiler processing of `Deprecated` annotations runs **before** 
   symbols of a project to simplify Kotlin project obfuscation with [ProGuard](https://www.guardsquare.com/proguard).
 
 ## Changelog
+
+### 0.1.2 - 2024-12-24
+
+**Bugfixes** :
+
+- Fixed issue where elements annotated with HideFromKotlin were also not accessible from Java Changed due to the
+generation of an `ACC_SYNTHETIC` flag ;
+- Changed the retention policy of the HideFromJava annotation to BINARY, to be consistent with other annotations.
 
 ### 0.1.1 - 2024-10-11
 

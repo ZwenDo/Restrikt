@@ -3,9 +3,8 @@ package com.zwendo.restrikt2.annotation
 /**
  * This annotation is used to hide elements from kotlin sources.
  *
- * Used with the [Restrikt compiler plugin](https://github.com/ZwenDo/Restrikt), this annotation causes the retention
- * of the [Deprecated] annotation with the level [DeprecationLevel.HIDDEN], which hides the element for Kotlin sources.
- * However, elements will still be accessible at runtime from compiled Kotlin files.
+ * Used with the [Restrikt compiler plugin](https://github.com/ZwenDo/Restrikt), this annotation causes the element
+ * visibility to be internal (only if the element has a greater visibility).
  *
  * Like [JvmSynthetic] acts to hide elements to Java, this annotation is intended for API designers who want to hide a
  * Java-specific target from Kotlin language, in order to keep an idiomatic API for both languages.
@@ -41,7 +40,7 @@ annotation class HideFromKotlin
     AnnotationTarget.FILE
 )
 @MustBeDocumented
-@Retention(AnnotationRetention.RUNTIME)
+@Retention(AnnotationRetention.BINARY)
 annotation class HideFromJava
 
 /**

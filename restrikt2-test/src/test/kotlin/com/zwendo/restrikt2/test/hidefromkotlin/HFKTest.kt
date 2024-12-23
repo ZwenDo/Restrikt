@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import kotlin.reflect.KAnnotatedElement
+import kotlin.reflect.KCallable
+import kotlin.reflect.KClass
+import kotlin.reflect.KVisibility
 import kotlin.reflect.jvm.javaField
 
 class HFKTest {
@@ -17,16 +20,7 @@ class HFKTest {
 
     @Test
     fun `Annotated property is hidden and message is correctly applied`() {
-        val property = invisiblePropertyAccessor
-        assertTrue(property.isHiddenFromKotlin)
-    }
-
-    @Test
-    fun `Annotated field is hidden and message is correctly applied`() {
-        val property = ::invisibleField
-        property.javaField.assertNotNullAnd {
-            assertTrue(isHiddenFromKotlin)
-        }
+        assertTrue(invisiblePropertyAccessor.isHiddenFromKotlin)
     }
 
     @Test
@@ -47,14 +41,12 @@ class HFKTest {
 
     @Test
     fun `Not annotated method is not hidden`() {
-        val property = visibleFunctionAccessor as KAnnotatedElement
-        assertFalse(property.isHiddenFromKotlin)
+        assertFalse(visibleFunctionAccessor.isHiddenFromKotlin)
     }
 
     @Test
     fun `Annotated method is hidden and message is correctly applied`() {
-        val property = invisibleFunctionAccessor as KAnnotatedElement
-        assertTrue(property.isHiddenFromKotlin)
+        assertTrue(invisibleFunctionAccessor.isHiddenFromKotlin)
     }
 
     @Test
@@ -99,15 +91,14 @@ class HFKTest {
 
     @Test
     fun `Annotated annotation is hidden and message is correctly applied`() {
-        val annotation = invisibleAnnotationAccessor
-        assertTrue(annotation.isHiddenFromKotlin)
+        assertTrue(invisibleAnnotationAccessor.isHiddenFromKotlin)
     }
 
 
-    private val KAnnotatedElement.isHiddenFromKotlin: Boolean
-        get() = annotations.any { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
+    private val KCallable<*>.isHiddenFromKotlin: Boolean
+        get() = visibility == KVisibility.INTERNAL
 
-    private val AnnotatedElement.isHiddenFromKotlin: Boolean
-        get() = annotations.any { it is Deprecated && it.level == DeprecationLevel.HIDDEN }
+    private val KClass<*>.isHiddenFromKotlin: Boolean
+        get() = visibility == KVisibility.INTERNAL
 
 }
