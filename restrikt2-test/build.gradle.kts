@@ -1,7 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     java
-    kotlin("jvm") version "2.0.20"
-    id("com.zwendo.restrikt2") version "0.1.2"
+    kotlin("jvm") version "2.1.0"
+    id("com.zwendo.restrikt2") version "0.2.0"
     id("com.github.gmazzo.buildconfig") version "5.5.0"
 }
 

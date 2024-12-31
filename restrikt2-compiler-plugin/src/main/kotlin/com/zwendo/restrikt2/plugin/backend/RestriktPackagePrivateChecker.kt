@@ -20,7 +20,6 @@ import org.jetbrains.kotlin.fir.expressions.FirResolvable
 import org.jetbrains.kotlin.fir.expressions.FirStatement
 import org.jetbrains.kotlin.fir.packageFqName
 import org.jetbrains.kotlin.fir.references.symbol
-import org.jetbrains.kotlin.fir.references.toResolvedNamedFunctionSymbol
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 
 /**
@@ -29,10 +28,10 @@ import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 internal class RestriktPackagePrivateChecker(session: FirSession) : FirAdditionalCheckersExtension(session) {
 
     override val expressionCheckers: ExpressionCheckers = object : ExpressionCheckers() {
-        override val basicExpressionCheckers: Set<FirBasicExpressionChecker> = setOf(Checker(session))
+        override val basicExpressionCheckers: Set<FirBasicExpressionChecker> = setOf(Checker)
     }
 
-    class Checker(private val session: FirSession) : FirBasicExpressionChecker(MppCheckerKind.Common) {
+    private object Checker : FirBasicExpressionChecker(MppCheckerKind.Common) {
 
         override fun check(expression: FirStatement, context: CheckerContext, reporter: DiagnosticReporter) {
             val currentFile = context.containingFile
@@ -50,7 +49,7 @@ internal class RestriktPackagePrivateChecker(session: FirSession) : FirAdditiona
 
             // We check if the callee has a package-private annotation or if it is in a class that has it.
             val isAnnotated = PluginConfiguration.packagePrivateAnnotations.any {
-                calleeSymbol.hasAnnotationOrInsideAnnotatedClass(it, session)
+                calleeSymbol.hasAnnotationOrInsideAnnotatedClass(it, context.session)
             }
             // If the symbol is not annotated, there is no error to report.
             if (!isAnnotated) return

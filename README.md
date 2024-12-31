@@ -35,14 +35,15 @@ K2.</i></h3>
 ## Summary
 
 1. [Dependency](#dependency)
-    1. [Gradle](#using-gradle)
-    2. [Maven](#using-maven)
-    3. [Kotlin Compiler](#using-kotlinc-in-the-command-line)
+    1. [Kotlin version compatibility table](#kotlin-version-compatibility-table)
+    2. [Gradle](#using-gradle)
+    3. [Maven](#using-maven)
+    4. [Kotlin compiler](#using-kotlinc-in-the-command-line)
 2. [Plugin Configuration](#plugin-configuration)
     1. [Available options](#available-options)
     2. [Gradle](#gradle)
     3. [Maven](#maven)
-    4. [Kotlin Compiler](#kotlinc-in-the-command-line)
+    4. [Kotlin compiler](#kotlinc-in-the-command-line)
 3. [Usage](#usage)
     1. [Internal symbols hiding](#internal-symbols-hiding)
     2. [Private constructors for Top-level classes](#private-constructors-for-top-level-classes)
@@ -62,6 +63,14 @@ as regular dependencies.
 
 > [!NOTE]
 > See the [Plugin Configuration](#plugin-configuration) section for more information about the default annotations.
+
+### Kotlin version compatibility table
+
+| Kotlin version |           Plugin version           |
+|:--------------:|:----------------------------------:|
+| prior to 2.0.0 | 4.0.0 <br/>(`com.zwendo.restrikt`) |
+| 2.0.0 - 2.0.20 |               0.1.x                |
+|     2.1.0+     |               0.2.x                |
 
 ### Using Gradle
 
@@ -193,6 +202,7 @@ Your `pom.xml` should look like this:
 To add the default annotations to your project, you can add the following dependencies:
 
 ```xml
+
 <dependencies>
     <dependency>
         <groupId>com.zwendo</groupId>
@@ -201,6 +211,7 @@ To add the default annotations to your project, you can add the following depend
     </dependency>
 </dependencies>
 ```
+
 </details>
 
 ### Using Kotlinc in the command line
@@ -300,6 +311,7 @@ configuration.
 Here is an example of options configuration:
 
 ```xml
+
 <pluginOptions>
     <option>com.zwendo.restrikt2:enabled=true</option>
     <option>com.zwendo.restrikt2:annotation-processing=false</option>
@@ -310,6 +322,7 @@ Using the example above and the configuration presented in the [Dependency](#dep
 look like this:
 
 ```xml
+
 <project>
     <build>
         <plugins>
@@ -387,9 +400,9 @@ Will be compiled to:
 
 ```java
 class Foo {
-   // $FF: synthetic method
+    // $FF: synthetic method
     public void bar() {
-        
+
     }
 }
 
@@ -472,6 +485,7 @@ this list, feel free to open an issue for it.</h4>
 
 Due to the way compiler plugins work (they are called before platform specific elements are generated), the plugin
 cannot perform certain operations on platform specific elements. Here are the current known limitations:
+
 - Apply visibility restrictions on value class members ;
 - Generate private constructor to MultiFileClass facades.
 
@@ -520,7 +534,7 @@ internal class Foo {
 **Bugfixes** :
 
 - Fixed issue where elements annotated with HideFromKotlin were also not accessible from Java Changed due to the
-generation of an `ACC_SYNTHETIC` flag ;
+  generation of an `ACC_SYNTHETIC` flag ;
 - Changed the retention policy of the HideFromJava annotation to BINARY, to be consistent with other annotations.
 
 ### 0.1.1 - 2024-10-11
