@@ -1,6 +1,6 @@
 package com.zwendo.restrikt2.plugin.frontend
 
-import com.zwendo.restrikt2.plugin.backend.RestriktAnnotationProcessor
+import com.zwendo.restrikt2.plugin.backend.RestriktIrElementTransformer
 import com.zwendo.restrikt2.plugin.backend.RestriktPackagePrivateChecker
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
@@ -32,7 +32,7 @@ internal class RestriktCompilerPluginRegistrar : CompilerPluginRegistrar() {
 private object RestriktIrGenerationExtension : IrGenerationExtension {
 
     override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext): Unit =
-        RestriktAnnotationProcessor(pluginContext).processModule(moduleFragment)
+        RestriktIrElementTransformer(pluginContext).processModule(moduleFragment)
 
 }
 
