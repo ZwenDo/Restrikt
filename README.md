@@ -15,7 +15,7 @@
 
 <h4>Others</h4>
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.0.20-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.1.0-7f52ff.svg?logo=kotlin)](https://kotlinlang.org)
 [![Java](https://img.shields.io/badge/Java-8-%23ED8B00.svg?logo=openJdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://mit-license.org/)
 
