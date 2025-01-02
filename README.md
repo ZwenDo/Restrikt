@@ -529,11 +529,21 @@ internal class Foo {
 
 ## Changelog
 
+### 0.2.0 - 2025-01-02
+
+**Features** :
+
+- Made the plugin compatible with Kotlin 2.1.0.
+
+**Bugfixes** :
+
+- Fixed the issue causing an incorrect name mangling of internal symbols.
+
 ### 0.1.2 - 2024-12-24
 
 **Bugfixes** :
 
-- Fixed issue where elements annotated with HideFromKotlin were also not accessible from Java Changed due to the
+- Fixed the issue where elements annotated with HideFromKotlin were also not accessible from Java Changed due to the
   generation of an `ACC_SYNTHETIC` flag ;
 - Changed the retention policy of the HideFromJava annotation to BINARY, to be consistent with other annotations.
 
