@@ -1,6 +1,7 @@
 package com.zwendo.restrikt2.test.internal
 
 import com.zwendo.restrikt2.test.assertNotNullAnd
+import java.lang.reflect.Modifier
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -20,7 +21,8 @@ class InternalHidingTest {
         val property = instance::internalProperty
 
         property.javaField.assertNotNullAnd {
-            assertTrue(isSynthetic)
+            assertFalse(isSynthetic)
+            assertTrue(modifiers and Modifier.PRIVATE != 0)
         }
 
         property.javaGetter.assertNotNullAnd {
@@ -55,7 +57,8 @@ class InternalHidingTest {
         val property = ::internalProperty
 
         property.javaField.assertNotNullAnd {
-            assertTrue(isSynthetic)
+            assertFalse(isSynthetic)
+            assertTrue(modifiers and Modifier.PRIVATE != 0)
         }
 
         property.javaGetter.assertNotNullAnd {
@@ -242,6 +245,17 @@ class InternalHidingTest {
         method.javaMethod.assertNotNullAnd {
             assertTrue(isSynthetic)
         }
+    }
+
+    @Test
+    fun `Internal class is not synthetic`() {
+        assertFalse(InternalClass::class.java.isSynthetic)
+    }
+
+    @Test
+    fun `Internal class private functions are not synthetic`() {
+        val method = InternalClass::class.java.getDeclaredMethod("privateFunction")
+        assertFalse(method.isSynthetic)
     }
 
 }

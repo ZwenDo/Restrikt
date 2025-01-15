@@ -135,7 +135,6 @@ class HFJTest {
         }
     }
 
-
     @Test
     fun `Annotated file has all its top-level members hidden transitively`() {
         val method = ::invisibleFunctionDueToFileAnnotation
@@ -143,6 +142,20 @@ class HFJTest {
         method.javaMethod.assertNotNullAnd {
             assertTrue(isSynthetic)
         }
+    }
+
+    @Test
+    fun `Annotated element with private visibility is not made synthetic`() {
+        val method = Foo::class.java.getDeclaredMethod("privateFunction")
+        method.assertNotNullAnd {
+            assertFalse(isSynthetic)
+        }
+    }
+
+    @Test
+    fun `Annotated class is not synthetic`() {
+        val clazz = InvisibleClass::class.java
+        assertFalse(clazz.isSynthetic)
     }
 
 }

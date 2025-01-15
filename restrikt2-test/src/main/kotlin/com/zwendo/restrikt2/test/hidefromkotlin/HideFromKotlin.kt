@@ -50,12 +50,31 @@ class VisibleClass {
     @HFK
     companion object
 
+    @HFK
+    private fun privateFunction() {
+
+    }
+
 }
 
 val visibleClassAccessor = VisibleClass::class
 
 @HFK
-class InvisibleClass
+class InvisibleClass {
+
+    constructor()
+
+    fun publicFunction() {
+
+    }
+
+    var publicProperty = 5
+
+    companion object
+
+    class InnerClass
+
+}
 
 val invisibleClassAccessor = InvisibleClass::class
 

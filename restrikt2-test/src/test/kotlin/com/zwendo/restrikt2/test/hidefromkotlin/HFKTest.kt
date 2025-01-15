@@ -1,6 +1,7 @@
 package com.zwendo.restrikt2.test.hidefromkotlin
 
 import com.zwendo.restrikt2.test.assertNotNullAnd
+import com.zwendo.restrikt2.test.packageprivate.PackagePrivateClass
 import java.lang.reflect.AnnotatedElement
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -9,7 +10,10 @@ import kotlin.reflect.KAnnotatedElement
 import kotlin.reflect.KCallable
 import kotlin.reflect.KClass
 import kotlin.reflect.KVisibility
+import kotlin.reflect.full.companionObject
 import kotlin.reflect.jvm.javaField
+import kotlin.reflect.jvm.javaMethod
+import kotlin.reflect.jvm.kotlinFunction
 
 class HFKTest {
 
@@ -94,6 +98,50 @@ class HFKTest {
         assertTrue(invisibleAnnotationAccessor.isHiddenFromKotlin)
     }
 
+    @Test
+    fun `Annotated element is not hidden if it has private visibility`() {
+        val element = VisibleClass::class.java.declaredMethods.first {
+            it.name == "privateFunction"
+        }
+
+        assertFalse(element.kotlinFunction!!.isHiddenFromKotlin)
+    }
+
+    @Test
+    fun `Annotated class function is not hidden`() {
+        val method = InvisibleClass::publicFunction
+        assertFalse(method.isHiddenFromKotlin)
+    }
+
+    @Test
+    fun `Annotated class constructor is not hidden`() {
+        val constructor = InvisibleClass::class.constructors.first { it.parameters.isEmpty() }
+        assertFalse(constructor.isHiddenFromKotlin)
+    }
+
+    @Test
+    fun `Annotated class property getter is not hidden`() {
+        val property = InvisibleClass::publicProperty.getter
+        assertFalse(property.isHiddenFromKotlin)
+    }
+
+    @Test
+    fun `Annotated class property setter is not hidden`() {
+        val property = InvisibleClass::publicProperty.setter
+        assertFalse(property.isHiddenFromKotlin)
+    }
+
+    @Test
+    fun `Annotated class companion object is not hidden`() {
+        val companion = InvisibleClass::class.companionObject!!
+        assertFalse(companion.isHiddenFromKotlin)
+    }
+
+    @Test
+    fun `Annotated class inner class is not hidden`() {
+        val innerClass = InvisibleClass.InnerClass::class
+        assertFalse(innerClass.isHiddenFromKotlin)
+    }
 
     private val KCallable<*>.isHiddenFromKotlin: Boolean
         get() = visibility == KVisibility.INTERNAL
