@@ -4,10 +4,10 @@ package com.zwendo.restrikt2.plugin.backend
  * Using a value class here is useless because instances will be passed through visitor methods, requiring a lot of
  * boxing and unboxing.
  */
-internal class ParentState(val value: Int, val kind: ParentKind) {
+internal class ElementState(val value: Int, val kind: ParentKind) {
 
     val isInternal: Boolean
-        get() = value and IS_INTERNAL != 0
+        get() = !hasPackagePrivate && (value and IS_INTERNAL != 0)
 
     val hasPackagePrivate: Boolean
         get() = value and HAS_PACKAGE_PRIVATE != 0
@@ -18,9 +18,9 @@ internal class ParentState(val value: Int, val kind: ParentKind) {
     val hasHideFromKotlin: Boolean
         get() = value and HAS_HIDE_FROM_KOTLIN != 0
 
-    fun defaultIfFileState(): ParentState =
+    fun defaultIfFileState(): ElementState =
         if (ParentKind.FILE == kind) {
-            ParentState(DEFAULT, ParentKind.OTHER)
+            ElementState(DEFAULT, ParentKind.OTHER)
         } else {
             this
         }
@@ -37,7 +37,7 @@ internal class ParentState(val value: Int, val kind: ParentKind) {
     }
 
     override fun equals(other: Any?): Boolean =
-        other is ParentState && value == other.value && kind == other.kind
+        other is ElementState && value == other.value && kind == other.kind
 
     override fun hashCode(): Int = value * 31 + kind.hashCode()
 
@@ -53,6 +53,8 @@ internal class ParentState(val value: Int, val kind: ParentKind) {
         const val HAS_HIDE_FROM_JAVA = 4
 
         const val HAS_HIDE_FROM_KOTLIN = 8
+
+        val IGNORE_STATE = ElementState(DEFAULT, ParentKind.OTHER)
 
     }
 
