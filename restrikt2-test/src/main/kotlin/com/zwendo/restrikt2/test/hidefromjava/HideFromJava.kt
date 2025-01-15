@@ -61,3 +61,11 @@ fun functionWithCustomBinaryRetention() {
 fun functionWithCustomSourceRetention() {
 
 }
+
+class Foo {
+
+    @HFJ
+    private fun privateFunction() {
+    }
+
+}

@@ -1,11 +1,26 @@
 package com.zwendo.restrikt2.test.packageprivate
 
+import com.zwendo.restrikt2.test.HFJ
 import com.zwendo.restrikt2.test.PP
 
 class VisibleClass
 
 @PP
-class PackagePrivateClass
+class PackagePrivateClass {
+
+    fun publicFunction() {
+
+    }
+
+    constructor()
+
+    var publicProperty = 5
+
+    companion object
+
+    class InnerClass
+
+}
 
 
 fun visibleFunction() {
@@ -29,12 +44,28 @@ var propertyWithHiddenGetter = Any()
 @set:PP
 var propertyWithHiddenSetter = Any()
 
-@field:PP
-var propertyWithHiddenField = Any()
-
-
 class DummyClass @PP constructor() {
 
     constructor(i: Int) : this()
+
+}
+
+@PP
+@HFJ
+fun ppFunctionWithHfj() {
+
+}
+
+@PP
+internal fun packagePrivateFunctionWithInternal() {
+
+}
+
+class Foo {
+
+    @PP
+    private fun privateFunction() {
+
+    }
 
 }

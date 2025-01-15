@@ -68,7 +68,9 @@ open class InternalTestClass internal constructor() {
 internal class InternalClass {
 
     fun publicFunction() {
+    }
 
+    private fun privateFunction() {
     }
 
 }

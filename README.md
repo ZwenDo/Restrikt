@@ -529,6 +529,25 @@ internal class Foo {
 
 ## Changelog
 
+### 0.3.0 - 2025-01-14
+
+**Features** :
+
+- Added compiler errors when using package-private on declarations in incompatible ways (e.g. interface methods, 
+lowering overridden method visibility 
+
+**Bugfixes** :
+
+- Fixed a bug with anonymous objects in HideFromKotlin methods
+- Fixed a bug causing unnecessary top-level class generation when there was primary constructor in the file
+- Fixed the name of symbols in PackagePrivate compilation error messages
+- Added a compiler error message for package-private classes usage (previously only worked for functions and properties)
+- Fixed visibility changes precedence (internal/hfj/hfk are now correctly ignored when the symbol is package-private or
+private)
+- Fixed a bug with enum classes and package-private visibility
+- Removed the generation of synthetic ACC on classes
+- Propagation of visibility restrictions is now handled correctly (e.g. pp on a class does not make all its members pp)
+
 ### 0.2.0 - 2025-01-02
 
 **Features** :

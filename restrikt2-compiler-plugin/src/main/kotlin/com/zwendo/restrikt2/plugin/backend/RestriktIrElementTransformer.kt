@@ -2,7 +2,6 @@ package com.zwendo.restrikt2.plugin.backend
 
 import com.zwendo.restrikt2.plugin.frontend.PluginConfiguration
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.backend.jvm.ir.hasChild
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Visibilities
 import org.jetbrains.kotlin.fir.backend.FirMetadataSource
@@ -11,17 +10,41 @@ import org.jetbrains.kotlin.fir.extensions.transform
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
-import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
+import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationOriginImpl
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationWithName
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationWithVisibility
+import org.jetbrains.kotlin.ir.declarations.IrField
+import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrFunction
+import org.jetbrains.kotlin.ir.declarations.IrFunctionWithLateBinding
+import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
+import org.jetbrains.kotlin.ir.declarations.IrProperty
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.createBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrConstKind
 import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
-import org.jetbrains.kotlin.ir.expressions.impl.*
+import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrThrowImpl
+import org.jetbrains.kotlin.ir.expressions.impl.fromSymbolOwner
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrConstructorSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.SimpleTypeNullability
 import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
-import org.jetbrains.kotlin.ir.util.*
+import org.jetbrains.kotlin.ir.util.addChild
+import org.jetbrains.kotlin.ir.util.allParametersCount
+import org.jetbrains.kotlin.ir.util.constructors
+import org.jetbrains.kotlin.ir.util.hasAnnotation
+import org.jetbrains.kotlin.ir.util.isEnumClass
+import org.jetbrains.kotlin.ir.util.isGetter
+import org.jetbrains.kotlin.ir.util.isPropertyAccessor
 import org.jetbrains.kotlin.ir.visitors.IrElementTransformer
 import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
@@ -33,7 +56,7 @@ internal class RestriktIrElementTransformer(
     private val pluginContext: IrPluginContext,
 ) {
 
-    private val defaultState = ParentState(ParentState.DEFAULT, ParentState.ParentKind.OTHER)
+    private val defaultState = ElementState(ElementState.DEFAULT, ElementState.ParentKind.OTHER)
 
     private val anyConstructor: IrConstructorSymbol
     private val assertionErrorType: IrSimpleType
@@ -44,75 +67,81 @@ internal class RestriktIrElementTransformer(
     private val jvmNameConstructor: IrConstructorSymbol
     private val jvmNameType: IrSimpleType
 
-    private val transformer = object : IrElementTransformer<ParentState> {
-        override fun visitFile(declaration: IrFile, data: ParentState): IrFile {
-            var state = ParentState.DEFAULT
+    private val transformer = object : IrElementTransformer<ElementState> {
+        override fun visitFile(declaration: IrFile, data: ElementState): IrFile {
+            var state = ElementState.DEFAULT
             if (declaration.hasAnyAnnotation(PluginConfiguration.hideFromJavaAnnotations)) {
-                state = state or ParentState.HAS_HIDE_FROM_JAVA
+                state = state or ElementState.HAS_HIDE_FROM_JAVA
             }
             if (declaration.hasAnyAnnotation(PluginConfiguration.packagePrivateAnnotations)) {
-                state = state or ParentState.HAS_PACKAGE_PRIVATE
+                state = state or ElementState.HAS_PACKAGE_PRIVATE
             }
             if (declaration.hasAnyAnnotation(PluginConfiguration.hideFromKotlinAnnotations)) {
-                state = state or ParentState.HAS_HIDE_FROM_KOTLIN
+                state = state or ElementState.HAS_HIDE_FROM_KOTLIN
             }
-            return super.visitFile(declaration, ParentState(state, ParentState.ParentKind.FILE)).also {
+            return super.visitFile(declaration, ElementState(state, ElementState.ParentKind.FILE)).also {
                 // we add the constructor in the 'also' to avoid visiting it
                 // generate private constructor for file if it has at least one top-level decl
-                if (declaration.hasChild { it.accept(TopLevelFinder, null) }) {
+                @OptIn(UnsafeDuringIrConstructionAPI::class)
+                if (declaration.declarations.any { it.accept(TopLevelFinder, null) }) {
                     generatePrivateConstructor(declaration)
                 }
             }
         }
 
-        override fun visitClass(declaration: IrClass, data: ParentState): IrStatement {
+        override fun visitClass(declaration: IrClass, data: ElementState): IrStatement {
             val oldIsInValueClass = isInValueClass
+            val r = processDeclaration(
+                declaration,
+                data.defaultIfFileState(),
+                (declaration.metadata as? FirMetadataSource.Class)?.fir,
+                ElementState.ParentKind.OTHER
+            )
+            val parent = if (declaration.isEnumClass) {
+                ElementState.IGNORE_STATE
+            } else {
+                r
+            }
             return try {
                 isInValueClass = declaration.isValue
                 super.visitClass(
                     declaration,
-                    processDeclaration(
-                        declaration,
-                        data.defaultIfFileState(),
-                        (declaration.metadata as? FirMetadataSource.Class)?.fir,
-                        ParentState.ParentKind.OTHER
-                    )
+                    parent
                 )
             } finally {
                 isInValueClass = oldIsInValueClass
             }
         }
 
-        override fun visitFunction(declaration: IrFunction, data: ParentState): IrStatement =
-            super.visitFunction(
+        override fun visitFunction(declaration: IrFunction, data: ElementState): IrStatement {
+            processDeclaration(
                 declaration,
-                processDeclaration(
-                    declaration,
-                    data,
-                    (declaration.metadata as? FirMetadataSource.Function)?.fir,
-                    ParentState.ParentKind.OTHER
-                )
+                data,
+                (declaration.metadata as? FirMetadataSource.Function)?.fir,
+                ElementState.ParentKind.OTHER
             )
+            return super.visitFunction(declaration, ElementState.IGNORE_STATE)
+        }
 
-        override fun visitField(declaration: IrField, data: ParentState): IrStatement =
+        override fun visitField(declaration: IrField, data: ElementState): IrStatement =
             super.visitField(
                 declaration,
                 processDeclaration(
                     declaration,
                     data,
                     (declaration.metadata as? FirMetadataSource.Field)?.fir,
-                    ParentState.ParentKind.FIELD
+                    ElementState.ParentKind.FIELD
                 )
             )
 
-        override fun visitProperty(declaration: IrProperty, data: ParentState): IrStatement =
+        override fun visitProperty(declaration: IrProperty, data: ElementState): IrStatement =
             super.visitProperty(
                 declaration,
                 processDeclaration(
                     declaration,
                     data,
                     (declaration.metadata as? FirMetadataSource.Property)?.fir,
-                    ParentState.ParentKind.PROPERTY
+                    ElementState.ParentKind.PROPERTY
                 )
             )
     }
@@ -123,82 +152,98 @@ internal class RestriktIrElementTransformer(
 
     private fun <T> processDeclaration(
         declaration: T,
-        parentState: ParentState,
+        parentState: ElementState,
         fir: FirMemberDeclaration?,
-        currentKind: ParentState.ParentKind,
-    ): ParentState where T : IrDeclarationWithVisibility, T : IrDeclarationWithName {
-        var isSynthetic = declaration.origin.isSynthetic
-        val pState = parentState.value
-        var newState = pState
+        currentKind: ElementState.ParentKind,
+    ): ElementState where T : IrDeclarationWithVisibility, T : IrDeclarationWithName {
+        if (parentState === ElementState.IGNORE_STATE) return parentState
+        var newState = parentState.value
 
-        if (PluginConfiguration.automaticInternalHiding && (parentState.isInternal || DescriptorVisibilities.INTERNAL == declaration.visibility)) {
-            if (!isSynthetic) {
-                declaration.origin = makeSynthetic(declaration.origin)
-                isSynthetic = true
-            }
-            newState = newState or ParentState.IS_INTERNAL
-        }
+        val isInternal =
+            PluginConfiguration.automaticInternalHiding && (parentState.isInternal || declaration.isInternal)
 
-        if (PluginConfiguration.annotationProcessing) {
+        val hasPackagePrivate = run {
+            if (!PluginConfiguration.annotationProcessing) return@run false
             val parentIsPackagePrivate = (parentState.kind.isFileOrProperty && parentState.hasPackagePrivate)
-            val isField = currentKind == ParentState.ParentKind.FIELD
-            if ((parentIsPackagePrivate && !isField) || declaration.hasAnyAnnotation(PluginConfiguration.packagePrivateAnnotations)) {
-                declaration.visibility = JavaDescriptorVisibilities.PACKAGE_VISIBILITY
-                if (currentKind == ParentState.ParentKind.PROPERTY) { // we need to propagate the package-private state to the getter and setter
-                    newState = newState or ParentState.HAS_PACKAGE_PRIVATE
-                }
-            }
+            val isField = currentKind == ElementState.ParentKind.FIELD
+            // we propagate package private from parent only if current is not a field
+            (parentIsPackagePrivate && !isField) || declaration.hasAnyAnnotation(PluginConfiguration.packagePrivateAnnotations)
+        }
 
-            if (parentState.hasHideFromJava || declaration.hasAnyAnnotation(PluginConfiguration.hideFromJavaAnnotations)) {
-                if (!isSynthetic) {
-                    declaration.origin = makeSynthetic(declaration.origin)
-                }
-                newState = newState or ParentState.HAS_HIDE_FROM_JAVA
-            }
+        val hasHideFromJava =
+            PluginConfiguration.annotationProcessing && (parentState.hasHideFromJava || declaration.hasAnyAnnotation(
+                PluginConfiguration.hideFromJavaAnnotations
+            ))
 
-            if (
-                PluginConfiguration.annotationProcessing &&
-                (
-                    (parentState.kind.isFileOrProperty && parentState.hasHideFromKotlin) ||
-                        declaration.hasAnyAnnotation(PluginConfiguration.hideFromKotlinAnnotations)
-                    )
-            ) {
-                newState = newState or ParentState.HAS_HIDE_FROM_KOTLIN
+        val hasHideFromKotlin =
+            PluginConfiguration.annotationProcessing && ((parentState.kind.isFileOrProperty && parentState.hasHideFromKotlin) ||
+                        declaration.hasAnyAnnotation(PluginConfiguration.hideFromKotlinAnnotations))
+
+        // NOTE: here the order is important, package-private processing should be done before hfj, hfk and internal
+        // because it takes precedence over them (e.g. if a symbol is package private, we do not apply synthetic to
+        // them). Currently, hfk and pp both set the kotlin visibility to internal, but if the way hfk is handled
+        // changes, we should make sure that the package-private processing is done before hfk because package-private
+        // should prevent hfk from being applied.
+        if (hasPackagePrivate && !declaration.isHidden) {
+            declaration.visibility = JavaDescriptorVisibilities.PACKAGE_VISIBILITY
+            // we also set the internal visibility to the declaration to avoid any unexpected behavior with the compiler
+            // or IDE plugin where the usage of the package-private symbol would be allowed because only the metadata
+            // would be checked.
+            declaration.setInternal(fir)
+
+            // we need to propagate the package-private state to the getter and setter
+            if (currentKind == ElementState.ParentKind.PROPERTY) {
+                newState = newState or ElementState.HAS_PACKAGE_PRIVATE
             }
         }
 
-        return ParentState(newState, currentKind).also { it ->
-            if (!it.hasHideFromKotlin || fir == null) return@also
-
-            val visibility = fir.status.visibility
-
-            // we apply the hide from kotlin internal visibility change only if it does not increase the visibility
-            if (visibility == Visibilities.Private || visibility == Visibilities.PrivateToThis || visibility == Visibilities.Local) return@also
-
-            fir.replaceStatus(fir.status.transform(visibility = Visibilities.Internal))
-
-            // if the declaration already has a JvmName annotation, we do not add another one
-            if (declaration.hasAnnotation(jvmNameId)) return@also
-
-            // We also must apply a JvmName annotation, because the way we change the visibility to internal is not
-            // handled correctly by the compiler. Normally the name of members should change when they are internal
-            // (i.e. foo$thePackage()), but the way we do it does not trigger this behavior.
-            // It is a problem when members from the same kotlin project (meaning that they can access the internal
-            // members) but compiled at a different time (typically test modules are compiled after the main module)
-            // try to access the internal members. The compiler will detect that the members are internal and will
-            // mangle the name following its rules, but the name of the members are not mangled as stated above.
-            // This will lead to a NoSuchMethodError at runtime.
-            val name = if (declaration.isPropertyAccessor) {
-                @OptIn(UnsafeDuringIrConstructionAPI::class)
-                (declaration as IrSimpleFunction).correspondingPropertySymbol?.owner?.let {
-                    val propName = it.name.asString()
-                    if (declaration.isGetter) JvmAbi.getterName(propName) else JvmAbi.setterName(propName)
-                } ?: declaration.name.asString()
-            } else {
-                declaration.name.asString()
+        if (isInternal || hasHideFromJava) {
+            if (!declaration.origin.isSynthetic && !declaration.isHidden && declaration !is IrClass) {
+                declaration.origin = makeSynthetic(declaration.origin)
             }
-            declaration.annotations += jvmNameAnnotation(name)
+            if (isInternal) newState = newState or ElementState.IS_INTERNAL
+            if (hasHideFromJava) newState = newState or ElementState.HAS_HIDE_FROM_JAVA
         }
+
+        if (hasHideFromKotlin) {
+            if (!declaration.isHidden) {
+                declaration.setInternal(fir)
+            }
+
+            if (currentKind == ElementState.ParentKind.PROPERTY) {
+                newState = newState or ElementState.HAS_HIDE_FROM_KOTLIN
+            }
+        }
+
+        return ElementState(newState, currentKind)
+    }
+
+    private fun <T> T.setInternal(fir: FirMemberDeclaration?) where T : IrDeclarationWithVisibility, T : IrDeclarationWithName {
+        if (fir == null) return
+
+        fir.replaceStatus(fir.status.transform(visibility = Visibilities.Internal))
+
+        // if the declaration already has a JvmName annotation, we do not add another one
+        if (hasAnnotation(jvmNameId)) return
+
+        // We also must apply a JvmName annotation, because the way we change the visibility to internal is not
+        // handled correctly by the compiler. Normally the name of members should change when they are internal
+        // (i.e. foo$thePackage()), but the way we do it does not trigger this behavior.
+        // It is a problem when members from the same kotlin project (meaning that they can access the internal
+        // members) but compiled at a different time (typically test modules are compiled after the main module)
+        // try to access the internal members. The compiler will detect that the members are internal and will
+        // mangle the name following its rules, but the name of the members are not mangled as stated above.
+        // This will lead to a NoSuchMethodError at runtime.
+        val name = if (isPropertyAccessor) {
+            @OptIn(UnsafeDuringIrConstructionAPI::class)
+            (this as IrSimpleFunction).correspondingPropertySymbol?.owner?.let {
+                val propName = it.name.asString()
+                if (isGetter) JvmAbi.getterName(propName) else JvmAbi.setterName(propName)
+            } ?: name.asString()
+        } else {
+            name.asString()
+        }
+        annotations += jvmNameAnnotation(name)
     }
 
     private fun IrAnnotationContainer.hasAnyAnnotation(annotations: Set<ClassId>): Boolean =
@@ -291,11 +336,20 @@ internal class RestriktIrElementTransformer(
         }!!
     }
 
+    private val IrDeclarationWithVisibility.isHidden: Boolean
+        get() = visibility == DescriptorVisibilities.PRIVATE
+                    || visibility == DescriptorVisibilities.PRIVATE_TO_THIS
+                    || visibility == JavaDescriptorVisibilities.PACKAGE_VISIBILITY
+
+    private val IrDeclarationWithVisibility.isInternal: Boolean
+        get() = visibility == DescriptorVisibilities.INTERNAL
+
     private object TopLevelFinder : IrElementVisitor<Boolean, Nothing?> {
 
         override fun visitElement(element: IrElement, data: Nothing?): Boolean = false
 
-        override fun visitFunction(declaration: IrFunction, data: Nothing?): Boolean = true
+        override fun visitFunction(declaration: IrFunction, data: Nothing?): Boolean =
+            !(declaration is IrConstructor || declaration is IrFunctionWithLateBinding)
 
         override fun visitProperty(declaration: IrProperty, data: Nothing?): Boolean = true
 
