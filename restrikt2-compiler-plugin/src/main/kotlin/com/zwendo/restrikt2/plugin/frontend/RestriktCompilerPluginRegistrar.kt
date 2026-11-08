@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalCompilerApi::class)
+
 package com.zwendo.restrikt2.plugin.frontend
 
 import com.zwendo.restrikt2.plugin.backend.RestriktIrElementTransformer
 import com.zwendo.restrikt2.plugin.backend.RestriktPackagePrivateChecker
+import com.zwendo.restrikt2_compiler_plugin.BuildConfig
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
@@ -14,11 +17,10 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 /**
  * Class that registers plugin custom class generation interceptor
  */
-@OptIn(ExperimentalCompilerApi::class)
 internal class RestriktCompilerPluginRegistrar : CompilerPluginRegistrar() {
+    override val pluginId: String = BuildConfig.PLUGIN_ID
 
-    override val supportsK2: Boolean
-        get() = true
+    override val supportsK2: Boolean = true
 
     override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
         if (!PluginConfiguration.enabled) return
@@ -39,7 +41,7 @@ private object RestriktIrGenerationExtension : IrGenerationExtension {
 private object RestriktFirExtensionRegistrar : FirExtensionRegistrar() {
 
     override fun ExtensionRegistrarContext.configurePlugin() {
+        registerDiagnosticContainers(RestriktPackagePrivateChecker.Lazy)
         +::RestriktPackagePrivateChecker
     }
-
 }

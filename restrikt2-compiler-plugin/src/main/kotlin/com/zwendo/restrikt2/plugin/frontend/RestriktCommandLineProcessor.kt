@@ -33,7 +33,7 @@ internal class RestriktCommandLineProcessor : CommandLineProcessor {
             ?: throw CliOptionProcessingException("Unknown option: ${option.optionName}")
         try {
             opt.applyToCompilation(value)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             throw CliOptionProcessingException(
                 "Invalid value for option ${option.optionName} expected ${option.valueDescription} but was $value",
             )

@@ -15,25 +15,28 @@ val junitVersion: String by project
 val javaVersion = JavaVersion.toVersion(jvmVersion)
 val pluginVersion: String by project
 
+allprojects {
+    repositories {
+        mavenCentral()
+    }
+}
+
 subprojects {
-    apply(plugin = "java")
-    apply(plugin = "kotlin")
-    apply(plugin = "maven-publish")
-    apply(plugin = "signing")
-    apply(plugin = "com.github.gmazzo.buildconfig")
+    pluginManager.apply("java")
+    pluginManager.apply("org.jetbrains.kotlin.jvm")
+    pluginManager.apply("maven-publish")
+    pluginManager.apply("signing")
+    pluginManager.apply("com.github.gmazzo.buildconfig")
 
     group = projectGroup
     version = when (project.name) {
         "restrikt2-gradle-plugin",
-        "restrikt2-compiler-plugin" -> pluginVersion
+        "restrikt2-compiler-plugin",
+            -> pluginVersion
+
         "restrikt2-annotations" -> project.properties["annotationsVersion"]
         else -> throw AssertionError("Unknown project name: ${project.name}")
     } as String
-
-
-    repositories {
-        mavenCentral()
-    }
 
     java {
         sourceCompatibility = javaVersion
@@ -98,8 +101,8 @@ subprojects {
                     name = "MavenCentral"
                     setUrl(repositoryUrl)
                     credentials {
-                        username = project.properties["ossrhUsername"] as String
-                        password = project.properties["ossrhPassword"] as String
+                        username = project.properties["ossrhUsername"] as? String
+                        password = project.properties["ossrhPassword"] as? String
                     }
                 }
             }
@@ -109,7 +112,6 @@ subprojects {
     signing {
         sign(publishing.publications)
     }
-
 }
 
 val pluginEnabled: String by project

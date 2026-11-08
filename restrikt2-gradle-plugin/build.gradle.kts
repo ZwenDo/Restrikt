@@ -9,7 +9,7 @@ val projectGroup: String by project
 val pluginVersion: String by project
 
 dependencies {
-    compileOnly("org.jetbrains.kotlin", "kotlin-gradle-plugin-api", kotlinVersion)
+    compileOnly("org.jetbrains.kotlin:kotlin-gradle-plugin-api:$kotlinVersion")
 }
 
 gradlePlugin {

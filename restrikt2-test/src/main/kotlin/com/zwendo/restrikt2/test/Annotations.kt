@@ -10,6 +10,7 @@ package com.zwendo.restrikt2.test
     AnnotationTarget.FIELD,
     AnnotationTarget.FILE
 )
+
 annotation class HFJ
 
 @Target(

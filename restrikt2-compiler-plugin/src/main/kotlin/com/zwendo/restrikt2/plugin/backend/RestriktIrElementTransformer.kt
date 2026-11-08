@@ -10,43 +10,19 @@ import org.jetbrains.kotlin.fir.extensions.transform
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
-import org.jetbrains.kotlin.ir.declarations.IrAnnotationContainer
-import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrConstructor
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationOriginImpl
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationWithName
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationWithVisibility
-import org.jetbrains.kotlin.ir.declarations.IrField
-import org.jetbrains.kotlin.ir.declarations.IrFile
-import org.jetbrains.kotlin.ir.declarations.IrFunction
-import org.jetbrains.kotlin.ir.declarations.IrFunctionWithLateBinding
-import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.declarations.IrProperty
-import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
-import org.jetbrains.kotlin.ir.declarations.createBlockBody
+import org.jetbrains.kotlin.ir.declarations.*
+import org.jetbrains.kotlin.ir.expressions.IrAnnotation
 import org.jetbrains.kotlin.ir.expressions.IrConstKind
-import org.jetbrains.kotlin.ir.expressions.IrConstructorCall
-import org.jetbrains.kotlin.ir.expressions.impl.IrConstImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrThrowImpl
-import org.jetbrains.kotlin.ir.expressions.impl.fromSymbolOwner
+import org.jetbrains.kotlin.ir.expressions.impl.*
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
 import org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI
 import org.jetbrains.kotlin.ir.symbols.impl.IrConstructorSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.SimpleTypeNullability
 import org.jetbrains.kotlin.ir.types.impl.IrSimpleTypeImpl
-import org.jetbrains.kotlin.ir.util.addChild
-import org.jetbrains.kotlin.ir.util.allParametersCount
-import org.jetbrains.kotlin.ir.util.constructors
-import org.jetbrains.kotlin.ir.util.hasAnnotation
-import org.jetbrains.kotlin.ir.util.isEnumClass
-import org.jetbrains.kotlin.ir.util.isGetter
-import org.jetbrains.kotlin.ir.util.isPropertyAccessor
-import org.jetbrains.kotlin.ir.visitors.IrElementTransformer
-import org.jetbrains.kotlin.ir.visitors.IrElementVisitor
+import org.jetbrains.kotlin.ir.util.*
+import org.jetbrains.kotlin.ir.visitors.IrTransformer
+import org.jetbrains.kotlin.ir.visitors.IrVisitor
 import org.jetbrains.kotlin.load.java.JavaDescriptorVisibilities
 import org.jetbrains.kotlin.load.java.JvmAbi
 import org.jetbrains.kotlin.name.ClassId
@@ -67,7 +43,7 @@ internal class RestriktIrElementTransformer(
     private val jvmNameConstructor: IrConstructorSymbol
     private val jvmNameType: IrSimpleType
 
-    private val transformer = object : IrElementTransformer<ElementState> {
+    private val transformer = object : IrTransformer<ElementState>() {
         override fun visitFile(declaration: IrFile, data: ElementState): IrFile {
             var state = ElementState.DEFAULT
             if (declaration.hasAnyAnnotation(PluginConfiguration.hideFromJavaAnnotations)) {
@@ -177,7 +153,7 @@ internal class RestriktIrElementTransformer(
 
         val hasHideFromKotlin =
             PluginConfiguration.annotationProcessing && ((parentState.kind.isFileOrProperty && parentState.hasHideFromKotlin) ||
-                        declaration.hasAnyAnnotation(PluginConfiguration.hideFromKotlinAnnotations))
+                    declaration.hasAnyAnnotation(PluginConfiguration.hideFromKotlinAnnotations))
 
         // NOTE: here the order is important, package-private processing should be done before hfj, hfk and internal
         // because it takes precedence over them (e.g. if a symbol is package private, we do not apply synthetic to
@@ -256,19 +232,21 @@ internal class RestriktIrElementTransformer(
             IrDeclarationOriginImpl("com.zwendo.restrikt2:syntheticMember", true)
         }
 
-    private fun jvmNameAnnotation(name: String): IrConstructorCall {
-        val call = IrConstructorCallImpl.fromSymbolOwner(jvmNameType, jvmNameConstructor)
-        call.putValueArgument(
-            0,
-            IrConstImpl(
-                UNDEFINED_OFFSET,
-                UNDEFINED_OFFSET,
-                pluginContext.irBuiltIns.stringType,
-                IrConstKind.String,
-                name,
-            )
+    private fun jvmNameAnnotation(name: String): IrAnnotation = IrAnnotationImpl(
+        UNDEFINED_OFFSET,
+        UNDEFINED_OFFSET,
+        jvmNameType,
+        jvmNameConstructor,
+        typeArgumentsCount = 0,
+        constructorTypeArgumentsCount = 0,
+    ).apply {
+        arguments[0] = IrConstImpl(
+            UNDEFINED_OFFSET,
+            UNDEFINED_OFFSET,
+            pluginContext.irBuiltIns.stringType,
+            IrConstKind.String,
+            name,
         )
-        return call
     }
 
     private fun generatePrivateConstructor(declaration: IrFile) {
@@ -311,10 +289,11 @@ internal class RestriktIrElementTransformer(
     }
 
     init {
+        val finder = pluginContext.finderForBuiltins()
         jvmNameId = ClassId.fromString("kotlin/jvm/JvmName")
-        jvmNameConstructor = pluginContext.referenceConstructors(jvmNameId).first()
+        jvmNameConstructor = finder.findConstructors(jvmNameId).first()
         jvmNameType = IrSimpleTypeImpl(
-            pluginContext.referenceClass(jvmNameId)!!,
+            finder.findClass(jvmNameId)!!,
             SimpleTypeNullability.DEFINITELY_NOT_NULL,
             emptyList(),
             emptyList()
@@ -325,26 +304,26 @@ internal class RestriktIrElementTransformer(
 
         val assertionError = ClassId.fromString("java/lang/AssertionError")
         assertionErrorType = IrSimpleTypeImpl(
-            pluginContext.referenceClass(assertionError)!!,
+            finder.findClass(assertionError)!!,
             SimpleTypeNullability.DEFINITELY_NOT_NULL,
             emptyList(),
             emptyList()
         )
-        assertionErrorConstructor = pluginContext.referenceConstructors(assertionError).find {
+        assertionErrorConstructor = finder.findConstructors(assertionError).find {
             @OptIn(UnsafeDuringIrConstructionAPI::class)
-            it.owner.allParametersCount == 1
+            it.owner.allParameters.size == 1
         }!!
     }
 
     private val IrDeclarationWithVisibility.isHidden: Boolean
         get() = visibility == DescriptorVisibilities.PRIVATE
-                    || visibility == DescriptorVisibilities.PRIVATE_TO_THIS
-                    || visibility == JavaDescriptorVisibilities.PACKAGE_VISIBILITY
+                || visibility == DescriptorVisibilities.PRIVATE_TO_THIS
+                || visibility == JavaDescriptorVisibilities.PACKAGE_VISIBILITY
 
     private val IrDeclarationWithVisibility.isInternal: Boolean
         get() = visibility == DescriptorVisibilities.INTERNAL
 
-    private object TopLevelFinder : IrElementVisitor<Boolean, Nothing?> {
+    private object TopLevelFinder : IrVisitor<Boolean, Nothing?>() {
 
         override fun visitElement(element: IrElement, data: Nothing?): Boolean = false
 
@@ -354,5 +333,4 @@ internal class RestriktIrElementTransformer(
         override fun visitProperty(declaration: IrProperty, data: Nothing?): Boolean = true
 
     }
-
 }
