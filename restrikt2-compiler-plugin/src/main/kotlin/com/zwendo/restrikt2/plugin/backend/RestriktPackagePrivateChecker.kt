@@ -24,10 +24,8 @@ import org.jetbrains.kotlin.fir.analysis.checkers.expression.ExpressionCheckers
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.FirBasicExpressionChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.expression.FirResolvedQualifierChecker
 import org.jetbrains.kotlin.fir.analysis.checkers.hasAnnotationOrInsideAnnotatedClass
-import org.jetbrains.kotlin.fir.analysis.checkers.unsubstitutedScope
 import org.jetbrains.kotlin.fir.analysis.diagnostics.FirDiagnosticRenderers
 import org.jetbrains.kotlin.fir.analysis.extensions.FirAdditionalCheckersExtension
-import org.jetbrains.kotlin.fir.containingClassLookupTag
 import org.jetbrains.kotlin.fir.declarations.*
 import org.jetbrains.kotlin.fir.declarations.impl.FirDefaultPropertySetter
 import org.jetbrains.kotlin.fir.declarations.utils.isOverride
@@ -39,11 +37,12 @@ import org.jetbrains.kotlin.fir.expressions.toResolvedCallableSymbol
 import org.jetbrains.kotlin.fir.packageFqName
 import org.jetbrains.kotlin.fir.references.toResolvedCallableSymbol
 import org.jetbrains.kotlin.fir.resolve.getContainingClassSymbol
-import org.jetbrains.kotlin.fir.resolve.toClassSymbol
-import org.jetbrains.kotlin.fir.scopes.*
 import org.jetbrains.kotlin.fir.symbols.FirBasedSymbol
 import org.jetbrains.kotlin.fir.symbols.SymbolInternals
-import org.jetbrains.kotlin.fir.symbols.impl.*
+import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirFileSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirPropertyAccessorSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 
 /**
  * Class that checks and catch misuse of package-private symbols.
@@ -54,23 +53,22 @@ internal class RestriktPackagePrivateChecker(session: FirSession) : FirAdditiona
     private val resolvedQualifierChecker = object : FirResolvedQualifierChecker(MppCheckerKind.Common) {
         context(context: CheckerContext, reporter: DiagnosticReporter)
         override fun check(expression: FirResolvedQualifier) {
-//            val currentFile = context.containingFile ?: return
+            val currentPackageName = context.containingFileSymbol ?: return
             val callee = expression.toResolvedCallableSymbol(context.session) ?: return
-            tryReportUsage(expression, callee, context, reporter)
+            tryReportUsage(expression, callee, currentPackageName, context, reporter)
         }
     }
 
     private val basicExpressionChecker = object : FirBasicExpressionChecker(MppCheckerKind.Common) {
         context(context: CheckerContext, reporter: DiagnosticReporter)
         override fun check(expression: FirStatement) {
-            val currentFile = context.containingFile
             // If the symbol is not resolvable or if we don't know in which file we currently are, we cannot perform the
             // check.
-            if (expression !is FirResolvable || currentFile == null) return
-
+            val currentPackageName = context.containingFileSymbol ?: return
+            if (expression !is FirResolvable) return
             val callee = expression.calleeReference
             val calleeSymbol = callee.toResolvedCallableSymbol() ?: return
-            tryReportUsage(expression, calleeSymbol, context, reporter)
+            tryReportUsage(expression, calleeSymbol, currentPackageName, context, reporter)
         }
     }
 
@@ -82,19 +80,12 @@ internal class RestriktPackagePrivateChecker(session: FirSession) : FirAdditiona
     private fun tryReportUsage(
         element: FirElement,
         calleeSymbol: FirBasedSymbol<*>,
+        currentFile: FirFileSymbol,
         context: CheckerContext,
         reporter: DiagnosticReporter,
     ) {
         val calleePackage = calleeSymbol.packageFqName()
-        val currentPackage = context.containingDeclarations.firstOrNull()?.let { symbol ->
-            when (symbol) {
-                is FirCallableSymbol -> symbol.callableId?.packageName
-                is FirClassLikeSymbol -> symbol.classId.packageFqName
-                else -> null
-            }
-        } ?: calleePackage  // Fixme, if no fallback value set, all compilations will be failed, maybe it's a bug?
-
-        if (calleePackage == currentPackage) return
+        if (calleePackage == currentFile.packageFqName) return
 
         // We check if the callee has a package-private annotation or if it is in a class that has it.
         val isAnnotated = PluginConfiguration.packagePrivateAnnotations.any {
